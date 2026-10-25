@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: 248 250 252;
+    --color-sidebar: 255 255 255;
+    --color-card: 255 255 255;
+    --color-border: 226 232 240;
+    --color-text: 15 23 42;
+    --color-muted: 100 116 139;
+  }
+
+  .dark {
+    --color-bg: 11 15 20;
+    --color-sidebar: 17 23 32;
+    --color-card: 23 30 40;
+    --color-border: 42 52 66;
+    --color-text: 243 244 246;
+    --color-muted: 161 170 184;
+  }
+
+  body {
+    @apply font-sans antialiased bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text transition-colors duration-150;
+  }
+
+  /* Custom scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-700 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400 dark:bg-slate-600;
+  }
+}
+
+/* Code block styles */
+pre, code {
+  font-family: 'Fira Code', monospace;
+}
+
+/* Assessment full-screen focus mode */
+.assessment-mode {
+  user-select: none;
+}
