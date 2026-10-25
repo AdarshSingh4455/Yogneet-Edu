@@ -169,8 +169,8 @@ export const VideoPlayerPage: React.FC = () => {
                 onClick={() => setActiveTab('overview')}
                 className={`pb-3 px-1 border-b-2 transition-colors ${
                   activeTab === 'overview'
-                    ? 'border-brand-500 text-brand-500 dark:text-brand-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                    ? 'border-brand-500 text-brand-500 dark:text-blue-400 dark:border-blue-500 font-bold'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-blue-200'
                 }`}
               >
                 Overview
@@ -179,8 +179,8 @@ export const VideoPlayerPage: React.FC = () => {
                 onClick={() => setActiveTab('resources')}
                 className={`pb-3 px-1 border-b-2 transition-colors flex items-center gap-1.5 ${
                   activeTab === 'resources'
-                    ? 'border-brand-500 text-brand-500 dark:text-brand-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                    ? 'border-brand-500 text-brand-500 dark:text-blue-400 dark:border-blue-500 font-bold'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-blue-200'
                 }`}
               >
                 Resources & Notes
@@ -192,8 +192,8 @@ export const VideoPlayerPage: React.FC = () => {
                 onClick={() => setActiveTab('discussion')}
                 className={`pb-3 px-1 border-b-2 transition-colors flex items-center gap-1.5 ${
                   activeTab === 'discussion'
-                    ? 'border-brand-500 text-brand-500 dark:text-brand-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                    ? 'border-brand-500 text-brand-500 dark:text-blue-400 dark:border-blue-500 font-bold'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-blue-200'
                 }`}
               >
                 Discussion
@@ -205,8 +205,8 @@ export const VideoPlayerPage: React.FC = () => {
                 onClick={() => setActiveTab('upnext')}
                 className={`pb-3 px-1 border-b-2 transition-colors ${
                   activeTab === 'upnext'
-                    ? 'border-brand-500 text-brand-500 dark:text-brand-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                    ? 'border-brand-500 text-brand-500 dark:text-blue-400 dark:border-blue-500 font-bold'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-blue-200'
                 }`}
               >
                 Up Next
@@ -259,7 +259,7 @@ export const VideoPlayerPage: React.FC = () => {
                   {activeLesson.resources.map(res => (
                     <div
                       key={res.id}
-                      className="flex items-center justify-between p-3.5 rounded-xl border border-light-border dark:border-dark-border bg-light-card dark:bg-dark-card hover:border-slate-300 dark:hover:border-slate-600 transition-all"
+                      className="flex items-center justify-between p-3.5 rounded-xl border border-light-border dark:border-dark-border bg-light-card dark:bg-dark-card hover:border-slate-300 dark:hover:border-blue-700/50 dark:hover:bg-dark-hover/60 transition-all"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -399,8 +399,8 @@ export const VideoPlayerPage: React.FC = () => {
                     onClick={() => handleSelectLesson(lesson)}
                     className={`w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 ${
                       isSelected
-                        ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-950/30'
-                        : 'border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-cardHover'
+                        ? 'border-brand-500 bg-brand-50/70 dark:bg-dark-selected dark:border-blue-500 dark:shadow-[0_0_12px_rgba(59,130,246,0.18)]'
+                        : 'border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-hover dark:hover:border-blue-900/40'
                     }`}
                   >
                     <span className="text-xs font-bold text-slate-400 shrink-0 mt-0.5">
@@ -408,7 +408,7 @@ export const VideoPlayerPage: React.FC = () => {
                     </span>
 
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-bold line-clamp-2 ${isSelected ? 'text-brand-600 dark:text-brand-400' : 'text-slate-900 dark:text-slate-100'}`}>
+                      <p className={`text-xs font-bold line-clamp-2 ${isSelected ? 'text-brand-600 dark:text-blue-300' : 'text-slate-900 dark:text-slate-100'}`}>
                         {lesson.title}
                       </p>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">

@@ -140,7 +140,7 @@ export const AdminDashboard: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-light-border dark:divide-dark-border">
                 {subAdmins.map(staff => (
-                  <tr key={staff.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-cardHover/50 transition-colors">
+                  <tr key={staff.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors">
                     <td className="py-3.5 px-4 flex items-center gap-3">
                       <img
                         src={staff.avatar}

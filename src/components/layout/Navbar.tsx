@@ -73,7 +73,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
               type="text"
               placeholder="Search lectures, study notes, coding problems..."
               onClick={() => navigate('/notes')}
-              className="w-full pl-9 pr-4 py-1.5 text-xs sm:text-sm rounded-xl border border-light-border dark:border-dark-border bg-slate-50 dark:bg-dark-card/60 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white dark:focus:bg-dark-card transition-all"
+              className="w-full pl-9 pr-4 py-1.5 text-xs sm:text-sm rounded-xl border border-light-border dark:border-dark-border bg-slate-50 dark:bg-dark-card/60 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-blue-500/50 dark:focus:border-blue-400 dark:focus:bg-dark-selected/50 focus:bg-white dark:hover:border-blue-800/60 transition-all"
             />
             <kbd className="hidden lg:inline-block absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700">
               /
@@ -114,13 +114,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
                   }}
                   className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded-lg transition-colors ${
                     mode === 'light'
-                      ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-cardHover'
+                      ? 'bg-brand-50 dark:bg-dark-selected text-brand-600 dark:text-blue-300 font-semibold border border-transparent dark:border-blue-700/60'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200'
                   }`}
                 >
                   <Sun className="w-3.5 h-3.5 text-amber-500" />
                   <span>Light</span>
-                  {mode === 'light' && <CheckCircle2 className="w-3.5 h-3.5 ml-auto" />}
+                  {mode === 'light' && <CheckCircle2 className="w-3.5 h-3.5 ml-auto text-brand-500 dark:text-blue-400" />}
                 </button>
                 <button
                   onClick={() => {
@@ -129,13 +129,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
                   }}
                   className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded-lg transition-colors ${
                     mode === 'dark'
-                      ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-cardHover'
+                      ? 'bg-brand-50 dark:bg-dark-selected text-brand-600 dark:text-blue-300 font-semibold border border-transparent dark:border-blue-700/60'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200'
                   }`}
                 >
                   <Moon className="w-3.5 h-3.5 text-blue-400" />
                   <span>Dark</span>
-                  {mode === 'dark' && <CheckCircle2 className="w-3.5 h-3.5 ml-auto" />}
+                  {mode === 'dark' && <CheckCircle2 className="w-3.5 h-3.5 ml-auto text-brand-500 dark:text-blue-400" />}
                 </button>
                 <button
                   onClick={() => {
@@ -144,13 +144,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
                   }}
                   className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded-lg transition-colors ${
                     mode === 'system'
-                      ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-cardHover'
+                      ? 'bg-brand-50 dark:bg-dark-selected text-brand-600 dark:text-blue-300 font-semibold border border-transparent dark:border-blue-700/60'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200'
                   }`}
                 >
                   <Laptop className="w-3.5 h-3.5 text-slate-400" />
                   <span>System Default</span>
-                  {mode === 'system' && <CheckCircle2 className="w-3.5 h-3.5 ml-auto" />}
+                  {mode === 'system' && <CheckCircle2 className="w-3.5 h-3.5 ml-auto text-brand-500 dark:text-blue-400" />}
                 </button>
               </div>
             )}
@@ -256,9 +256,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
                   <Link
                     to="/profile"
                     onClick={() => setShowUserMenu(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-cardHover transition-colors"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200 transition-colors"
                   >
-                    <User className="w-3.5 h-3.5 text-slate-400" />
+                    <User className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-500" />
                     <span>My Profile & Settings</span>
                   </Link>
 
@@ -266,7 +266,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
                     <Link
                       to="/admin/permissions"
                       onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-cardHover transition-colors"
+                      className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200 transition-colors"
                     >
                       <Shield className="w-3.5 h-3.5 text-brand-400" />
                       <span>RBAC & Permissions Editor</span>
@@ -277,7 +277,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
                     href="https://youtube.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between px-3 py-2 text-xs font-medium rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-cardHover transition-colors"
+                    className="flex items-center justify-between px-3 py-2 text-xs font-medium rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200 transition-colors"
                   >
                     <span className="flex items-center gap-2.5">
                       <ExternalLink className="w-3.5 h-3.5 text-slate-400" />

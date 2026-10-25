@@ -100,13 +100,13 @@ export const StudentProfilePage: React.FC = () => {
             onClick={() => setMode('light')}
             className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between ${
               mode === 'light'
-                ? 'border-brand-500 bg-brand-50/60 dark:bg-brand-950/40 ring-2 ring-brand-500'
-                : 'border-light-border dark:border-dark-border bg-white dark:bg-dark-card hover:border-slate-300 dark:hover:border-slate-600'
+                ? 'border-brand-500 bg-brand-50/70 dark:bg-dark-selected dark:border-blue-500 ring-2 ring-brand-500 dark:ring-blue-400 dark:shadow-blue-glow'
+                : 'border-light-border dark:border-dark-border bg-white dark:bg-dark-card hover:border-slate-300 dark:hover:border-blue-700/50 dark:hover:bg-dark-hover'
             }`}
           >
             <div className="flex items-center justify-between mb-3">
               <Sun className="w-5 h-5 text-amber-500" />
-              {mode === 'light' && <CheckCircle2 className="w-4 h-4 text-brand-500" />}
+              {mode === 'light' && <CheckCircle2 className="w-4 h-4 text-brand-500 dark:text-blue-400" />}
             </div>
             <span className="text-xs font-bold text-slate-900 dark:text-slate-100">Light Mode</span>
             <span className="text-[10px] text-slate-400 mt-0.5">Clean high-contrast theme</span>
@@ -116,13 +116,13 @@ export const StudentProfilePage: React.FC = () => {
             onClick={() => setMode('dark')}
             className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between ${
               mode === 'dark'
-                ? 'border-brand-500 bg-brand-50/60 dark:bg-brand-950/40 ring-2 ring-brand-500'
-                : 'border-light-border dark:border-dark-border bg-white dark:bg-dark-card hover:border-slate-300 dark:hover:border-slate-600'
+                ? 'border-brand-500 bg-brand-50/70 dark:bg-dark-selected dark:border-blue-500 ring-2 ring-brand-500 dark:ring-blue-400 dark:shadow-blue-glow'
+                : 'border-light-border dark:border-dark-border bg-white dark:bg-dark-card hover:border-slate-300 dark:hover:border-blue-700/50 dark:hover:bg-dark-hover'
             }`}
           >
             <div className="flex items-center justify-between mb-3">
               <Moon className="w-5 h-5 text-brand-400" />
-              {mode === 'dark' && <CheckCircle2 className="w-4 h-4 text-brand-500" />}
+              {mode === 'dark' && <CheckCircle2 className="w-4 h-4 text-brand-500 dark:text-blue-400" />}
             </div>
             <span className="text-xs font-bold text-slate-900 dark:text-slate-100">Dark Mode</span>
             <span className="text-[10px] text-slate-400 mt-0.5">Default dark developer theme</span>
@@ -132,13 +132,13 @@ export const StudentProfilePage: React.FC = () => {
             onClick={() => setMode('system')}
             className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between ${
               mode === 'system'
-                ? 'border-brand-500 bg-brand-50/60 dark:bg-brand-950/40 ring-2 ring-brand-500'
-                : 'border-light-border dark:border-dark-border bg-white dark:bg-dark-card hover:border-slate-300 dark:hover:border-slate-600'
+                ? 'border-brand-500 bg-brand-50/70 dark:bg-dark-selected dark:border-blue-500 ring-2 ring-brand-500 dark:ring-blue-400 dark:shadow-blue-glow'
+                : 'border-light-border dark:border-dark-border bg-white dark:bg-dark-card hover:border-slate-300 dark:hover:border-blue-700/50 dark:hover:bg-dark-hover'
             }`}
           >
             <div className="flex items-center justify-between mb-3">
               <Laptop className="w-5 h-5 text-slate-400" />
-              {mode === 'system' && <CheckCircle2 className="w-4 h-4 text-brand-500" />}
+              {mode === 'system' && <CheckCircle2 className="w-4 h-4 text-brand-500 dark:text-blue-400" />}
             </div>
             <span className="text-xs font-bold text-slate-900 dark:text-slate-100">System Default</span>
             <span className="text-[10px] text-slate-400 mt-0.5">Matches OS preference</span>

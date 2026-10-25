@@ -164,7 +164,7 @@ export const SubAdminManagementPage: React.FC = () => {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search sub-admins by name, email, or department..."
-            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-blue-500/40 dark:focus:border-blue-400 dark:focus:bg-dark-selected/30 transition-all"
           />
         </div>
 
@@ -176,8 +176,8 @@ export const SubAdminManagementPage: React.FC = () => {
               onClick={() => setStatusFilter(s)}
               className={`px-3 py-1.5 rounded-xl capitalize font-semibold transition-colors ${
                 statusFilter === s
-                  ? 'bg-slate-800 text-white dark:bg-slate-700'
-                  : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-300 border border-light-border dark:border-dark-border hover:bg-slate-50'
+                  ? 'bg-slate-800 text-white dark:bg-dark-selected dark:text-blue-300 dark:border dark:border-blue-500 font-semibold shadow-sm'
+                  : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-300 border border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-800/40'
               }`}
             >
               {s}
@@ -206,7 +206,7 @@ export const SubAdminManagementPage: React.FC = () => {
                 return (
                   <tr
                     key={staff.id}
-                    className="hover:bg-slate-50/80 dark:hover:bg-dark-cardHover/60 transition-colors"
+                    className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors"
                   >
                     {/* User profile */}
                     <td className="py-3.5 px-4">

@@ -33,13 +33,13 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variantStyles = {
     primary:
-      'bg-brand-500 hover:bg-brand-600 text-white shadow-sm shadow-brand-500/20 focus:ring-brand-500 dark:focus:ring-offset-dark-bg focus:ring-offset-light-bg',
+      'bg-brand-500 hover:bg-brand-600 text-white shadow-sm shadow-brand-500/20 focus:ring-brand-500 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-offset-dark-bg focus:ring-offset-light-bg',
     secondary:
-      'bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-dark-card dark:hover:bg-dark-cardHover dark:text-dark-text border border-light-border dark:border-dark-border focus:ring-slate-400',
+      'bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-dark-card dark:hover:bg-dark-hover dark:hover:border-blue-700/50 dark:hover:text-blue-200 dark:text-dark-text border border-light-border dark:border-dark-border focus:ring-brand-500',
     outline:
-      'bg-transparent hover:bg-slate-100 dark:hover:bg-dark-card text-slate-700 dark:text-slate-200 border border-light-border dark:border-dark-border focus:ring-brand-500',
+      'bg-transparent hover:bg-slate-100 dark:hover:bg-dark-selected dark:hover:border-blue-500/60 dark:hover:text-blue-200 text-slate-700 dark:text-slate-200 border border-light-border dark:border-dark-border focus:ring-brand-500',
     ghost:
-      'bg-transparent hover:bg-slate-100 dark:hover:bg-dark-card text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white focus:ring-slate-400',
+      'bg-transparent hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-300 text-slate-600 hover:text-slate-900 dark:text-slate-300 focus:ring-brand-500',
     danger:
       'bg-rose-600 hover:bg-rose-700 text-white shadow-sm shadow-rose-600/20 focus:ring-rose-500',
     success:

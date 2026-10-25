@@ -342,7 +342,7 @@ export const StudentDashboard: React.FC = () => {
             <Card
               key={event.id}
               padding="md"
-              className="space-y-3 border-l-4 border-l-brand-500 hover:border-slate-300 dark:hover:border-slate-600 transition-all"
+              className="space-y-3 border-l-4 border-l-brand-500 hover:border-slate-300 dark:hover:border-blue-500/40 dark:hover:shadow-[0_4px_20px_-2px_rgba(59,130,246,0.12)] transition-all"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>

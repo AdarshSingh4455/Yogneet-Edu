@@ -91,8 +91,8 @@ export const NotesDirectoryPage: React.FC = () => {
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg transition-colors ${
                 viewMode === 'grid'
-                  ? 'bg-white dark:bg-dark-sidebar shadow-sm text-brand-500'
-                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                  ? 'bg-white dark:bg-dark-selected shadow-sm text-brand-500 dark:text-blue-300 dark:border dark:border-blue-600'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-blue-200 dark:hover:bg-dark-hover'
               }`}
               title="Grid View"
               aria-label="Grid View"
@@ -103,8 +103,8 @@ export const NotesDirectoryPage: React.FC = () => {
               onClick={() => setViewMode('list')}
               className={`p-1.5 rounded-lg transition-colors ${
                 viewMode === 'list'
-                  ? 'bg-white dark:bg-dark-sidebar shadow-sm text-brand-500'
-                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                  ? 'bg-white dark:bg-dark-selected shadow-sm text-brand-500 dark:text-blue-300 dark:border dark:border-blue-600'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-blue-200 dark:hover:bg-dark-hover'
               }`}
               title="List View"
               aria-label="List View"
@@ -125,7 +125,7 @@ export const NotesDirectoryPage: React.FC = () => {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search by topic, keyword, or concepts..."
-            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-blue-500/40 dark:focus:border-blue-400 dark:focus:bg-dark-selected/30 transition-all"
           />
         </div>
 
@@ -136,7 +136,7 @@ export const NotesDirectoryPage: React.FC = () => {
             <select
               value={sortBy}
               onChange={e => setSortBy(e.target.value as 'recent' | 'downloads' | 'title')}
-              className="p-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer"
+              className="p-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:border-blue-400 dark:focus:ring-blue-500/40 dark:hover:border-blue-700/60 cursor-pointer transition-all"
             >
               <option value="recent">Recently Updated</option>
               <option value="downloads">Most Downloaded</option>
@@ -154,8 +154,8 @@ export const NotesDirectoryPage: React.FC = () => {
             onClick={() => setSelectedSubject(subj)}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
               selectedSubject === subj
-                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/20'
-                : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-300 border border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-cardHover'
+                ? 'bg-brand-500 dark:bg-blue-600 text-white shadow-sm shadow-brand-500/20 dark:shadow-blue-glow dark:border dark:border-blue-400/50'
+                : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-300 border border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-900/40'
             }`}
           >
             {subj}
@@ -181,7 +181,7 @@ export const NotesDirectoryPage: React.FC = () => {
             <Card
               key={note.id}
               padding="md"
-              className="flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-600 transition-all group"
+              className="flex flex-col justify-between hover:border-slate-300 dark:hover:border-blue-500/40 dark:hover:shadow-[0_4px_20px_-2px_rgba(59,130,246,0.12)] transition-all group"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -266,7 +266,7 @@ export const NotesDirectoryPage: React.FC = () => {
             <Card
               key={note.id}
               padding="sm"
-              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-slate-300 dark:hover:border-slate-600 transition-all"
+              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-slate-300 dark:hover:border-blue-500/40 dark:hover:shadow-[0_4px_20px_-2px_rgba(59,130,246,0.12)] transition-all"
             >
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">

@@ -158,19 +158,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   }}
                   className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all group ${
                     isActive
-                      ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/20 font-semibold'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-cardHover'
+                      ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/20 font-semibold dark:bg-blue-600 dark:text-white dark:border dark:border-blue-400/50 dark:shadow-blue-glow'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-blue-200 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:border-blue-900/40'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <Icon className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${isActive ? 'text-white' : 'text-slate-400 dark:text-slate-400'}`} />
+                    <Icon className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${isActive ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:dark:text-blue-300'}`} />
                     <span className="truncate">{item.label}</span>
                   </div>
                   {item.badge && (
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                       isActive
                         ? 'bg-white/20 text-white'
-                        : 'bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400'
+                        : 'bg-brand-100 dark:bg-dark-selected dark:text-blue-300 dark:border dark:border-blue-700/50 text-brand-600'
                     }`}>
                       {item.badge}
                     </span>
@@ -189,7 +189,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <NavLink
                 to="/dashboard"
                 onClick={() => { if (window.innerWidth < 1024) onClose(); }}
-                className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-cardHover transition-colors"
+                className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-blue-200 hover:bg-slate-100 dark:hover:bg-dark-hover transition-colors"
               >
                 <span>View Student Dashboard</span>
                 <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
@@ -199,7 +199,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <NavLink
                 to="/admin"
                 onClick={() => { if (window.innerWidth < 1024) onClose(); }}
-                className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-cardHover transition-colors"
+                className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-blue-200 hover:bg-slate-100 dark:hover:bg-dark-hover transition-colors"
               >
                 <span>Inspect Admin Console</span>
                 <ChevronRight className="w-3.5 h-3.5 text-slate-400" />

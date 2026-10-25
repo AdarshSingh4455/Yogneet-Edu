@@ -60,8 +60,8 @@ export const TestSeriesPage: React.FC = () => {
               onClick={() => setSelectedSubject(s)}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
                 selectedSubject === s
-                  ? 'bg-brand-500 text-white shadow-sm'
-                  : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-300 border border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-cardHover'
+                  ? 'bg-brand-500 dark:bg-blue-600 text-white shadow-sm dark:shadow-blue-glow dark:border dark:border-blue-400/50'
+                  : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-300 border border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-900/40'
               }`}
             >
               {s}
@@ -78,8 +78,8 @@ export const TestSeriesPage: React.FC = () => {
               onClick={() => setSelectedDifficulty(d)}
               className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
                 selectedDifficulty === d
-                  ? 'bg-slate-800 text-white dark:bg-slate-700'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  ? 'bg-slate-800 text-white dark:bg-dark-selected dark:text-blue-300 dark:border dark:border-blue-500 font-semibold shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-blue-200 dark:hover:bg-dark-hover'
               }`}
             >
               {d}
@@ -98,7 +98,7 @@ export const TestSeriesPage: React.FC = () => {
             <Card
               key={test.id}
               padding="md"
-              className="flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-600 transition-all space-y-4"
+              className="flex flex-col justify-between hover:border-slate-300 dark:hover:border-blue-500/40 dark:hover:shadow-[0_4px_20px_-2px_rgba(59,130,246,0.12)] transition-all space-y-4"
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-2">

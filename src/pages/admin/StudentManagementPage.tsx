@@ -86,7 +86,7 @@ export const StudentManagementPage: React.FC = () => {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search students by name, email, or college..."
-          className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-blue-500/40 dark:focus:border-blue-400 dark:focus:bg-dark-selected/30 transition-all"
         />
       </div>
 
@@ -111,7 +111,7 @@ export const StudentManagementPage: React.FC = () => {
                 return (
                   <tr
                     key={student.id}
-                    className="hover:bg-slate-50/80 dark:hover:bg-dark-cardHover/60 transition-colors"
+                    className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors"
                   >
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">

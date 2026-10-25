@@ -126,7 +126,7 @@ export const AuditLogsPage: React.FC = () => {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search by actor, action, resource, or details..."
-            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-blue-500/40 dark:focus:border-blue-400 dark:focus:bg-dark-selected/30 transition-all"
           />
         </div>
 
@@ -138,8 +138,8 @@ export const AuditLogsPage: React.FC = () => {
               onClick={() => setOutcomeFilter(outcome)}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
                 outcomeFilter === outcome
-                  ? 'bg-slate-800 text-white dark:bg-slate-700'
-                  : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-300 border border-light-border dark:border-dark-border hover:bg-slate-50'
+                  ? 'bg-slate-800 text-white dark:bg-dark-selected dark:text-blue-300 dark:border dark:border-blue-500 font-semibold shadow-sm'
+                  : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-300 border border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-800/40'
               }`}
             >
               {outcome === 'all' ? 'All Outcomes' : outcome}
@@ -182,7 +182,7 @@ export const AuditLogsPage: React.FC = () => {
                     <React.Fragment key={log.id}>
                       <tr
                         onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
-                        className="hover:bg-slate-50/80 dark:hover:bg-dark-cardHover/50 transition-colors cursor-pointer"
+                        className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors cursor-pointer"
                       >
                         {/* Timestamp */}
                         <td className="py-3 px-4 font-mono text-[11px] text-slate-500 whitespace-nowrap">
@@ -245,7 +245,7 @@ export const AuditLogsPage: React.FC = () => {
 
                       {/* Expanded View Row */}
                       {isExpanded && (
-                        <tr className="bg-slate-50/70 dark:bg-dark-sidebar/60">
+                        <tr className="bg-slate-50/70 dark:bg-dark-selected/40 border-l-2 border-l-brand-500 dark:border-l-blue-500">
                           <td colSpan={6} className="p-4 sm:p-5 border-t border-light-border dark:border-dark-border">
                             <div className="space-y-3 max-w-3xl">
                               <div>

@@ -38,12 +38,12 @@ export const Input: React.FC<InputProps> = ({
         )}
         <input
           id={inputId}
-          className={`w-full rounded-xl border bg-white dark:bg-dark-card/90 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 disabled:opacity-50 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 ${
+          className={`w-full rounded-xl border bg-white dark:bg-dark-card/90 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:focus:ring-blue-500/40 dark:focus:border-blue-400 dark:focus:bg-dark-selected/50 disabled:opacity-50 disabled:bg-slate-50 dark:disabled:bg-slate-900/50 ${
             leftIcon ? 'pl-10' : 'pl-3.5'
           } ${rightIcon ? 'pr-10' : 'pr-3.5'} py-2.5 ${
             error
               ? 'border-rose-500 focus:ring-rose-500'
-              : 'border-light-border dark:border-dark-border'
+              : 'border-light-border dark:border-dark-border hover:border-slate-300 dark:hover:border-blue-800/60'
           } ${className}`}
           {...props}
         />

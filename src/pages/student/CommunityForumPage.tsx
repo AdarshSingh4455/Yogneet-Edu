@@ -124,7 +124,7 @@ export const CommunityForumPage: React.FC = () => {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search discussions, questions, error messages..."
-              className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-blue-500/40 dark:focus:border-blue-400 dark:focus:bg-dark-selected/30 transition-all"
             />
           </div>
 
@@ -136,8 +136,8 @@ export const CommunityForumPage: React.FC = () => {
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
                   selectedCategory === cat
-                    ? 'bg-brand-500 text-white shadow-sm'
-                    : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-300 border border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-cardHover'
+                    ? 'bg-brand-500 dark:bg-blue-600 text-white shadow-sm dark:shadow-blue-glow dark:border dark:border-blue-400/50'
+                    : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-300 border border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-900/40'
                 }`}
               >
                 {cat}
@@ -164,7 +164,7 @@ export const CommunityForumPage: React.FC = () => {
                 >
                   <Card
                     padding="md"
-                    className="hover:border-slate-300 dark:hover:border-slate-600 transition-all space-y-3"
+                    className="hover:border-slate-300 dark:hover:border-blue-500/40 dark:hover:shadow-[0_4px_20px_-2px_rgba(59,130,246,0.12)] transition-all space-y-3"
                   >
                     {/* Header: Author & Tag */}
                     <div className="flex items-center justify-between">
@@ -227,8 +227,8 @@ export const CommunityForumPage: React.FC = () => {
                           onClick={e => handleToggleUpvote(e, thread.id)}
                           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition-colors ${
                             thread.userUpvoted
-                              ? 'bg-blue-50 dark:bg-blue-950/60 text-brand-600 dark:text-brand-400 border-brand-300 dark:border-brand-800 font-bold'
-                              : 'hover:bg-slate-100 dark:hover:bg-dark-cardHover border-light-border dark:border-dark-border text-slate-500'
+                              ? 'bg-blue-50 dark:bg-dark-selected text-brand-600 dark:text-blue-300 border-brand-300 dark:border-blue-500 font-bold shadow-sm'
+                              : 'hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-800/40 border-light-border dark:border-dark-border text-slate-500'
                           }`}
                         >
                           <ThumbsUp className="w-3.5 h-3.5" />

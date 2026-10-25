@@ -189,8 +189,8 @@ export const ContentWorkspacePage: React.FC = () => {
           onClick={() => handleTabChange('notes')}
           className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-colors ${
             activeTab === 'notes'
-              ? 'bg-brand-500 text-white shadow-sm'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-card'
+              ? 'bg-brand-500 dark:bg-blue-600 text-white shadow-sm dark:shadow-blue-glow dark:border dark:border-blue-400/50'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200'
           }`}
         >
           <FileText className="w-4 h-4" />
@@ -201,8 +201,8 @@ export const ContentWorkspacePage: React.FC = () => {
           onClick={() => handleTabChange('videos')}
           className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-colors ${
             activeTab === 'videos'
-              ? 'bg-brand-500 text-white shadow-sm'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-card'
+              ? 'bg-brand-500 dark:bg-blue-600 text-white shadow-sm dark:shadow-blue-glow dark:border dark:border-blue-400/50'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200'
           }`}
         >
           <Video className="w-4 h-4" />
@@ -213,8 +213,8 @@ export const ContentWorkspacePage: React.FC = () => {
           onClick={() => handleTabChange('tests')}
           className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-colors ${
             activeTab === 'tests'
-              ? 'bg-brand-500 text-white shadow-sm'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-card'
+              ? 'bg-brand-500 dark:bg-blue-600 text-white shadow-sm dark:shadow-blue-glow dark:border dark:border-blue-400/50'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200'
           }`}
         >
           <CheckSquare className="w-4 h-4" />
@@ -243,7 +243,7 @@ export const ContentWorkspacePage: React.FC = () => {
                     const isDraft = note.status === 'draft' || note.status === 'in_review';
 
                     return (
-                      <tr key={note.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-cardHover/60 transition-colors">
+                      <tr key={note.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors">
                         <td className="py-3.5 px-4">
                           <span className="font-bold text-slate-900 dark:text-slate-100 block">
                             {note.title}
@@ -329,7 +329,7 @@ export const ContentWorkspacePage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-light-border dark:divide-dark-border">
               {videos.map(v => (
-                <tr key={v.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-cardHover/60 transition-colors">
+                <tr key={v.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors">
                   <td className="py-3.5 px-4">
                     <span className="font-bold text-slate-900 dark:text-slate-100 block">
                       {v.title}
@@ -375,7 +375,7 @@ export const ContentWorkspacePage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-light-border dark:divide-dark-border">
               {tests.map(t => (
-                <tr key={t.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-cardHover/60 transition-colors">
+                <tr key={t.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors">
                   <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-100">
                     {t.title}
                   </td>

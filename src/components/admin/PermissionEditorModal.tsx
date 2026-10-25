@@ -242,8 +242,8 @@ export const PermissionEditorModal: React.FC<PermissionEditorModalProps> = ({
                     onClick={() => handleApplyPreset(key)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                       selectedPreset === key
-                        ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800 font-bold'
-                        : 'border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-sidebar text-slate-700 dark:text-slate-300'
+                        ? 'bg-purple-50 dark:bg-dark-selected text-purple-700 dark:text-blue-300 border-purple-300 dark:border-blue-500 font-bold shadow-sm'
+                        : 'border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-800/40 text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     {preset.name}
@@ -309,7 +309,7 @@ export const PermissionEditorModal: React.FC<PermissionEditorModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handleSelectModuleAll(moduleKey)}
-                            className="text-[11px] font-medium text-brand-500 hover:text-brand-600 px-1.5 py-0.5 rounded hover:bg-slate-200 dark:hover:bg-dark-card transition-colors"
+                            className="text-[11px] font-medium text-brand-500 hover:text-brand-600 px-1.5 py-0.5 rounded hover:bg-slate-200 dark:hover:bg-dark-hover dark:hover:text-blue-300 transition-colors"
                           >
                             Select All
                           </button>
@@ -317,7 +317,7 @@ export const PermissionEditorModal: React.FC<PermissionEditorModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handleClearModuleAll(moduleKey)}
-                            className="text-[11px] font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-1.5 py-0.5 rounded hover:bg-slate-200 dark:hover:bg-dark-card transition-colors"
+                            className="text-[11px] font-medium text-slate-400 hover:text-slate-600 dark:hover:text-blue-200 px-1.5 py-0.5 rounded hover:bg-slate-200 dark:hover:bg-dark-hover transition-colors"
                           >
                             Clear
                           </button>
@@ -336,8 +336,8 @@ export const PermissionEditorModal: React.FC<PermissionEditorModalProps> = ({
                           key={perm.key}
                           className={`flex items-start gap-3 p-2.5 rounded-xl border transition-all cursor-pointer select-none ${
                             isChecked
-                              ? 'border-purple-300 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/20'
-                              : 'border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-sidebar'
+                              ? 'border-purple-300 dark:border-blue-500/80 bg-purple-50/50 dark:bg-dark-selected dark:shadow-[0_0_12px_rgba(59,130,246,0.12)]'
+                              : 'border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-hover dark:hover:border-blue-900/30'
                           } ${!canEdit ? 'cursor-not-allowed opacity-60' : ''}`}
                         >
                           <input

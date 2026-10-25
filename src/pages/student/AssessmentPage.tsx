@@ -332,21 +332,21 @@ export const AssessmentPage: React.FC = () => {
                       onClick={() => handleSelectOption(option.id)}
                       className={`w-full text-left p-3.5 sm:p-4 rounded-xl border transition-all flex items-start gap-3.5 ${
                         isSelected
-                          ? 'border-brand-500 bg-brand-50/70 dark:bg-brand-950/40 shadow-sm ring-1 ring-brand-500'
-                          : 'border-light-border dark:border-dark-border bg-white dark:bg-dark-card hover:bg-slate-50 dark:hover:bg-dark-cardHover'
+                          ? 'border-brand-500 bg-brand-50/70 dark:bg-dark-selected dark:border-blue-500 shadow-sm ring-1 ring-brand-500 dark:ring-blue-400'
+                          : 'border-light-border dark:border-dark-border bg-white dark:bg-dark-card hover:bg-slate-50 dark:hover:bg-dark-hover dark:hover:border-blue-700/50'
                       }`}
                     >
                       <div
                         className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
                           isSelected
-                            ? 'bg-brand-500 text-white'
+                            ? 'bg-brand-500 dark:bg-blue-600 text-white'
                             : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                         }`}
                       >
                         {optionLetters[optIdx]}
                       </div>
 
-                      <div className="flex-1 text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-200 leading-snug">
+                      <div className={`flex-1 text-xs sm:text-sm font-medium leading-snug ${isSelected ? 'text-brand-900 dark:text-blue-100 font-semibold' : 'text-slate-800 dark:text-slate-200'}`}>
                         {option.text}
                       </div>
                     </button>
@@ -460,7 +460,7 @@ export const AssessmentPage: React.FC = () => {
                   const isMarkedAnswered = status === 'marked_answered';
 
                   let bgClasses =
-                    'bg-slate-100 dark:bg-dark-card text-slate-600 dark:text-slate-400 border-light-border dark:border-dark-border';
+                    'bg-slate-100 dark:bg-dark-card text-slate-600 dark:text-slate-400 border-light-border dark:border-dark-border dark:hover:bg-dark-hover dark:hover:border-blue-500/50 dark:hover:text-blue-200';
                   if (isAnswered) {
                     bgClasses = 'bg-emerald-500 text-white border-emerald-600';
                   } else if (isMarked) {
@@ -476,9 +476,9 @@ export const AssessmentPage: React.FC = () => {
                         setCurrentIndex(idx);
                         setIsPaletteOpenMobile(false);
                       }}
-                      className={`h-9 rounded-xl font-bold text-xs flex items-center justify-center border transition-transform relative ${bgClasses} ${
+                      className={`h-9 rounded-xl font-bold text-xs flex items-center justify-center border transition-all relative ${bgClasses} ${
                         isCurrent
-                          ? 'ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-dark-sidebar scale-105'
+                          ? 'ring-2 ring-brand-500 dark:ring-blue-400 ring-offset-2 dark:ring-offset-dark-sidebar dark:border-blue-400 scale-105 shadow-sm dark:shadow-blue-glow'
                           : 'hover:scale-105'
                       }`}
                     >

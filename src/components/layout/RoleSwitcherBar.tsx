@@ -46,7 +46,7 @@ export const RoleSwitcherBar: React.FC = () => {
                 toast.info(`Switched to ${target.name}`, `Role: ${target.role.toUpperCase()} (${target.status})`);
               }
             }}
-            className="bg-slate-800 hover:bg-slate-700/80 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer"
+            className="bg-slate-800 hover:bg-slate-700/80 text-slate-200 border border-slate-700 hover:border-blue-500/50 rounded-lg px-2.5 py-1 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-blue-400 cursor-pointer transition-colors"
           >
             {availableUsers.map(user => (
               <option key={user.id} value={user.id}>

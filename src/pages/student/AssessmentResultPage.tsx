@@ -150,8 +150,8 @@ export const AssessmentResultPage: React.FC = () => {
             onClick={() => setFilterMode('all')}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
               filterMode === 'all'
-                ? 'bg-slate-800 text-white dark:bg-slate-700'
-                : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-300 border border-light-border dark:border-dark-border'
+                ? 'bg-slate-800 text-white dark:bg-dark-selected dark:text-blue-300 dark:border dark:border-blue-500 font-semibold shadow-sm'
+                : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-300 border border-light-border dark:border-dark-border dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-800/40'
             }`}
           >
             All Questions ({questions.length})
@@ -160,8 +160,8 @@ export const AssessmentResultPage: React.FC = () => {
             onClick={() => setFilterMode('correct')}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
               filterMode === 'correct'
-                ? 'bg-emerald-600 text-white'
-                : 'bg-white dark:bg-dark-card text-emerald-600 dark:text-emerald-400 border border-light-border dark:border-dark-border'
+                ? 'bg-emerald-600 text-white dark:border dark:border-emerald-500 font-semibold shadow-sm'
+                : 'bg-white dark:bg-dark-card text-emerald-600 dark:text-emerald-400 border border-light-border dark:border-dark-border dark:hover:bg-dark-hover'
             }`}
           >
             Correct ({latestAttempt.correctCount})
@@ -170,8 +170,8 @@ export const AssessmentResultPage: React.FC = () => {
             onClick={() => setFilterMode('incorrect')}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
               filterMode === 'incorrect'
-                ? 'bg-rose-600 text-white'
-                : 'bg-white dark:bg-dark-card text-rose-500 border border-light-border dark:border-dark-border'
+                ? 'bg-rose-600 text-white dark:border dark:border-rose-500 font-semibold shadow-sm'
+                : 'bg-white dark:bg-dark-card text-rose-500 border border-light-border dark:border-dark-border dark:hover:bg-dark-hover'
             }`}
           >
             Incorrect ({latestAttempt.incorrectCount})
@@ -180,8 +180,8 @@ export const AssessmentResultPage: React.FC = () => {
             onClick={() => setFilterMode('unanswered')}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
               filterMode === 'unanswered'
-                ? 'bg-slate-600 text-white'
-                : 'bg-white dark:bg-dark-card text-slate-400 border border-light-border dark:border-dark-border'
+                ? 'bg-slate-600 text-white dark:bg-dark-selected dark:text-blue-300 dark:border dark:border-blue-500 font-semibold shadow-sm'
+                : 'bg-white dark:bg-dark-card text-slate-400 border border-light-border dark:border-dark-border dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-800/40'
             }`}
           >
             Unanswered ({latestAttempt.unansweredCount})

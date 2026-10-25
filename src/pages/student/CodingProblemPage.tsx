@@ -153,8 +153,8 @@ export const CodingProblemPage: React.FC = () => {
                 onClick={() => setActiveTab('description')}
                 className={`pb-2.5 border-b-2 transition-colors ${
                   activeTab === 'description'
-                    ? 'border-brand-500 text-brand-500 dark:text-brand-400'
-                    : 'border-transparent text-slate-500'
+                    ? 'border-brand-500 text-brand-500 dark:border-blue-500 dark:text-blue-400 font-bold'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-blue-200'
                 }`}
               >
                 Description
@@ -163,8 +163,8 @@ export const CodingProblemPage: React.FC = () => {
                 onClick={() => setActiveTab('hints')}
                 className={`pb-2.5 border-b-2 transition-colors ${
                   activeTab === 'hints'
-                    ? 'border-brand-500 text-brand-500 dark:text-brand-400'
-                    : 'border-transparent text-slate-500'
+                    ? 'border-brand-500 text-brand-500 dark:border-blue-500 dark:text-blue-400 font-bold'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-blue-200'
                 }`}
               >
                 Hints & Patterns
@@ -244,7 +244,7 @@ export const CodingProblemPage: React.FC = () => {
               <select
                 value={language}
                 onChange={e => handleLanguageChange(e.target.value as any)}
-                className="p-1.5 rounded-lg border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer"
+                className="p-1.5 rounded-lg border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:focus:border-blue-400 dark:focus:ring-blue-500/40 dark:hover:border-blue-700/60 cursor-pointer transition-all"
               >
                 <option value="python">Python 3</option>
                 <option value="javascript">JavaScript (Node.js)</option>
@@ -256,7 +256,7 @@ export const CodingProblemPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleCopyCode}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-dark-card transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-blue-200 hover:bg-slate-200 dark:hover:bg-dark-hover transition-colors"
                 title="Copy Code"
                 aria-label="Copy Code"
               >
@@ -264,7 +264,7 @@ export const CodingProblemPage: React.FC = () => {
               </button>
               <button
                 onClick={() => setCode(problem.starterCode[language])}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-dark-card transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-blue-200 hover:bg-slate-200 dark:hover:bg-dark-hover transition-colors"
                 title="Reset Starter Template"
                 aria-label="Reset Starter Template"
               >

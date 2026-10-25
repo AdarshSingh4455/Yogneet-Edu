@@ -124,8 +124,8 @@ export const CommunityThreadPage: React.FC = () => {
             onClick={handleToggleUpvote}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors ${
               thread.userUpvoted
-                ? 'bg-blue-50 dark:bg-blue-950/60 text-brand-600 dark:text-brand-400 border-brand-300 dark:border-brand-800'
-                : 'hover:bg-slate-100 dark:hover:bg-dark-cardHover border-light-border dark:border-dark-border text-slate-600 dark:text-slate-400'
+                ? 'bg-blue-50 dark:bg-dark-selected text-brand-600 dark:text-blue-300 border-brand-300 dark:border-blue-500 font-bold shadow-sm'
+                : 'hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-800/40 border-light-border dark:border-dark-border text-slate-600 dark:text-slate-400'
             }`}
           >
             <ThumbsUp className="w-4 h-4" />
@@ -206,7 +206,7 @@ export const CommunityThreadPage: React.FC = () => {
               value={replyText}
               onChange={e => setNewReplyText(e.target.value)}
               placeholder="Explain your approach, provide code examples, or share feedback..."
-              className="w-full p-3 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full p-3 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-blue-500/40 dark:focus:border-blue-400 dark:focus:bg-dark-selected/30 transition-all"
               required
             />
             <div className="flex items-center justify-between">

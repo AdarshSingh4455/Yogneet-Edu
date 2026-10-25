@@ -12,7 +12,11 @@ export default {
           bg: '#0B0F14',
           sidebar: '#111720',
           card: '#171E28',
-          cardHover: '#1E2633',
+          cardHover: '#1B2636',
+          selected: '#132338',
+          selectedBorder: '#3B82F6',
+          hover: '#182436',
+          active: '#192C48',
           border: '#2A3442',
           borderSubtle: '#1F2733',
           text: '#F3F4F6',
@@ -56,6 +60,7 @@ export default {
       boxShadow: {
         'subtle-dark': '0 4px 20px -2px rgba(0, 0, 0, 0.4)',
         'subtle-light': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+        'blue-glow': '0 0 16px -2px rgba(59, 130, 246, 0.25)',
       }
     },
   },
