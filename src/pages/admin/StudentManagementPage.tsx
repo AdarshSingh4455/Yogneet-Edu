@@ -90,82 +90,169 @@ export const StudentManagementPage: React.FC = () => {
         />
       </div>
 
-      {/* Students Table */}
-      <Card padding="none" className="overflow-hidden border border-light-border dark:border-dark-border">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs sm:text-sm">
-            <thead className="bg-slate-50 dark:bg-dark-sidebar border-b border-light-border dark:border-dark-border text-slate-400 text-[10px] font-bold uppercase tracking-wider">
-              <tr>
-                <th className="py-3 px-4">Student Profile</th>
-                <th className="py-3 px-4">Program / College</th>
-                <th className="py-3 px-4">Solved Problems</th>
-                <th className="py-3 px-4">Tests Completed</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-light-border dark:divide-dark-border">
-              {filteredStudents.map(student => {
-                const isSuspended = student.status === 'suspended';
+      {/* Students List / Table */}
+      {filteredStudents.length === 0 ? (
+        <Card padding="lg" className="text-center py-12 border border-light-border dark:border-dark-border">
+          <Users className="w-12 h-12 text-slate-400 mx-auto mb-3 opacity-60" />
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">No Students Found</h3>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            No enrolled students match "{searchQuery}". Try a different name, email, or college query.
+          </p>
+        </Card>
+      ) : (
+        <>
+          {/* Mobile Student Cards (visible on mobile < md) */}
+          <div className="block md:hidden space-y-3">
+            {filteredStudents.map(student => {
+              const isSuspended = student.status === 'suspended';
 
-                return (
-                  <tr
-                    key={student.id}
-                    className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors"
-                  >
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={student.avatar}
-                          alt={student.name}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                        <div>
-                          <span className="font-bold text-slate-900 dark:text-slate-100 block">
-                            {student.name}
-                          </span>
-                          <span className="text-[11px] text-slate-400">{student.email}</span>
-                        </div>
+              return (
+                <Card
+                  key={student.id}
+                  padding="md"
+                  className="border border-light-border dark:border-dark-border space-y-3 shadow-xs"
+                >
+                  {/* Identity & Status */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <img
+                        src={student.avatar}
+                        alt={student.name}
+                        className="w-10 h-10 rounded-full object-cover shrink-0 ring-1 ring-light-border dark:ring-dark-border"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <span className="font-bold text-sm text-slate-900 dark:text-slate-100 block truncate">
+                          {student.name}
+                        </span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block break-all leading-tight mt-0.5">
+                          {student.email}
+                        </span>
                       </div>
-                    </td>
+                    </div>
+                    <Badge variant={isSuspended ? 'danger' : 'success'} size="sm" dot className="shrink-0">
+                      {student.status.toUpperCase()}
+                    </Badge>
+                  </div>
 
-                    <td className="py-3.5 px-4 text-xs text-slate-600 dark:text-slate-300">
-                      {student.department || 'B.Tech CS'}
-                    </td>
+                  {/* Academic Info */}
+                  <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 pt-2 border-t border-light-border dark:border-dark-border">
+                    <GraduationCap className="w-4 h-4 text-brand-500 shrink-0" />
+                    <span className="font-medium truncate">{student.department || 'B.Tech CS'}</span>
+                  </div>
 
-                    <td className="py-3.5 px-4 font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                      {student.solvedProblemsCount || 47} Solved
-                    </td>
+                  {/* Learning Metrics */}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-dark-sidebar/60 border border-light-border dark:border-dark-border text-center">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Solved Problems</span>
+                      <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 block">
+                        {student.solvedProblemsCount || 47} Solved
+                      </span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-dark-sidebar/60 border border-light-border dark:border-dark-border text-center">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Tests Completed</span>
+                      <span className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300 mt-0.5 block">
+                        {student.testsCompletedCount || 6} Tests
+                      </span>
+                    </div>
+                  </div>
 
-                    <td className="py-3.5 px-4 font-mono text-xs text-slate-600 dark:text-slate-400">
-                      {student.testsCompletedCount || 6} Tests
-                    </td>
+                  {/* Action Button */}
+                  <div className="pt-1 flex justify-end">
+                    <Button
+                      size="sm"
+                      variant={isSuspended ? 'success' : 'outline'}
+                      disabled={!canSuspendStudents}
+                      onClick={() => setSelectedToSuspend(student)}
+                      title={canSuspendStudents ? 'Toggle account status' : 'Requires students.suspend permission'}
+                      leftIcon={isSuspended ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                      className="w-full justify-center"
+                    >
+                      {isSuspended ? 'Reactivate Student' : 'Suspend Access'}
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
 
-                    <td className="py-3.5 px-4">
-                      <Badge variant={isSuspended ? 'danger' : 'success'} size="sm" dot>
-                        {student.status.toUpperCase()}
-                      </Badge>
-                    </td>
-
-                    <td className="py-3.5 px-4 text-right">
-                      <Button
-                        size="sm"
-                        variant={isSuspended ? 'success' : 'outline'}
-                        disabled={!canSuspendStudents}
-                        onClick={() => setSelectedToSuspend(student)}
-                        title={canSuspendStudents ? 'Toggle account status' : 'Requires students.suspend permission'}
-                        leftIcon={isSuspended ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                      >
-                        {isSuspended ? 'Reactivate' : 'Suspend'}
-                      </Button>
-                    </td>
+          {/* Desktop & Tablet Table (visible on >= md) */}
+          <Card padding="none" className="hidden md:block overflow-hidden border border-light-border dark:border-dark-border">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs sm:text-sm min-w-[700px]">
+                <thead className="bg-slate-50 dark:bg-dark-sidebar border-b border-light-border dark:border-dark-border text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                  <tr>
+                    <th className="py-3 px-4 min-w-[220px]">Student Profile</th>
+                    <th className="py-3 px-4 min-w-[150px]">Program / College</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Solved Problems</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Tests Completed</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Status</th>
+                    <th className="py-3 px-4 text-right whitespace-nowrap">Actions</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+                </thead>
+                <tbody className="divide-y divide-light-border dark:divide-dark-border">
+                  {filteredStudents.map(student => {
+                    const isSuspended = student.status === 'suspended';
+
+                    return (
+                      <tr
+                        key={student.id}
+                        className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors"
+                      >
+                        <td className="py-3.5 px-4 min-w-[220px]">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <img
+                              src={student.avatar}
+                              alt={student.name}
+                              className="w-8 h-8 rounded-full object-cover shrink-0"
+                            />
+                            <div className="min-w-0">
+                              <span className="font-bold text-slate-900 dark:text-slate-100 block truncate">
+                                {student.name}
+                              </span>
+                              <span className="text-[11px] text-slate-400 block break-all">{student.email}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-xs text-slate-600 dark:text-slate-300 min-w-[150px]">
+                          {student.department || 'B.Tech CS'}
+                        </td>
+
+                        <td className="py-3.5 px-4 font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                          {student.solvedProblemsCount || 47} Solved
+                        </td>
+
+                        <td className="py-3.5 px-4 font-mono text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                          {student.testsCompletedCount || 6} Tests
+                        </td>
+
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <Badge variant={isSuspended ? 'danger' : 'success'} size="sm" dot>
+                            {student.status.toUpperCase()}
+                          </Badge>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                          <Button
+                            size="sm"
+                            variant={isSuspended ? 'success' : 'outline'}
+                            disabled={!canSuspendStudents}
+                            onClick={() => setSelectedToSuspend(student)}
+                            title={canSuspendStudents ? 'Toggle account status' : 'Requires students.suspend permission'}
+                            leftIcon={isSuspended ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                          >
+                            {isSuspended ? 'Reactivate' : 'Suspend'}
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </>
+      )}
 
       {/* Suspend Confirmation Dialog */}
       {selectedToSuspend && (

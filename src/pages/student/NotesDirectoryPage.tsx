@@ -22,6 +22,7 @@ import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { EmptyState } from '../../components/common/EmptyState';
+import { MarkdownRenderer } from '../../components/common/MarkdownRenderer';
 
 export const NotesDirectoryPage: React.FC = () => {
   const toast = useToast();
@@ -344,11 +345,9 @@ export const NotesDirectoryPage: React.FC = () => {
             </div>
 
             {/* Note Markdown Content Rendering */}
-            <article className="prose dark:prose-invert max-w-none text-xs sm:text-sm leading-relaxed space-y-4">
-              <div className="whitespace-pre-line font-sans text-slate-800 dark:text-slate-200">
-                {selectedNote.fullMarkdown}
-              </div>
-            </article>
+            <div className="text-xs sm:text-sm leading-relaxed overflow-x-hidden">
+              <MarkdownRenderer content={selectedNote.fullMarkdown} />
+            </div>
 
             {/* Footer */}
             <div className="flex items-center justify-between pt-4 border-t border-light-border dark:border-dark-border text-xs text-slate-400">

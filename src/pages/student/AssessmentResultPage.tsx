@@ -70,15 +70,15 @@ export const AssessmentResultPage: React.FC = () => {
       </div>
 
       {/* Main Scorecard Banner */}
-      <div className={`rounded-3xl border p-6 sm:p-8 relative overflow-hidden shadow-xl ${
+      <div className={`rounded-3xl border p-6 sm:p-8 relative overflow-hidden transition-colors ${
         isPassed
-          ? 'bg-gradient-to-br from-emerald-950/40 via-dark-card to-dark-card border-emerald-500/40'
-          : 'bg-gradient-to-br from-amber-950/40 via-dark-card to-dark-card border-amber-500/40'
+          ? 'bg-gradient-to-br from-emerald-50/90 via-white to-slate-50 border-emerald-200/90 shadow-subtle-light dark:from-emerald-950/40 dark:via-dark-card dark:to-dark-card dark:border-emerald-500/40 dark:shadow-xl'
+          : 'bg-gradient-to-br from-amber-50/90 via-white to-slate-50 border-amber-200/90 shadow-subtle-light dark:from-amber-950/40 dark:via-dark-card dark:to-dark-card dark:border-amber-500/40 dark:shadow-xl'
       }`}>
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
           <div className="space-y-2 text-center md:text-left">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/10 backdrop-blur-sm">
-              <Award className="w-4 h-4 text-amber-400" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-50 text-amber-900 border border-amber-200/80 dark:bg-white/10 dark:text-amber-300 dark:border-white/10 backdrop-blur-sm">
+              <Award className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               <span>Assessment Summary</span>
             </div>
 
@@ -86,7 +86,7 @@ export const AssessmentResultPage: React.FC = () => {
               {latestAttempt.testTitle}
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
               {isPassed
                 ? 'Congratulations! You met and exceeded the cutoff benchmark score. Keep sharpening your skills!'
                 : 'Good effort! Review the detailed answer explanations below to strengthen your conceptual foundation.'}
@@ -94,11 +94,11 @@ export const AssessmentResultPage: React.FC = () => {
           </div>
 
           {/* Large Score Circle / Badge */}
-          <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/80 dark:bg-dark-sidebar/90 border border-light-border dark:border-dark-border shadow-lg shrink-0">
+          <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white dark:bg-dark-sidebar/90 border border-slate-200/80 dark:border-dark-border shadow-md shrink-0">
             <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100">
               {latestAttempt.percentage}%
             </span>
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-0.5">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 mt-0.5">
               {latestAttempt.scoreObtained} / {latestAttempt.maxScore} Marks
             </span>
             <Badge
@@ -113,29 +113,29 @@ export const AssessmentResultPage: React.FC = () => {
 
         {/* Stats Metrics Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 text-center">
-          <div className="p-3 rounded-xl bg-slate-100/60 dark:bg-dark-card/60 border border-light-border dark:border-dark-border">
-            <span className="text-[10px] font-bold uppercase text-slate-400 block">Correct Answers</span>
-            <span className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">
+          <div className="p-3.5 rounded-xl bg-white/90 dark:bg-dark-card/60 border border-slate-200/80 dark:border-dark-border shadow-xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Correct Answers</span>
+            <span className="text-lg font-extrabold text-emerald-700 dark:text-emerald-400">
               {latestAttempt.correctCount} / {latestAttempt.totalQuestions}
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-slate-100/60 dark:bg-dark-card/60 border border-light-border dark:border-dark-border">
-            <span className="text-[10px] font-bold uppercase text-slate-400 block">Incorrect Answers</span>
-            <span className="text-lg font-extrabold text-rose-500">
+          <div className="p-3.5 rounded-xl bg-white/90 dark:bg-dark-card/60 border border-slate-200/80 dark:border-dark-border shadow-xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Incorrect Answers</span>
+            <span className="text-lg font-extrabold text-rose-600 dark:text-rose-400">
               {latestAttempt.incorrectCount}
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-slate-100/60 dark:bg-dark-card/60 border border-light-border dark:border-dark-border">
-            <span className="text-[10px] font-bold uppercase text-slate-400 block">Accuracy</span>
-            <span className="text-lg font-extrabold text-blue-500">
+          <div className="p-3.5 rounded-xl bg-white/90 dark:bg-dark-card/60 border border-slate-200/80 dark:border-dark-border shadow-xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Accuracy</span>
+            <span className="text-lg font-extrabold text-blue-600 dark:text-blue-400">
               {accuracy}%
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-slate-100/60 dark:bg-dark-card/60 border border-light-border dark:border-dark-border">
-            <span className="text-[10px] font-bold uppercase text-slate-400 block">Time Spent</span>
+          <div className="p-3.5 rounded-xl bg-white/90 dark:bg-dark-card/60 border border-slate-200/80 dark:border-dark-border shadow-xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">Time Spent</span>
             <span className="text-lg font-extrabold text-slate-800 dark:text-slate-200">
               {Math.floor(latestAttempt.timeSpentSeconds / 60)}m {latestAttempt.timeSpentSeconds % 60}s
             </span>
@@ -145,13 +145,13 @@ export const AssessmentResultPage: React.FC = () => {
 
       {/* Action Buttons Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setFilterMode('all')}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
               filterMode === 'all'
-                ? 'bg-slate-800 text-white dark:bg-dark-selected dark:text-blue-300 dark:border dark:border-blue-500 font-semibold shadow-sm'
-                : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-300 border border-light-border dark:border-dark-border dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-800/40'
+                ? 'bg-slate-900 text-white dark:bg-dark-selected dark:text-blue-300 dark:border dark:border-blue-500 font-semibold shadow-sm'
+                : 'bg-white dark:bg-dark-card text-slate-700 dark:text-slate-300 border border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-800/40'
             }`}
           >
             All Questions ({questions.length})
@@ -161,7 +161,7 @@ export const AssessmentResultPage: React.FC = () => {
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
               filterMode === 'correct'
                 ? 'bg-emerald-600 text-white dark:border dark:border-emerald-500 font-semibold shadow-sm'
-                : 'bg-white dark:bg-dark-card text-emerald-600 dark:text-emerald-400 border border-light-border dark:border-dark-border dark:hover:bg-dark-hover'
+                : 'bg-white dark:bg-dark-card text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-dark-border hover:bg-emerald-50/50 dark:hover:bg-dark-hover'
             }`}
           >
             Correct ({latestAttempt.correctCount})
@@ -171,7 +171,7 @@ export const AssessmentResultPage: React.FC = () => {
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
               filterMode === 'incorrect'
                 ? 'bg-rose-600 text-white dark:border dark:border-rose-500 font-semibold shadow-sm'
-                : 'bg-white dark:bg-dark-card text-rose-500 border border-light-border dark:border-dark-border dark:hover:bg-dark-hover'
+                : 'bg-white dark:bg-dark-card text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-dark-border hover:bg-rose-50/50 dark:hover:bg-dark-hover'
             }`}
           >
             Incorrect ({latestAttempt.incorrectCount})
@@ -180,8 +180,8 @@ export const AssessmentResultPage: React.FC = () => {
             onClick={() => setFilterMode('unanswered')}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
               filterMode === 'unanswered'
-                ? 'bg-slate-600 text-white dark:bg-dark-selected dark:text-blue-300 dark:border dark:border-blue-500 font-semibold shadow-sm'
-                : 'bg-white dark:bg-dark-card text-slate-400 border border-light-border dark:border-dark-border dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-800/40'
+                ? 'bg-slate-700 text-white dark:bg-dark-selected dark:text-blue-300 dark:border dark:border-blue-500 font-semibold shadow-sm'
+                : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-400 border border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-800/40'
             }`}
           >
             Unanswered ({latestAttempt.unansweredCount})
@@ -269,10 +269,10 @@ export const AssessmentResultPage: React.FC = () => {
 
                     if (isCorrectAnswer) {
                       optClasses =
-                        'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 font-semibold';
+                        'border-emerald-300 dark:border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 font-semibold';
                     } else if (isSelectedByUser && !isCorrectAnswer) {
                       optClasses =
-                        'border-rose-500 bg-rose-50/70 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200';
+                        'border-rose-300 dark:border-rose-500 bg-rose-50/80 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 font-semibold';
                     }
 
                     return (
@@ -281,7 +281,7 @@ export const AssessmentResultPage: React.FC = () => {
                         className={`p-3 rounded-xl border flex items-center justify-between text-xs transition-all ${optClasses}`}
                       >
                         <div className="flex items-center gap-2.5">
-                          <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-[10px]">
+                          <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-[10px] shrink-0">
                             {['A', 'B', 'C', 'D'][optIndex]}
                           </span>
                           <span>{opt.text}</span>
@@ -305,11 +305,11 @@ export const AssessmentResultPage: React.FC = () => {
                 </div>
 
                 {/* In-depth Explanation Card */}
-                <div className="p-3.5 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 text-xs space-y-1">
-                  <span className="font-bold text-brand-600 dark:text-brand-400 block">
+                <div className="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/40 text-xs space-y-1">
+                  <span className="font-bold text-brand-700 dark:text-brand-400 block">
                     Explanation:
                   </span>
-                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                  <p className="text-slate-800 dark:text-slate-300 leading-relaxed">
                     {q.explanation}
                   </p>
                 </div>

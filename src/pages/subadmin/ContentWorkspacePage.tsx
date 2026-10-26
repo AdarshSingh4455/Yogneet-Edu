@@ -184,40 +184,45 @@ export const ContentWorkspacePage: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-light-border dark:border-dark-border pb-1">
+      <div className="flex items-center gap-2 border-b border-light-border dark:border-dark-border pb-1 overflow-x-auto scrollbar-none">
         <button
           onClick={() => handleTabChange('notes')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-colors ${
+          className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl shrink-0 transition-colors ${
             activeTab === 'notes'
               ? 'bg-brand-500 dark:bg-blue-600 text-white shadow-sm dark:shadow-blue-glow dark:border dark:border-blue-400/50'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200'
           }`}
+          aria-label={`Study Notes (${notes.length})`}
         >
-          <FileText className="w-4 h-4" />
-          <span>Study Notes ({notes.length})</span>
+          <FileText className="w-4 h-4 shrink-0" />
+          <span className="sm:hidden">Notes ({notes.length})</span>
+          <span className="hidden sm:inline">Study Notes ({notes.length})</span>
         </button>
 
         <button
           onClick={() => handleTabChange('videos')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-colors ${
+          className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl shrink-0 transition-colors ${
             activeTab === 'videos'
               ? 'bg-brand-500 dark:bg-blue-600 text-white shadow-sm dark:shadow-blue-glow dark:border dark:border-blue-400/50'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200'
           }`}
+          aria-label={`Video Lessons (${videos.length})`}
         >
-          <Video className="w-4 h-4" />
-          <span>Video Lessons ({videos.length})</span>
+          <Video className="w-4 h-4 shrink-0" />
+          <span className="sm:hidden">Videos ({videos.length})</span>
+          <span className="hidden sm:inline">Video Lessons ({videos.length})</span>
         </button>
 
         <button
           onClick={() => handleTabChange('tests')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-colors ${
+          className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl shrink-0 transition-colors ${
             activeTab === 'tests'
               ? 'bg-brand-500 dark:bg-blue-600 text-white shadow-sm dark:shadow-blue-glow dark:border dark:border-blue-400/50'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200'
           }`}
+          aria-label={`Assessments (${tests.length})`}
         >
-          <CheckSquare className="w-4 h-4" />
+          <CheckSquare className="w-4 h-4 shrink-0" />
           <span>Assessments ({tests.length})</span>
         </button>
       </div>
@@ -225,17 +230,87 @@ export const ContentWorkspacePage: React.FC = () => {
       {/* Tab 1: Notes Management Table */}
       {activeTab === 'notes' && (
         <div className="space-y-4">
-          <Card padding="none" className="overflow-hidden border border-light-border dark:border-dark-border">
+          {/* Mobile Notes Cards */}
+          <div className="block md:hidden space-y-3">
+            {notes.map(note => {
+              const isDraft = note.status === 'draft' || note.status === 'in_review';
+
+              return (
+                <Card
+                  key={note.id}
+                  padding="md"
+                  className="border border-light-border dark:border-dark-border space-y-3 shadow-xs"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100 block">
+                        {note.title}
+                      </span>
+                      <span className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 block mt-0.5">
+                        {note.subject}
+                      </span>
+                    </div>
+                    <Badge
+                      variant={note.status === 'published' ? 'success' : 'warning'}
+                      size="sm"
+                      className="shrink-0 whitespace-nowrap"
+                    >
+                      {note.status.toUpperCase()}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-light-border dark:border-dark-border">
+                    <span>By {note.author}</span>
+                    <span className="font-mono">{note.downloads} Downloads</span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[11px] text-slate-400">Updated {note.lastUpdated}</span>
+                    <div className="flex items-center gap-2">
+                      {isDraft && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={!canPublishNotes}
+                          onClick={() => setNoteToPublish(note)}
+                          title={canPublishNotes ? 'Publish note' : 'Requires notes.publish permission'}
+                          leftIcon={canPublishNotes ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Lock className="w-3.5 h-3.5 text-slate-400" />}
+                        >
+                          Publish
+                        </Button>
+                      )}
+                      <button
+                        onClick={() => setNoteToDelete(note)}
+                        disabled={!canDeleteNotes}
+                        className={`p-1.5 rounded-lg border transition-colors ${
+                          canDeleteNotes
+                            ? 'border-slate-300 dark:border-dark-border text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+                            : 'border-slate-200 dark:border-slate-800 text-slate-300 dark:text-slate-700 cursor-not-allowed opacity-50'
+                        }`}
+                        title={canDeleteNotes ? 'Delete note' : 'Requires notes.delete permission'}
+                        aria-label="Delete note"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Desktop Notes Table */}
+          <Card padding="none" className="hidden md:block overflow-hidden border border-light-border dark:border-dark-border">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs sm:text-sm">
+              <table className="w-full text-left text-xs sm:text-sm min-w-[700px]">
                 <thead className="bg-slate-50 dark:bg-dark-sidebar border-b border-light-border dark:border-dark-border text-slate-400 text-[10px] font-bold uppercase tracking-wider">
                   <tr>
-                    <th className="py-3 px-4">Title & Subject</th>
-                    <th className="py-3 px-4">Author</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4">Downloads</th>
-                    <th className="py-3 px-4">Last Updated</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
+                    <th className="py-3 px-4 min-w-[220px]">Title & Subject</th>
+                    <th className="py-3 px-4 min-w-[140px]">Author</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Status</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Downloads</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Last Updated</th>
+                    <th className="py-3 px-4 text-right whitespace-nowrap min-w-[140px]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-light-border dark:divide-dark-border">
@@ -244,35 +319,36 @@ export const ContentWorkspacePage: React.FC = () => {
 
                     return (
                       <tr key={note.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors">
-                        <td className="py-3.5 px-4">
+                        <td className="py-3.5 px-4 min-w-[220px]">
                           <span className="font-bold text-slate-900 dark:text-slate-100 block">
                             {note.title}
                           </span>
                           <span className="text-[11px] text-brand-500 font-semibold">{note.subject}</span>
                         </td>
 
-                        <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300">
+                        <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300 min-w-[140px]">
                           {note.author}
                         </td>
 
-                        <td className="py-3.5 px-4">
+                        <td className="py-3.5 px-4 whitespace-nowrap">
                           <Badge
                             variant={note.status === 'published' ? 'success' : 'warning'}
                             size="sm"
+                            className="whitespace-nowrap"
                           >
                             {note.status.toUpperCase()}
                           </Badge>
                         </td>
 
-                        <td className="py-3.5 px-4 font-mono text-xs text-slate-500">
+                        <td className="py-3.5 px-4 font-mono text-xs text-slate-500 whitespace-nowrap">
                           {note.downloads}
                         </td>
 
-                        <td className="py-3.5 px-4 text-xs text-slate-400">
+                        <td className="py-3.5 px-4 text-xs text-slate-400 whitespace-nowrap">
                           {note.lastUpdated}
                         </td>
 
-                        <td className="py-3.5 px-4 text-right">
+                        <td className="py-3.5 px-4 text-right whitespace-nowrap min-w-[140px]">
                           <div className="flex items-center justify-end gap-2">
                             {/* Publish action with permission check */}
                             {isDraft && (
@@ -316,83 +392,185 @@ export const ContentWorkspacePage: React.FC = () => {
 
       {/* Tab 2: Videos Management Table */}
       {activeTab === 'videos' && (
-        <Card padding="none" className="overflow-hidden border border-light-border dark:border-dark-border">
-          <table className="w-full text-left text-xs sm:text-sm">
-            <thead className="bg-slate-50 dark:bg-dark-sidebar border-b border-light-border dark:border-dark-border text-slate-400 text-[10px] font-bold uppercase tracking-wider">
-              <tr>
-                <th className="py-3 px-4">Lesson Title & Course</th>
-                <th className="py-3 px-4">Duration</th>
-                <th className="py-3 px-4">YouTube ID</th>
-                <th className="py-3 px-4">Views</th>
-                <th className="py-3 px-4 text-right">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-light-border dark:divide-dark-border">
-              {videos.map(v => (
-                <tr key={v.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors">
-                  <td className="py-3.5 px-4">
-                    <span className="font-bold text-slate-900 dark:text-slate-100 block">
+        <div className="space-y-4">
+          {/* Mobile Video Cards */}
+          <div className="block md:hidden space-y-3">
+            {videos.map(v => (
+              <Card
+                key={v.id}
+                padding="md"
+                className="border border-light-border dark:border-dark-border space-y-3 shadow-xs"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <span className="font-bold text-sm text-slate-900 dark:text-slate-100 block">
                       {v.title}
                     </span>
-                    <span className="text-[11px] text-slate-400">{v.courseTitle}</span>
-                  </td>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5">
+                      {v.courseTitle}
+                    </span>
+                  </div>
+                  <Badge variant="success" size="sm" className="shrink-0 whitespace-nowrap">
+                    PUBLISHED
+                  </Badge>
+                </div>
 
-                  <td className="py-3.5 px-4 font-mono text-xs">{v.duration}</td>
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-light-border dark:border-dark-border text-center">
+                  <div className="p-2 rounded-lg bg-slate-50 dark:bg-dark-sidebar/60 border border-light-border dark:border-dark-border">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Duration</span>
+                    <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300 block mt-0.5">
+                      {v.duration}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-slate-50 dark:bg-dark-sidebar/60 border border-light-border dark:border-dark-border">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">YouTube ID</span>
+                    <span className="font-mono text-xs font-semibold text-brand-600 dark:text-brand-400 block mt-0.5 truncate">
+                      {v.youtubeId}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-slate-50 dark:bg-dark-sidebar/60 border border-light-border dark:border-dark-border">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Views</span>
+                    <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300 block mt-0.5">
+                      {v.views.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
 
-                  <td className="py-3.5 px-4 font-mono text-xs text-brand-500">
-                    {v.youtubeId}
-                  </td>
+          {/* Desktop & Tablet Videos Table */}
+          <Card padding="none" className="hidden md:block overflow-hidden border border-light-border dark:border-dark-border">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs sm:text-sm min-w-[650px]">
+                <thead className="bg-slate-50 dark:bg-dark-sidebar border-b border-light-border dark:border-dark-border text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                  <tr>
+                    <th className="py-3 px-4 min-w-[220px]">Lesson Title & Course</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Duration</th>
+                    <th className="py-3 px-4 whitespace-nowrap">YouTube ID</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Views</th>
+                    <th className="py-3 px-4 text-right whitespace-nowrap min-w-[110px]">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-light-border dark:divide-dark-border">
+                  {videos.map(v => (
+                    <tr key={v.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors">
+                      <td className="py-3.5 px-4 min-w-[220px]">
+                        <span className="font-bold text-slate-900 dark:text-slate-100 block">
+                          {v.title}
+                        </span>
+                        <span className="text-[11px] text-slate-400">{v.courseTitle}</span>
+                      </td>
 
-                  <td className="py-3.5 px-4 font-mono text-xs text-slate-500">
-                    {v.views.toLocaleString()}
-                  </td>
+                      <td className="py-3.5 px-4 font-mono text-xs whitespace-nowrap">{v.duration}</td>
 
-                  <td className="py-3.5 px-4 text-right">
-                    <Badge variant="success" size="sm">
-                      PUBLISHED
-                    </Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
+                      <td className="py-3.5 px-4 font-mono text-xs text-brand-500 whitespace-nowrap">
+                        {v.youtubeId}
+                      </td>
+
+                      <td className="py-3.5 px-4 font-mono text-xs text-slate-500 whitespace-nowrap">
+                        {v.views.toLocaleString()}
+                      </td>
+
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap min-w-[110px]">
+                        <Badge variant="success" size="sm" className="whitespace-nowrap">
+                          PUBLISHED
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* Tab 3: Tests Catalog Management */}
       {activeTab === 'tests' && (
-        <Card padding="none" className="overflow-hidden border border-light-border dark:border-dark-border">
-          <table className="w-full text-left text-xs sm:text-sm">
-            <thead className="bg-slate-50 dark:bg-dark-sidebar border-b border-light-border dark:border-dark-border text-slate-400 text-[10px] font-bold uppercase tracking-wider">
-              <tr>
-                <th className="py-3 px-4">Assessment Title</th>
-                <th className="py-3 px-4">Subject</th>
-                <th className="py-3 px-4">Questions</th>
-                <th className="py-3 px-4">Duration</th>
-                <th className="py-3 px-4">Attempts</th>
-                <th className="py-3 px-4 text-right">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-light-border dark:divide-dark-border">
-              {tests.map(t => (
-                <tr key={t.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors">
-                  <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-100">
-                    {t.title}
-                  </td>
-                  <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">{t.subject}</td>
-                  <td className="py-3.5 px-4 font-mono text-xs">{t.questionCount} Qs</td>
-                  <td className="py-3.5 px-4 font-mono text-xs">{t.durationMinutes} mins</td>
-                  <td className="py-3.5 px-4 font-mono text-xs text-slate-500">{t.attemptCount}</td>
-                  <td className="py-3.5 px-4 text-right">
-                    <Badge variant="success" size="sm">
-                      ACTIVE
-                    </Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
+        <div className="space-y-4">
+          {/* Mobile Assessment Cards */}
+          <div className="block md:hidden space-y-3">
+            {tests.map(t => (
+              <Card
+                key={t.id}
+                padding="md"
+                className="border border-light-border dark:border-dark-border space-y-3 shadow-xs"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <span className="font-bold text-sm text-slate-900 dark:text-slate-100 block">
+                      {t.title}
+                    </span>
+                    <span className="text-xs font-semibold text-brand-600 dark:text-brand-400 block mt-0.5">
+                      {t.subject}
+                    </span>
+                  </div>
+                  <Badge variant="success" size="sm" className="shrink-0 whitespace-nowrap">
+                    ACTIVE
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-light-border dark:border-dark-border text-center">
+                  <div className="p-2 rounded-lg bg-slate-50 dark:bg-dark-sidebar/60 border border-light-border dark:border-dark-border">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Questions</span>
+                    <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300 block mt-0.5">
+                      {t.questionCount} Qs
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-slate-50 dark:bg-dark-sidebar/60 border border-light-border dark:border-dark-border">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Duration</span>
+                    <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300 block mt-0.5">
+                      {t.durationMinutes} mins
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-slate-50 dark:bg-dark-sidebar/60 border border-light-border dark:border-dark-border">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Attempts</span>
+                    <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300 block mt-0.5">
+                      {t.attemptCount}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop & Tablet Tests Table */}
+          <Card padding="none" className="hidden md:block overflow-hidden border border-light-border dark:border-dark-border">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs sm:text-sm min-w-[650px]">
+                <thead className="bg-slate-50 dark:bg-dark-sidebar border-b border-light-border dark:border-dark-border text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                  <tr>
+                    <th className="py-3 px-4 min-w-[200px]">Assessment Title</th>
+                    <th className="py-3 px-4 min-w-[120px]">Subject</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Questions</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Duration</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Attempts</th>
+                    <th className="py-3 px-4 text-right whitespace-nowrap min-w-[100px]">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-light-border dark:divide-dark-border">
+                  {tests.map(t => (
+                    <tr key={t.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors">
+                      <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-100 min-w-[200px]">
+                        {t.title}
+                      </td>
+                      <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300 min-w-[120px]">{t.subject}</td>
+                      <td className="py-3.5 px-4 font-mono text-xs whitespace-nowrap">{t.questionCount} Qs</td>
+                      <td className="py-3.5 px-4 font-mono text-xs whitespace-nowrap">{t.durationMinutes} mins</td>
+                      <td className="py-3.5 px-4 font-mono text-xs text-slate-500 whitespace-nowrap">{t.attemptCount}</td>
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap min-w-[100px]">
+                        <Badge variant="success" size="sm" className="whitespace-nowrap">
+                          ACTIVE
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* Create Note Modal */}
