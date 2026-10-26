@@ -70,6 +70,15 @@ export const ApiService = {
     return usersState.find(u => u.id === id);
   },
 
+  updateUserProfile(updatedUser: UserProfile): UserProfile {
+    const index = usersState.findIndex(u => u.id === updatedUser.id);
+    if (index === -1) throw new Error('User not found');
+    usersState[index] = { ...updatedUser };
+    usersState = [...usersState];
+    setStored('users', usersState);
+    return usersState[index];
+  },
+
   updateUserPermissions(
     actor: UserProfile,
     targetUserId: string,
