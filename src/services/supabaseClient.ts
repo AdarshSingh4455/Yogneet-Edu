@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Database } from '../types/database.types';
 
 export type BackendMode = 'supabase' | 'local-mock';
 
@@ -82,8 +83,8 @@ export const supabaseConfig: SupabaseConfig = resolveSupabaseConfig();
  * Centralized Supabase Client Singleton.
  * Configured with auto-refreshing tokens and persistent auth sessions in localStorage.
  */
-export const supabase: SupabaseClient | null = supabaseConfig.isConfigured
-  ? createClient(supabaseConfig.url, supabaseConfig.anonKey, {
+export const supabase: SupabaseClient<Database> | null = supabaseConfig.isConfigured
+  ? createClient<Database>(supabaseConfig.url, supabaseConfig.anonKey, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
@@ -111,7 +112,7 @@ export function isSupabaseConfigured(): boolean {
  * Safe accessor for the Supabase client.
  * Throws a descriptive error if called while in local-mock mode.
  */
-export function requireSupabase(): SupabaseClient {
+export function requireSupabase(): SupabaseClient<Database> {
   if (!supabase) {
     throw new Error(
       'Supabase client is not configured. Verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
