@@ -175,7 +175,11 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_id ON public.audit_logs(actor_id
 
 -- Trigger: Automatically provision public profile upon new auth user creation
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth, pg_temp
+AS $$
 BEGIN
   INSERT INTO public.profiles (id, name, email, avatar_url, role, status)
   VALUES (
@@ -189,37 +193,56 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- Trigger: Defense-in-depth preventing non-admins from changing role or status
+-- Trigger: Defense-in-depth preventing non-admins from changing privileged fields
 CREATE OR REPLACE FUNCTION public.protect_profile_privileged_fields()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth, pg_temp
+AS $$
 DECLARE
   current_user_role TEXT;
 BEGIN
-  -- If role or status is not being altered, permit update
-  IF OLD.role = NEW.role AND OLD.status = NEW.status THEN
-    RETURN NEW;
-  END IF;
-
   -- Determine requester role from public.profiles
   SELECT role INTO current_user_role
   FROM public.profiles
   WHERE id = auth.uid();
 
-  -- Only super admin is allowed to alter user role or status
-  IF current_user_role <> 'admin' THEN
+  -- If requester is super admin, allow all modifications
+  IF current_user_role = 'admin' THEN
+    RETURN NEW;
+  END IF;
+
+  -- Non-admins cannot alter role or account status
+  IF OLD.role <> NEW.role OR OLD.status <> NEW.status THEN
     RAISE EXCEPTION 'Access Denied: Only administrators can modify user roles or account status.';
+  END IF;
+
+  -- Non-admins cannot alter authoritative email directly (must go through auth.users)
+  IF OLD.email <> NEW.email THEN
+    RAISE EXCEPTION 'Access Denied: Email address is managed through authentication credentials.';
+  END IF;
+
+  -- Non-admins cannot modify account creation timestamp
+  IF OLD.created_at <> NEW.created_at THEN
+    RAISE EXCEPTION 'Access Denied: Account creation timestamp is immutable.';
+  END IF;
+
+  -- Non-admins cannot tamper with problem and test metrics directly
+  IF OLD.solved_problems_count <> NEW.solved_problems_count OR OLD.tests_completed_count <> NEW.tests_completed_count THEN
+    RAISE EXCEPTION 'Access Denied: Gamification counters are updated only by verified scoring events.';
   END IF;
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 DROP TRIGGER IF EXISTS trg_protect_profile_privileged_fields ON public.profiles;
 CREATE TRIGGER trg_protect_profile_privileged_fields

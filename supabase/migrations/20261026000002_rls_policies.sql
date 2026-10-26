@@ -4,9 +4,13 @@
 -- Description: Row-Level Security (RLS) policies and Storage authorization rules.
 -- ==============================================================================
 
--- 1. Helper Functions for Security Checks
+-- 1. Helper Functions for Security Checks (Fixed Search Path & Safe Execution)
 CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth, pg_temp
+AS $$
 BEGIN
   RETURN EXISTS (
     SELECT 1 FROM public.profiles
@@ -15,10 +19,14 @@ BEGIN
       AND status = 'active'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE OR REPLACE FUNCTION public.is_staff()
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth, pg_temp
+AS $$
 BEGIN
   RETURN EXISTS (
     SELECT 1 FROM public.profiles
@@ -27,10 +35,14 @@ BEGIN
       AND status = 'active'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE OR REPLACE FUNCTION public.is_active_user()
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth, pg_temp
+AS $$
 BEGIN
   RETURN EXISTS (
     SELECT 1 FROM public.profiles
@@ -38,7 +50,7 @@ BEGIN
       AND status = 'active'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- 2. Enable RLS on All Tables
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -218,12 +230,18 @@ CREATE POLICY "storage_public_select"
   TO authenticated
   USING (bucket_id = 'yogneet-public');
 
--- Public Storage Policy: Staff/Admin or profile owner can upload public assets
+-- Public Storage Policy: Staff/Admin or profile owner can upload public assets to their own subfolder
 CREATE POLICY "storage_public_insert"
   ON storage.objects
   FOR INSERT
   TO authenticated
-  WITH CHECK (bucket_id = 'yogneet-public');
+  WITH CHECK (
+    bucket_id = 'yogneet-public'
+    AND (
+      public.is_staff()
+      OR (storage.foldername(name))[1] = auth.uid()::text
+    )
+  );
 
 -- Private Storage Policy: Only the owner or Admin can read private resources
 CREATE POLICY "storage_private_select"
@@ -232,7 +250,7 @@ CREATE POLICY "storage_private_select"
   TO authenticated
   USING (
     bucket_id = 'yogneet-private'
-    AND (auth.uid() = owner OR public.is_admin())
+    AND ((storage.foldername(name))[1] = auth.uid()::text OR public.is_admin())
   );
 
 -- Private Storage Policy: Authenticated users can upload to private bucket under their own path
@@ -242,5 +260,5 @@ CREATE POLICY "storage_private_insert"
   TO authenticated
   WITH CHECK (
     bucket_id = 'yogneet-private'
-    AND auth.uid() = owner
+    AND (storage.foldername(name))[1] = auth.uid()::text
   );

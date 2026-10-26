@@ -50,6 +50,14 @@ describe('Supabase Migrations & Schema Structural Integrity', () => {
       sql.includes('RAISE EXCEPTION \'Access Denied: Only administrators can modify user roles or account status.\''),
       'Must reject non-admin privilege escalation'
     );
+    assert.ok(
+      sql.includes('SET search_path = public, auth, pg_temp'),
+      'Must declare fixed search_path on security definer trigger functions'
+    );
+    assert.ok(
+      sql.includes('Gamification counters are updated only by verified scoring events'),
+      'Must reject unauthorized modifications to gamification metrics'
+    );
   });
 });
 
@@ -81,11 +89,15 @@ describe('PostgreSQL Row-Level Security (RLS) & Storage Policies', () => {
     }
   });
 
-  it('Configures explicit public and private storage buckets', () => {
+  it('Configures explicit public and private storage buckets with folder scoping', () => {
     assert.ok(sql.includes("'yogneet-public'"), 'Public storage bucket must be declared');
     assert.ok(sql.includes("'yogneet-private'"), 'Private storage bucket must be declared');
     assert.ok(sql.includes('storage_private_select'), 'Private storage RLS select policy must exist');
     assert.ok(sql.includes('storage_public_select'), 'Public storage RLS select policy must exist');
+    assert.ok(
+      sql.includes('(storage.foldername(name))[1] = auth.uid()::text'),
+      'Private storage must enforce user folder path isolation'
+    );
   });
 
   it('Enforces immutable attempts and append-only audit logs (no UPDATE/DELETE policies)', () => {
@@ -131,6 +143,12 @@ describe('Negative & Positive Authorization Path Verification', () => {
     if (proposedChanges.status && proposedChanges.status !== requester.status) {
       return { allowed: false, reason: 'Cannot alter account suspension status' };
     }
+    if (proposedChanges.solved_problems_count !== undefined) {
+      return { allowed: false, reason: 'Cannot manually tamper with gamification counter' };
+    }
+    if (proposedChanges.email && proposedChanges.email !== requester.email) {
+      return { allowed: false, reason: 'Cannot alter authoritative email directly' };
+    }
     return { allowed: true };
   }
 
@@ -165,6 +183,18 @@ describe('Negative & Positive Authorization Path Verification', () => {
     const res = evaluateProfileUpdatePolicy(studentA, 'std_1', { role: 'admin' });
     assert.equal(res.allowed, false);
     assert.ok(res.reason.includes('Privilege escalation'));
+  });
+
+  it('NEGATIVE: Student cannot manually tamper with gamification counters', () => {
+    const res = evaluateProfileUpdatePolicy(studentA, 'std_1', { solved_problems_count: 500 });
+    assert.equal(res.allowed, false);
+    assert.ok(res.reason.includes('gamification counter'));
+  });
+
+  it('NEGATIVE: Student cannot alter authoritative email directly', () => {
+    const res = evaluateProfileUpdatePolicy(studentA, 'std_1', { email: 'hacker@example.com' });
+    assert.equal(res.allowed, false);
+    assert.ok(res.reason.includes('authoritative email'));
   });
 
   it('NEGATIVE: Suspended user is denied all profile updates', () => {
