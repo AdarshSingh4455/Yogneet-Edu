@@ -222,6 +222,122 @@ describe('Negative & Positive Authorization Path Verification', () => {
   it('POSITIVE: Admin has full access to audit logs', () => {
     assert.equal(evaluateAuditLogsReadPolicy(superAdmin), true);
   });
+
+  // Assessment Question Security Simulation (Phase 3B)
+  function evaluateQuestionAccessPolicy(requester, testId, userCompletedTests = []) {
+    if (!requester || requester.status === 'suspended') return { allowed: false, reason: 'Suspended or unauthenticated' };
+    if (requester.role === 'admin' || requester.role === 'subadmin') {
+      return { allowed: true, role: 'staff', canViewSolutions: true };
+    }
+    // Student can only view full questions & explanations if they submitted an attempt
+    if (userCompletedTests.includes(testId)) {
+      return { allowed: true, role: 'student', canViewSolutions: true };
+    }
+    return { allowed: false, reason: 'Cannot view solutions before submitting test attempt' };
+  }
+
+  function getSanitizedQuestionsForTaking(requester, rawQuestions) {
+    if (!requester || requester.status === 'suspended') return null;
+    return rawQuestions.map(q => ({
+      id: q.id,
+      test_id: q.test_id,
+      question_number: q.question_number,
+      text: q.text,
+      code_snippet: q.code_snippet,
+      code_language: q.code_language,
+      options: q.options,
+      marks: q.marks,
+      negative_marks: q.negative_marks,
+      // Strictly NO correct_answer_id or explanation
+    }));
+  }
+
+  const rawSampleQuestions = [
+    {
+      id: 'q1',
+      test_id: 'test_py_201',
+      question_number: 1,
+      text: 'What is Python list comprehension?',
+      code_snippet: '[x for x in range(5)]',
+      code_language: 'python',
+      options: [{ id: 'a', text: 'Option A' }, { id: 'b', text: 'Option B' }],
+      correct_answer_id: 'a',
+      explanation: 'List comprehension provides a concise way to create lists.',
+      marks: 4,
+      negative_marks: 1,
+    },
+  ];
+
+  it('POSITIVE: Staff can read full questions including solutions and explanations', () => {
+    const res = evaluateQuestionAccessPolicy(superAdmin, 'test_py_201', []);
+    assert.equal(res.allowed, true);
+    assert.equal(res.canViewSolutions, true);
+  });
+
+  it('POSITIVE: Student with submitted attempt can view full questions & explanations for review', () => {
+    const res = evaluateQuestionAccessPolicy(studentA, 'test_py_201', ['test_py_201']);
+    assert.equal(res.allowed, true);
+    assert.equal(res.canViewSolutions, true);
+  });
+
+  it('NEGATIVE: Student with NO submitted attempt is DENIED direct access to solutions table', () => {
+    const res = evaluateQuestionAccessPolicy(studentA, 'test_py_201', []);
+    assert.equal(res.allowed, false);
+    assert.ok(res.reason.includes('Cannot view solutions before submitting'));
+  });
+
+  it('POSITIVE: Active student can query sanitized questions for taking the test', () => {
+    const sanitized = getSanitizedQuestionsForTaking(studentA, rawSampleQuestions);
+    assert.ok(sanitized);
+    assert.equal(sanitized.length, 1);
+    assert.equal(sanitized[0].id, 'q1');
+    assert.equal(sanitized[0].text, 'What is Python list comprehension?');
+  });
+
+  it('NEGATIVE: Sanitized questions strictly exclude correct_answer_id and explanation', () => {
+    const sanitized = getSanitizedQuestionsForTaking(studentA, rawSampleQuestions);
+    assert.equal(sanitized[0].correct_answer_id, undefined);
+    assert.equal(sanitized[0].explanation, undefined);
+    assert.equal('correct_answer_id' in sanitized[0], false);
+    assert.equal('explanation' in sanitized[0], false);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Test Suite 4: Phase 3B Incremental Migration Structural Integrity
+// -----------------------------------------------------------------------------
+describe('Assessment Question Security Migration (20261026000003)', () => {
+  const migrationsDir = path.resolve(process.cwd(), 'supabase', 'migrations');
+  const fixFile = path.join(migrationsDir, '20261026000003_secure_assessment_questions.sql');
+
+  it('Migration file 20261026000003_secure_assessment_questions.sql exists', () => {
+    assert.ok(fs.existsSync(fixFile), 'Migration file must exist');
+  });
+
+  it('Drops overly permissive public select policy and replaces with post-submission guard', () => {
+    const sql = fs.readFileSync(fixFile, 'utf-8');
+    assert.ok(sql.includes('DROP POLICY IF EXISTS "assessment_questions_select_active"'));
+    assert.ok(sql.includes('CREATE POLICY "assessment_questions_select_staff"'));
+    assert.ok(sql.includes('CREATE POLICY "assessment_questions_select_post_submission"'));
+    assert.ok(sql.includes('public.is_staff()'));
+    assert.ok(sql.includes('EXISTS ('));
+    assert.ok(sql.includes('public.assessment_attempts'));
+  });
+
+  it('Declares SECURITY DEFINER RPC function with fixed search_path to fetch sanitized questions', () => {
+    const sql = fs.readFileSync(fixFile, 'utf-8');
+    assert.ok(sql.includes('public.get_assessment_questions_for_taking(p_test_id TEXT)'));
+    assert.ok(sql.includes('SECURITY DEFINER'));
+    assert.ok(sql.includes('SET search_path = public, auth, pg_temp'));
+    assert.ok(!sql.includes('q.correct_answer_id'));
+    assert.ok(!sql.includes('q.explanation'));
+  });
+
+  it('Declares sanitized student view and grants authenticated SELECT', () => {
+    const sql = fs.readFileSync(fixFile, 'utf-8');
+    assert.ok(sql.includes('CREATE OR REPLACE VIEW public.student_assessment_questions'));
+    assert.ok(sql.includes('GRANT SELECT ON public.student_assessment_questions TO authenticated'));
+  });
 });
 
 // -----------------------------------------------------------------------------

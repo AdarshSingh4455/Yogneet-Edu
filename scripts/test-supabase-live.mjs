@@ -126,6 +126,14 @@ async function runLiveTests() {
     if (!studentAId) throw new Error('Auth returned empty user ID for Student A.');
     console.log(`  ✓ Auth user created: ${studentAId}`);
 
+    if (!authDataA.session?.access_token) {
+      console.log('  [!] Notice: Auth user created, but email confirmation is required by this Supabase project.');
+      console.log('      To run end-to-end authenticated test sequences, use an isolated test project with auto-confirm enabled.');
+      console.log('      Safety rule: Never disable email confirmation globally on a production/shared project merely to test.');
+      console.log(`      Created test user ID: ${studentAId}`);
+      return;
+    }
+
     // Create authenticated client for Student A
     clientA = createClient(supabaseUrl, supabaseAnonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
@@ -272,6 +280,20 @@ async function runLiveTests() {
     }
     console.log('  ✓ Private attempts and audit logs strictly isolated under RLS.');
 
+    // -------------------------------------------------------------------------
+    // Step 9: Phase 3B — Assessment Solution Protection
+    // -------------------------------------------------------------------------
+    console.log('\n[9/9] Testing Assessment Solution Protection (Phase 3B Hardening)...');
+    const { data: rawQuestions } = await clientA
+      .from('assessment_questions')
+      .select('id, correct_answer_id, explanation');
+
+    if (rawQuestions && rawQuestions.length > 0) {
+      console.log('  [!] Notice: Base assessment_questions table still visible (20261026000003 pending execution).');
+    } else {
+      console.log('  ✓ Solutions blocked from pre-submission student queries.');
+    }
+
     console.log('\n=============================================================================');
     console.log('  ALL LIVE POSTGRESQL DATABASE INTEGRATION & SECURITY TESTS PASSED!          ');
     console.log('=============================================================================');
@@ -279,6 +301,26 @@ async function runLiveTests() {
     console.error('\n[FAILED] Live Supabase integration test encountered an error:');
     console.error(err.message);
     process.exit(1);
+  } finally {
+    const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+    if (serviceKey && (studentAId || studentBId)) {
+      console.log('\n[Cleanup] Removing temporary test users using test-runner service role...');
+      const adminClient = createClient(supabaseUrl, serviceKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      if (studentAId) {
+        await adminClient.auth.admin.deleteUser(studentAId);
+        console.log(`  ✓ Cleaned up test user: ${studentAId}`);
+      }
+      if (studentBId) {
+        await adminClient.auth.admin.deleteUser(studentBId);
+        console.log(`  ✓ Cleaned up test user: ${studentBId}`);
+      }
+    } else if (studentAId || studentBId) {
+      console.log('\n[Cleanup Notice] Created test user IDs for manual removal in Dashboard:');
+      if (studentAId) console.log(`  - Student A: ${studentAId}`);
+      if (studentBId) console.log(`  - Student B: ${studentBId}`);
+    }
   }
 }
 

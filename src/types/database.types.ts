@@ -422,5 +422,38 @@ export interface Database {
         };
       };
     };
+    Views: {
+      student_assessment_questions: {
+        Row: {
+          id: string;
+          test_id: string;
+          question_number: number;
+          text: string;
+          code_snippet: string | null;
+          code_language: string | null;
+          options: Json;
+          marks: number;
+          negative_marks: number;
+        };
+      };
+    };
+    Functions: {
+      get_assessment_questions_for_taking: {
+        Args: {
+          p_test_id: string;
+        };
+        Returns: {
+          id: string;
+          test_id: string;
+          question_number: number;
+          text: string;
+          code_snippet: string | null;
+          code_language: string | null;
+          options: Json;
+          marks: number;
+          negative_marks: number;
+        }[];
+      };
+    };
   };
 }
