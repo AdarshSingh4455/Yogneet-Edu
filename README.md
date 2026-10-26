@@ -250,28 +250,65 @@ A sticky simulator bar at the top of the interface allows instant persona toggli
 | `npm run dev` | Starts Vite development server with Hot Module Replacement |
 | `npm run build` | Runs TypeScript typecheck (`tsc -b`) and produces production bundle in `dist/` |
 | `npm run lint` | Runs TypeScript type validation without emitting files (`tsc --noEmit`) |
-| `npm test` | Executes the built-in Node.js RBAC and Scoring test suite (`scripts/test-permissions.mjs`) |
+| `npm test` | Executes the complete test suite (RBAC, WCAG, and Supabase schema/RLS suites) |
 | `npm run preview` | Previews the production build locally |
+
+---
+
+## 🗄️ Phase 2: Secure Supabase Backend Foundation
+
+Yogneet Edu features an enterprise-grade backend foundation powered by **Supabase (PostgreSQL, Supabase Auth, Storage, and RLS)** configured in a **Dual-Mode Adapter Architecture**:
+
+1. **Local-Mock Mode (Default):** Runs completely offline without credentials, enabling zero-config rapid prototyping, sticky role switching, and full test execution.
+2. **Supabase Live Mode:** Activated automatically when valid environment variables are supplied. Authenticates against Supabase Auth, writes to PostgreSQL, and enforces database-level authorization via PostgreSQL Row-Level Security (RLS).
+
+### Environment Configuration
+
+Copy `.env.example` to `.env` or `.env.local`:
+
+```bash
+cp .env.example .env.local
+```
+
+Populate the public credentials:
+
+```ini
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+> **Security Rule:** Never put service-role keys or database passwords into `.env` or client Vite bundles. `.env*` files are strictly excluded in `.gitignore`.
+
+### Database Schema & Reproducible Migrations
+
+All relational tables and security triggers are declared in versioned SQL migrations:
+- `supabase/migrations/20261026000001_initial_schema.sql`: Declares 9 domain entities (`profiles`, `user_permissions`, `courses`, `video_lessons`, `study_notes`, `assessments`, `assessment_questions`, `assessment_attempts`, `audit_logs`), foreign keys, `handle_new_user()` trigger, and non-admin privilege defense triggers.
+- `supabase/migrations/20261026000002_rls_policies.sql`: Enables RLS on all 9 tables, defines granular SELECT/INSERT/UPDATE/DELETE policies, and sets up `yogneet-public` and `yogneet-private` storage buckets.
+
+### Row-Level Security (RLS) Authorization Matrix
+
+| Entity | SELECT Policy | INSERT Policy | UPDATE Policy | DELETE Policy |
+|:---|:---|:---|:---|:---|
+| `profiles` | Authenticated users | System trigger only | User own (`auth.uid() = id`), non-admins blocked from changing `role`/`status` | Admin only |
+| `user_permissions` | Owner or Admin | Admin only | Admin only | Admin only |
+| `courses` / `video_lessons` | Active users | Staff/Admin | Staff/Admin | Staff/Admin |
+| `study_notes` | Published (Active users) or Author/Staff | Staff/Admin | Author or Staff | Admin only |
+| `assessments` / `questions` | Active users | Staff/Admin | Staff/Admin | Staff/Admin |
+| `assessment_attempts` | Owner (`auth.uid() = user_id`) or Admin | Owner only | **Denied** (Immutable test results) | **Denied** (Immutable test results) |
+| `audit_logs` | Admin only | Authenticated | **Denied** (Append-only) | **Denied** (Append-only) |
+| `storage.objects (private)` | Owner or Admin | Owner only | Owner only | Admin only |
 
 ---
 
 ## 🧪 Automated Test Results
 
-The automated unit test suite validates authorization, default-deny policies, and deterministic scoring:
+The platform automated test suites validate RBAC engine invariants, responsive layouts, Markdown & LaTeX math security, theme contrast, and Supabase migrations/RLS paths:
 
 ```
 TAP version 13
-# Subtest: Yogneet Edu RBAC Engine Test Suite
-    ok 1 - Super Admin has unrestricted permissions automatically
-    ok 2 - Sub-Admin has only assigned permissions and is denied publishing/deletion
-    ok 3 - Suspended user is denied all actions regardless of permissions array
-    ok 4 - hasAnyPermission correctly verifies permission subsets
-    ok 5 - hasAllPermissions strictly enforces full set matching
-    ok 6 - Deterministic scoring engine calculates marks and negative marks accurately
-1..6
-# tests 6
-# suites 1
-# pass 6
+# tests 37
+# suites 10
+# pass 37
 # fail 0
 ```
 
