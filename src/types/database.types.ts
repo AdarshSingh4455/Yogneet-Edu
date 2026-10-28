@@ -334,6 +334,7 @@ export interface Database {
           passed: boolean;
           user_answers: Json;
           question_statuses: Json;
+          is_verified: boolean;
         };
         Insert: {
           attempt_id?: string;
@@ -353,6 +354,7 @@ export interface Database {
           passed: boolean;
           user_answers?: Json;
           question_statuses?: Json;
+          is_verified?: boolean;
         };
         Update: {
           attempt_id?: string;
@@ -372,6 +374,7 @@ export interface Database {
           passed?: boolean;
           user_answers?: Json;
           question_statuses?: Json;
+          is_verified?: boolean;
         };
       };
       audit_logs: {
@@ -453,6 +456,26 @@ export interface Database {
           marks: number;
           negative_marks: number;
         }[];
+      };
+      submit_assessment_attempt: {
+        Args: {
+          p_test_id: string;
+          p_time_spent_seconds: number;
+          p_user_answers: Json;
+          p_question_statuses?: Json;
+        };
+        Returns: {
+          attempt_id: string;
+          test_id: string;
+          score_obtained: number;
+          max_score: number;
+          percentage: number;
+          passed: boolean;
+          correct_count: number;
+          incorrect_count: number;
+          answered_count: number;
+          unanswered_count: number;
+        };
       };
     };
   };

@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ApiService } from '../../services/api';
+import { AssessmentService } from '../../services/assessmentService';
+import { supabase, isSupabaseConfigured } from '../../services/supabaseClient';
 import {
   AssessmentQuestion,
   TestSeriesItem,
@@ -32,7 +34,47 @@ export const AssessmentPage: React.FC = () => {
   const toast = useToast();
 
   const test = ApiService.getTestById(testId || 'test_py_201');
-  const questions: AssessmentQuestion[] = ApiService.getTestQuestions(testId || 'test_py_201');
+  const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
+  const [questionFetchError, setQuestionFetchError] = useState<string | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+
+  // Detect session mode
+  useEffect(() => {
+    if (!isSupabaseConfigured() || !supabase) {
+      setIsDemoMode(true);
+      return;
+    }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsDemoMode(!session);
+    }).catch(() => {
+      setIsDemoMode(true);
+    });
+  }, []);
+
+  // Fetch sanitized questions via trusted RPC when configured
+  const loadQuestions = useCallback(async () => {
+    setIsLoadingQuestions(true);
+    setQuestionFetchError(null);
+    try {
+      const qs = await AssessmentService.getQuestionsForTaking(testId || 'test_py_201');
+      if (qs && qs.length > 0) {
+        setQuestions(qs);
+      } else {
+        setQuestionFetchError('No active questions found for this assessment.');
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to load assessment questions.';
+      console.error('[AssessmentPage] Question fetch failed:', err);
+      setQuestionFetchError(message);
+    } finally {
+      setIsLoadingQuestions(false);
+    }
+  }, [testId]);
+
+  useEffect(() => {
+    loadQuestions();
+  }, [loadQuestions]);
 
   // Assessment session states
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -145,66 +187,42 @@ export const AssessmentPage: React.FC = () => {
   ).length;
 
   // Final submission logic
-  const handleConfirmSubmit = () => {
+  const handleConfirmSubmit = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
-    if (timerRef.current) clearInterval(timerRef.current);
 
-    // Compute deterministic score
-    let scoreObtained = 0;
-    let maxScore = 0;
-    let correctCount = 0;
-    let incorrectCount = 0;
-
-    questions.forEach(q => {
-      maxScore += q.marks;
-      const selectedOptionId = userAnswers[q.id];
-      if (selectedOptionId) {
-        if (selectedOptionId === q.correctAnswerId) {
-          scoreObtained += q.marks;
-          correctCount++;
-        } else {
-          scoreObtained -= q.negativeMarks;
-          incorrectCount++;
-        }
-      }
-    });
-
-    scoreObtained = Math.max(0, scoreObtained);
-    const percentage = Math.round((scoreObtained / maxScore) * 100);
-    const passed = percentage >= (test?.passPercentage || 70);
     const timeSpentSeconds = (test ? test.durationMinutes * 60 : 900) - secondsRemaining;
 
-    const result: TestAttemptResult = {
-      attemptId: `att_${Date.now()}`,
-      testId: test?.id || 'test_py_201',
-      testTitle: test?.title || 'Assessment',
-      subject: test?.subject || 'Computer Science',
-      submittedAt: new Date().toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      timeSpentSeconds,
-      totalQuestions: questions.length,
-      answeredCount,
-      unansweredCount,
-      markedCount,
-      correctCount,
-      incorrectCount,
-      scoreObtained,
-      maxScore,
-      percentage,
-      passed,
-      userAnswers,
-      questionStatuses,
-    };
+    try {
+      const result = await AssessmentService.submitAttempt(
+        test?.id || 'test_py_201',
+        timeSpentSeconds,
+        userAnswers,
+        questionStatuses
+      );
 
-    ApiService.submitTestAttempt(result);
-    toast.success('Assessment Submitted!', `Score: ${scoreObtained}/${maxScore} (${percentage}%)`);
-    navigate(`/assessment/${test?.id || 'test_py_201'}/result`);
+      // Submission succeeded: clear the timer now
+      if (timerRef.current) clearInterval(timerRef.current);
+
+      if (result.isDemo) {
+        toast.info(
+          'Demo Assessment Complete',
+          `Score: ${result.scoreObtained}/${result.maxScore} (${result.percentage}%) [Demo Simulation — not submitted to hosted database]`
+        );
+      } else {
+        toast.success(
+          'Assessment Submitted!',
+          `Score: ${result.scoreObtained}/${result.maxScore} (${result.percentage}%)`
+        );
+      }
+      navigate(`/assessment/${test?.id || 'test_py_201'}/result`);
+    } catch (err: unknown) {
+      // Submission failed: preserve userAnswers and questionStatuses, allow safe retry
+      setIsSubmitting(false);
+      setIsSubmitModalOpen(false);
+      const message = err instanceof Error ? err.message : 'Failed to submit assessment. Please retry.';
+      toast.error('Submission Failed', message);
+    }
   };
 
   const handleAutoSubmit = () => {
@@ -220,6 +238,45 @@ export const AssessmentPage: React.FC = () => {
     );
   }
 
+  if (isLoadingQuestions) {
+    return (
+      <div className="min-h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text flex items-center justify-center p-6">
+        <div className="text-center space-y-4">
+          <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Loading assessment questions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (questionFetchError) {
+    return (
+      <div className="min-h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text flex items-center justify-center p-6">
+        <div className="max-w-md w-full p-6 rounded-2xl border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 text-center space-y-4">
+          <AlertTriangle className="w-10 h-10 text-rose-500 mx-auto" />
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Unable to Load Assessment</h2>
+          <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed">{questionFetchError}</p>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <Button size="sm" variant="outline" onClick={() => navigate('/assessments')}>
+              Return to Assessments
+            </Button>
+            <Button size="sm" variant="primary" onClick={loadQuestions} leftIcon={<RotateCcw className="w-3.5 h-3.5" />}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="p-12 text-center text-slate-500">
+        No questions available for this assessment.
+      </div>
+    );
+  }
+
   const isLowTime = secondsRemaining < 180; // Under 3 mins
 
   return (
@@ -227,8 +284,8 @@ export const AssessmentPage: React.FC = () => {
       {/* Distraction-Free Assessment Header */}
       <header className="sticky top-0 z-30 h-16 border-b border-light-border dark:border-dark-border bg-light-sidebar dark:bg-dark-sidebar px-4 sm:px-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Badge variant="brand" size="sm">
-            Assessment Mode
+          <Badge variant={isDemoMode ? 'purple' : 'brand'} size="sm">
+            {isDemoMode ? 'Demo Simulation Mode' : 'Live Assessment Mode'}
           </Badge>
           <div className="hidden sm:block">
             <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate max-w-md">
@@ -236,6 +293,7 @@ export const AssessmentPage: React.FC = () => {
             </h1>
             <span className="text-[10px] text-slate-400">
               Positive: +{currentQuestion.marks} • Negative: -{currentQuestion.negativeMarks}
+              {isDemoMode && ' • Local Prototype Persona (Not submitted to hosted DB)'}
             </span>
           </div>
         </div>
