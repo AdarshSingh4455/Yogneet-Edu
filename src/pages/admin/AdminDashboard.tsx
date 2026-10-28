@@ -33,46 +33,48 @@ export const AdminDashboard: React.FC = () => {
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* Authority Hero Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-yogneet-navy via-[#12224A] to-[#0A1329] p-6 sm:p-8 text-white border border-yogneet-cyan/20 shadow-2xl">
-        <div className="relative z-10 max-w-2xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-yogneet-cyan/15 border border-yogneet-cyan/30 text-yogneet-cyan backdrop-blur-sm">
-              👑 Super Admin Authority • Full Platform Console
-            </span>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-yogneet-cyan/15 border border-yogneet-cyan/30 text-yogneet-cyan backdrop-blur-sm">
+                👑 Super Admin Authority • Full Platform Console
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
+              YOGNEET <span className="text-yogneet-cyan">EDU</span> Administration Portal
+            </h1>
+            <p className="text-sm sm:text-base text-slate-300 mt-2 leading-relaxed">
+              Oversee platform staff, configure fine-grained RBAC permissions, audit operational compliance, and manage technical education curricula.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 mt-5">
+              <Link to="/admin/permissions">
+                <Button size="md" className="bg-yogneet-cyan hover:bg-yogneet-cyanHover text-yogneet-navy font-bold border-none shadow-md shadow-yogneet-cyan/25" leftIcon={<Key className="w-4 h-4 fill-yogneet-navy" />}>
+                  RBAC Permissions
+                </Button>
+              </Link>
+              <Link to="/admin/audit-logs">
+                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<FileSpreadsheet className="w-4 h-4 text-yogneet-orange" />}>
+                  Audit Logs
+                </Button>
+              </Link>
+              <Link to="/admin/subadmins">
+                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<Shield className="w-4 h-4 text-purple-400" />}>
+                  Manage Staff
+                </Button>
+              </Link>
+            </div>
           </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
-            YOGNEET <span className="text-yogneet-cyan">EDU</span> Administration Portal
-          </h1>
-          <p className="text-sm sm:text-base text-slate-300 mt-2 leading-relaxed">
-            Oversee platform staff, configure fine-grained RBAC permissions, audit operational compliance, and manage technical education curricula.
-          </p>
-          <div className="flex flex-wrap items-center gap-3 mt-5">
-            <Link to="/admin/permissions">
-              <Button size="md" className="bg-yogneet-cyan hover:bg-yogneet-cyanHover text-yogneet-navy font-bold border-none shadow-md shadow-yogneet-cyan/25" leftIcon={<Key className="w-4 h-4 fill-yogneet-navy" />}>
-                RBAC Permissions
-              </Button>
-            </Link>
-            <Link to="/admin/audit-logs">
-              <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<FileSpreadsheet className="w-4 h-4 text-yogneet-orange" />}>
-                Audit Logs
-              </Button>
-            </Link>
-            <Link to="/admin/subadmins">
-              <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<Shield className="w-4 h-4 text-purple-400" />}>
-                Manage Staff
-              </Button>
-            </Link>
-          </div>
-        </div>
 
-        {/* Brand Emblem Graphic */}
-        <div className="absolute right-0 bottom-0 top-0 w-2/5 pointer-events-none hidden md:flex items-center justify-end pr-6">
-          <div className="relative w-72 h-48 flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yogneet-cyan/10 to-yogneet-orange/20 blur-3xl rounded-full" />
-            <img
-              src="/brand/yogneet-emblem-glow.png"
-              alt="Yogneet Phoenix Emblem"
-              className="relative max-h-44 w-auto object-contain drop-shadow-[0_0_30px_rgba(0,200,232,0.3)] transition-transform duration-500 hover:scale-105"
-            />
+          {/* Dedicated Hero Phoenix Emblem */}
+          <div className="flex items-center justify-center md:justify-end shrink-0 self-center">
+            <div className="relative w-48 h-32 sm:w-60 sm:h-36 md:w-72 md:h-44 flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/20 to-orange-500/25 blur-2xl rounded-full pointer-events-none" />
+              <img
+                src="/brand/yogneet-emblem.png"
+                alt="Yogneet Edu Phoenix Emblem"
+                className="relative max-h-28 sm:max-h-36 md:max-h-40 w-auto object-contain drop-shadow-[0_0_25px_rgba(0,200,232,0.35)] transition-transform duration-300 hover:scale-105"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -249,7 +251,7 @@ export const AdminDashboard: React.FC = () => {
                 </Button>
               </Link>
               <Link to="/subadmin/content" className="block">
-                <Button size="sm" variant="outline" className="w-full justify-start" leftIcon={<FileText className="w-4 h-4 text-brand-500" />}>
+                <Button size="sm" variant="outline" className="w-full justify-start gap-2" leftIcon={<img src="/brand/features/feature-notes.png" alt="Content Workspace" className="w-4 h-4 object-contain inline-block" />}>
                   Content Workspace (Notes & Videos)
                 </Button>
               </Link>

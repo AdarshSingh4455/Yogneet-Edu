@@ -99,6 +99,7 @@ export const VideoPlayerPage: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-light-border dark:border-dark-border">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-brand-500 uppercase tracking-wider">
+            <img src="/brand/features/feature-youtube.png" alt="Video Lecture" className="w-4 h-4 object-contain inline-block" />
             <span>{activeLesson.courseTitle}</span>
             <span>•</span>
             <span>{activeLesson.moduleName}</span>
