@@ -44,6 +44,15 @@ export default {
           800: '#1E40AF',
           900: '#1E3A8A',
         },
+        yogneet: {
+          navy: '#0E1B3D',
+          navyDark: '#070E21',
+          navyLight: '#162752',
+          cyan: '#00C8E8',
+          cyanHover: '#00b4d1',
+          orange: '#FF7A3D',
+          orangeHover: '#f56b2c',
+        },
         accent: {
           green: '#22C55E',
           yellow: '#EAB308',

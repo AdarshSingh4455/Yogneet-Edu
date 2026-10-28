@@ -209,16 +209,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer brand footer */}
-        <div className="p-4 border-t border-light-border dark:border-dark-border bg-slate-50/50 dark:bg-dark-card/30">
-          <div className="flex items-center gap-2.5">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              Yogneet Edu Engine Active
-            </span>
+        <div className="p-3.5 border-t border-light-border dark:border-dark-border bg-slate-50/60 dark:bg-dark-card/40">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-yogneet-navy border border-yogneet-cyan/20 flex items-center justify-center shrink-0 p-1">
+              <img
+                src="/brand/yogneet-emblem.png"
+                alt="Yogneet Edu"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                  YOGNEET <span className="text-yogneet-cyan">EDU</span>
+                </span>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              </div>
+              <p className="text-[9px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+                LEARN • CODE • GROW
+              </p>
+            </div>
           </div>
-          <p className="text-[10px] text-slate-600 dark:text-slate-400 mt-1">
-            Frontend Phase • Tech Geek Adarsh
-          </p>
         </div>
       </aside>
     </>
