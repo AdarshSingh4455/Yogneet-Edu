@@ -94,8 +94,8 @@ export const CommunityForumPage: React.FC = () => {
             <span className="text-xs text-slate-400">Peer Learning & Mentorship</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center p-1 shrink-0">
-              <img src="/brand/features/feature-community.png" alt="Community Forum" className="w-full h-full object-contain" />
+            <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center shrink-0 text-purple-500 dark:text-purple-400">
+              <Users className="w-4 h-4" />
             </div>
             Student Discussion Forum
           </h1>

@@ -17,6 +17,7 @@ import {
   TrendingUp,
   CheckCircle2,
   Users,
+  Youtube,
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -89,17 +90,17 @@ export const StudentDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 4 Feature Pillars (From 04_student_dashboard.png & 08-11 Feature Tiles) */}
+      {/* 4 Feature Pillars */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Link
           to="/videos"
-          className="group rounded-2xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-3.5 hover:border-yogneet-cyan/50 hover:shadow-lg hover:shadow-yogneet-cyan/10 transition-all flex items-center gap-3"
+          className="group rounded-2xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-3.5 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/10 transition-all flex items-center gap-3"
         >
-          <div className="w-11 h-11 rounded-xl bg-cyan-500/10 border border-yogneet-cyan/25 flex items-center justify-center shrink-0 p-1.5 group-hover:scale-105 transition-transform">
-            <img src="/brand/features/feature-youtube.png" alt="Video Lectures" className="w-full h-full object-contain" />
+          <div className="w-11 h-11 rounded-xl bg-red-500/10 border border-red-500/25 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform text-red-500 dark:text-red-400">
+            <Youtube className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-yogneet-cyan transition-colors truncate">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors truncate">
               Video Lectures
             </h3>
             <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
@@ -112,11 +113,11 @@ export const StudentDashboard: React.FC = () => {
           to="/notes"
           className="group rounded-2xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-3.5 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 transition-all flex items-center gap-3"
         >
-          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center shrink-0 p-1.5 group-hover:scale-105 transition-transform">
-            <img src="/brand/features/feature-notes.png" alt="Study Notes" className="w-full h-full object-contain" />
+          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform text-emerald-500 dark:text-emerald-400">
+            <FileText className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-500 transition-colors truncate">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors truncate">
               Study Notes &amp; PDFs
             </h3>
             <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
@@ -129,8 +130,8 @@ export const StudentDashboard: React.FC = () => {
           to="/coding"
           className="group rounded-2xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-3.5 hover:border-yogneet-orange/50 hover:shadow-lg hover:shadow-yogneet-orange/10 transition-all flex items-center gap-3"
         >
-          <div className="w-11 h-11 rounded-xl bg-orange-500/10 border border-yogneet-orange/25 flex items-center justify-center shrink-0 p-1.5 group-hover:scale-105 transition-transform">
-            <img src="/brand/features/feature-coding.png" alt="Coding Practice" className="w-full h-full object-contain" />
+          <div className="w-11 h-11 rounded-xl bg-orange-500/10 border border-yogneet-orange/25 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform text-yogneet-orange">
+            <Code2 className="w-5 h-5" />
           </div>
           <div className="min-w-0">
             <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-yogneet-orange transition-colors truncate">
@@ -146,8 +147,8 @@ export const StudentDashboard: React.FC = () => {
           to="/community"
           className="group rounded-2xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-3.5 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 transition-all flex items-center gap-3"
         >
-          <div className="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center shrink-0 p-1.5 group-hover:scale-105 transition-transform">
-            <img src="/brand/features/feature-community.png" alt="Community Forum" className="w-full h-full object-contain" />
+          <div className="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform text-purple-500 dark:text-purple-400">
+            <Users className="w-5 h-5" />
           </div>
           <div className="min-w-0">
             <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-400 transition-colors truncate">

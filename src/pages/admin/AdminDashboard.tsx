@@ -251,7 +251,7 @@ export const AdminDashboard: React.FC = () => {
                 </Button>
               </Link>
               <Link to="/subadmin/content" className="block">
-                <Button size="sm" variant="outline" className="w-full justify-start gap-2" leftIcon={<img src="/brand/features/feature-notes.png" alt="Content Workspace" className="w-4 h-4 object-contain inline-block" />}>
+                <Button size="sm" variant="outline" className="w-full justify-start gap-2" leftIcon={<FileText className="w-4 h-4 text-emerald-500 inline-block" />}>
                   Content Workspace (Notes & Videos)
                 </Button>
               </Link>

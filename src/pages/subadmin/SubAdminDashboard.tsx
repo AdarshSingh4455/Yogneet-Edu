@@ -141,8 +141,8 @@ export const SubAdminDashboard: React.FC = () => {
           {(hasPermission('notes.view') || hasPermission('videos.view')) && (
             <Card padding="md" className="space-y-4 flex flex-col justify-between border border-light-border dark:border-dark-border hover:border-yogneet-cyan/40 transition-all shadow-sm">
               <div className="space-y-3">
-                <div className="w-11 h-11 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 border border-yogneet-cyan/25 flex items-center justify-center p-2">
-                  <img src="/brand/features/feature-notes.png" alt="Content Workspace" className="w-full h-full object-contain" />
+                <div className="w-11 h-11 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 border border-yogneet-cyan/25 flex items-center justify-center text-yogneet-cyan">
+                  <FileText className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
@@ -189,8 +189,8 @@ export const SubAdminDashboard: React.FC = () => {
           {hasPermission('community.moderate') && (
             <Card padding="md" className="space-y-4 flex flex-col justify-between border border-light-border dark:border-dark-border hover:border-purple-500/40 transition-all shadow-sm">
               <div className="space-y-3">
-                <div className="w-11 h-11 rounded-2xl bg-purple-50 dark:bg-purple-950/60 border border-purple-500/25 flex items-center justify-center p-2">
-                  <img src="/brand/features/feature-community.png" alt="Community Moderation" className="w-full h-full object-contain" />
+                <div className="w-11 h-11 rounded-2xl bg-purple-50 dark:bg-purple-950/60 border border-purple-500/25 flex items-center justify-center text-purple-500 dark:text-purple-400">
+                  <Users className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">

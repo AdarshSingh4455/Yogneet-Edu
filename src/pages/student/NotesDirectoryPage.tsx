@@ -77,8 +77,8 @@ export const NotesDirectoryPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-light-border dark:border-dark-border">
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center p-1 shrink-0">
-              <img src="/brand/features/feature-notes.png" alt="Study Notes" className="w-full h-full object-contain" />
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center shrink-0 text-emerald-500 dark:text-emerald-400">
+              <FileText className="w-4 h-4" />
             </div>
             Study Notes &amp; Reference PDFs
           </h1>

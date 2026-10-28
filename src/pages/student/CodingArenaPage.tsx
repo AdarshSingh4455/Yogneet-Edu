@@ -61,8 +61,8 @@ export const CodingArenaPage: React.FC = () => {
           <span className="text-xs text-slate-400">LeetCode & GFG Style Directory</span>
         </div>
         <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-yogneet-orange/25 flex items-center justify-center p-1 shrink-0">
-            <img src="/brand/features/feature-coding.png" alt="Coding Practice" className="w-full h-full object-contain" />
+          <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-yogneet-orange/25 flex items-center justify-center shrink-0 text-yogneet-orange">
+            <Code2 className="w-4 h-4" />
           </div>
           DSA &amp; Coding Practice Arena
         </h1>
