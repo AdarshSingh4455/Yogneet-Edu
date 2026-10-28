@@ -11,6 +11,10 @@
  *   3. Rejects known production hostname acmhdklihpqzurzuthkw.supabase.co.
  *   4. Fails closed before client initialization or network requests.
  *   5. Requires staging service-role key for guaranteed automated teardown.
+ *   6. Dispatches pre-confirmed disposable test accounts via admin API,
+ *      eliminating the need to disable email confirmation project-wide.
+ *   7. Distinguishes safe skips from failures; incomplete runs fail closed.
+ *   8. All 12 test assertions must pass before printing the verified banner.
  *
  * Phase 3B Test Coverage:
  *   - Auto-provisioning via public.handle_new_user() trigger
@@ -32,6 +36,7 @@ import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 
 export const KNOWN_PRODUCTION_HOST = 'acmhdklihpqzurzuthkw.supabase.co';
+export const SUCCESS_BANNER = 'ALL 12 HARDENED STAGING E2E SECURITY INTEGRATION TESTS PASSED CLEANLY!';
 
 /**
  * Loads environment variables strictly from .env.local (or specified file).
@@ -124,14 +129,14 @@ export function validateStagingConfig(env) {
   };
 }
 
-export async function runLiveTests() {
+export async function runLiveTests(injectedEnv, options = {}) {
   console.log('=============================================================================');
   console.log('      YOGNEET EDU — HARDENED STAGING E2E ASSESSMENT SECURITY TEST SUITE     ');
   console.log('=============================================================================');
 
   const localEnvPath = path.resolve(process.cwd(), '.env.local');
-  const hasLocalEnv = fs.existsSync(localEnvPath);
-  const env = loadStagingEnv();
+  const hasLocalEnv = injectedEnv ? true : fs.existsSync(localEnvPath);
+  const env = injectedEnv || loadStagingEnv();
 
   // If .env.local does not exist, fail closed with safe setup instructions
   if (!hasLocalEnv && !env.VITE_SUPABASE_URL) {
@@ -148,6 +153,9 @@ export async function runLiveTests() {
     console.log('       SUPABASE_SERVICE_ROLE_KEY=<staging-service-role-key>');
     console.log('  2. Re-run: npm run test:live');
     console.log('=============================================================================');
+    if (options.exitOnSkip === false) {
+      return { status: 'SKIPPED', message: 'No .env.local staging file detected.' };
+    }
     process.exit(0);
   }
 
@@ -158,22 +166,27 @@ export async function runLiveTests() {
       console.error(`  - ${err}`);
     }
     console.error('\nAborting before creating any Supabase clients or initiating network connections.');
+    if (options.throwOnInvalid) {
+      throw new Error(`Staging environment validation failed: ${validation.errors.join('; ')}`);
+    }
     process.exit(1);
   }
 
   const supabaseUrl = validation.url;
   const supabaseAnonKey = validation.anonKey;
   const serviceKey = validation.serviceKey;
+  const createSupabaseClient = options.clientFactory || createClient;
+  const delayMs = options.delayMs !== undefined ? options.delayMs : 800;
 
   console.log(`Target Staging Host: ${supabaseUrl}`);
   console.log('Mode: Isolated Staging Integration');
   console.log('-----------------------------------------------------------------------------');
 
-  const adminClient = createClient(supabaseUrl, serviceKey, {
+  const adminClient = createSupabaseClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const clientAnon = createClient(supabaseUrl, supabaseAnonKey, {
+  const clientAnon = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
@@ -188,41 +201,50 @@ export async function runLiveTests() {
   let clientA = null;
   let clientB = null;
   let createdAssessment = false;
+  let completedSteps = 0;
+  let failureError = null;
 
   try {
     // -------------------------------------------------------------------------
-    // Step 1: Sign up Student A
+    // Step 1: Provision & Authenticate Disposable Student A
     // -------------------------------------------------------------------------
-    console.log('\n[1/12] Registering Disposable Student A...');
-    const { data: authDataA, error: authErrA } = await clientAnon.auth.signUp({
+    console.log('\n[1/12] Provisioning & Authenticating Disposable Student A...');
+    // Create via admin API with email_confirm: true (disposable test account pre-confirmed)
+    const { data: authDataA, error: authErrA } = await adminClient.auth.admin.createUser({
       email: emailA,
       password,
-      options: {
-        data: { name: `Test Student A (${testRunId})` },
-      },
+      email_confirm: true,
+      user_metadata: { name: `Test Student A (${testRunId})` },
     });
 
-    if (authErrA) throw new Error(`Failed to sign up Test Student A: ${authErrA.message}`);
-    studentAId = authDataA.user?.id;
-    if (!studentAId) throw new Error('Auth returned empty user ID for Student A.');
-    console.log(`  ✓ Auth user created: ${studentAId}`);
+    if (authErrA) throw new Error(`Failed to provision Test Student A: ${authErrA.message}`);
+    studentAId = authDataA?.user?.id;
+    if (!studentAId) throw new Error('Auth admin API returned empty user ID for Student A.');
+    console.log(`  ✓ Auth user provisioned (pre-confirmed): ${studentAId}`);
 
-    if (!authDataA.session?.access_token) {
-      console.log('  [!] Notice: Auth user created, but email confirmation is required by staging project.');
-      console.log('      To test authenticated flows, uncheck "Confirm email" in Supabase Auth settings.');
-      return;
+    // Authenticate via clientAnon to obtain authentic student session and access token
+    const { data: signInDataA, error: signInErrA } = await clientAnon.auth.signInWithPassword({
+      email: emailA,
+      password,
+    });
+
+    if (signInErrA) throw new Error(`Failed to sign in as Student A: ${signInErrA.message}`);
+    if (!signInDataA?.session?.access_token) {
+      throw new Error('Authentication failure: No access token returned for Student A session.');
     }
 
-    clientA = createClient(supabaseUrl, supabaseAnonKey, {
+    clientA = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
-      global: { headers: { Authorization: `Bearer ${authDataA.session?.access_token}` } },
+      global: { headers: { Authorization: `Bearer ${signInDataA.session.access_token}` } },
     });
+    console.log(`  ✓ Student A authenticated session established.`);
+    completedSteps++;
 
     // -------------------------------------------------------------------------
     // Step 2: Verify Profile Trigger Auto-Provisioning for Student A
     // -------------------------------------------------------------------------
     console.log('\n[2/12] Verifying public.handle_new_user() trigger for Student A...');
-    await new Promise((r) => setTimeout(r, 800));
+    if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
 
     const { data: profileA, error: profErrA } = await clientA
       .from('profiles')
@@ -235,6 +257,7 @@ export async function runLiveTests() {
     if (profileA.role !== 'student') throw new Error(`Unexpected default role: ${profileA.role}`);
     if (profileA.status !== 'active') throw new Error(`Unexpected default status: ${profileA.status}`);
     console.log(`  ✓ Profile auto-provisioned with role='${profileA.role}', status='${profileA.status}'`);
+    completedSteps++;
 
     // -------------------------------------------------------------------------
     // Step 3: Positive Test — Update Own Profile (Bio & Department)
@@ -252,27 +275,41 @@ export async function runLiveTests() {
       throw new Error('Profile update fields did not persist properly.');
     }
     console.log('  ✓ Own profile updated successfully under RLS policy `profiles_update_own`.');
+    completedSteps++;
 
     // -------------------------------------------------------------------------
-    // Step 4: Sign up Student B
+    // Step 4: Provision & Authenticate Disposable Student B
     // -------------------------------------------------------------------------
-    console.log('\n[4/12] Registering Disposable Student B...');
-    const { data: authDataB, error: authErrB } = await clientAnon.auth.signUp({
+    console.log('\n[4/12] Provisioning & Authenticating Disposable Student B...');
+    const { data: authDataB, error: authErrB } = await adminClient.auth.admin.createUser({
       email: emailB,
       password,
-      options: { data: { name: `Test Student B (${testRunId})` } },
+      email_confirm: true,
+      user_metadata: { name: `Test Student B (${testRunId})` },
     });
 
-    if (authErrB) throw new Error(`Failed to sign up Test Student B: ${authErrB.message}`);
-    studentBId = authDataB.user?.id;
-    if (!studentBId) throw new Error('Auth returned empty user ID for Student B.');
+    if (authErrB) throw new Error(`Failed to provision Test Student B: ${authErrB.message}`);
+    studentBId = authDataB?.user?.id;
+    if (!studentBId) throw new Error('Auth admin API returned empty user ID for Student B.');
+    console.log(`  ✓ Auth user provisioned (pre-confirmed): ${studentBId}`);
 
-    clientB = createClient(supabaseUrl, supabaseAnonKey, {
+    const { data: signInDataB, error: signInErrB } = await clientAnon.auth.signInWithPassword({
+      email: emailB,
+      password,
+    });
+
+    if (signInErrB) throw new Error(`Failed to sign in as Student B: ${signInErrB.message}`);
+    if (!signInDataB?.session?.access_token) {
+      throw new Error('Authentication failure: No access token returned for Student B session.');
+    }
+
+    clientB = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
-      global: { headers: { Authorization: `Bearer ${authDataB.session?.access_token}` } },
+      global: { headers: { Authorization: `Bearer ${signInDataB.session.access_token}` } },
     });
-    console.log(`  ✓ Student B registered: ${studentBId}`);
-    await new Promise((r) => setTimeout(r, 800));
+    console.log(`  ✓ Student B authenticated session established.`);
+    if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
+    completedSteps++;
 
     // -------------------------------------------------------------------------
     // Step 5: Negative Test — Cross-Tenant Profile Tampering
@@ -288,6 +325,7 @@ export async function runLiveTests() {
       throw new Error('SECURITY VIOLATION: Student A was able to update Student B profile!');
     }
     console.log('  ✓ Foreign profile mutation safely rejected by RLS (0 rows updated).');
+    completedSteps++;
 
     // -------------------------------------------------------------------------
     // Step 6: Negative Test — Privilege Escalation Rejection
@@ -303,6 +341,7 @@ export async function runLiveTests() {
       throw new Error('CRITICAL SECURITY VULNERABILITY: Student was able to escalate role to admin!');
     }
     console.log(`  ✓ Role escalation safely blocked by database trigger: ${escErr?.message || 'Access Denied'}`);
+    completedSteps++;
 
     // -------------------------------------------------------------------------
     // Step 7: Negative Test — Gamification Counter Tampering Rejection
@@ -318,6 +357,7 @@ export async function runLiveTests() {
       throw new Error('CRITICAL SECURITY VULNERABILITY: Student altered gamification metric directly!');
     }
     console.log(`  ✓ Metric tampering safely blocked by database trigger: ${countErr?.message || 'Access Denied'}`);
+    completedSteps++;
 
     // -------------------------------------------------------------------------
     // Step 8: Negative Test — Cross-Student Attempts & Audit Log Isolation
@@ -337,6 +377,7 @@ export async function runLiveTests() {
       throw new Error('SECURITY VIOLATION: Non-admin student was able to read audit logs!');
     }
     console.log('  ✓ Private attempts and audit logs strictly isolated under RLS.');
+    completedSteps++;
 
     // -------------------------------------------------------------------------
     // Step 9: Phase 3B — Set Up Staging Assessment Fixture & Verify Question Masking
@@ -419,6 +460,7 @@ export async function runLiveTests() {
       throw new Error('SECURITY VIOLATION: Student queried full assessment_questions table prior to submission!');
     }
     console.log('  ✓ Direct assessment_questions SELECT rejected prior to verified submission.');
+    completedSteps++;
 
     // -------------------------------------------------------------------------
     // Step 10: Phase 3B — Direct Attempt Insertion Denial (RLS)
@@ -448,6 +490,7 @@ export async function runLiveTests() {
       throw new Error('CRITICAL SECURITY VULNERABILITY: Student directly inserted an assessment attempt!');
     }
     console.log('  ✓ Direct attempt insertion safely rejected by RLS policy drop.');
+    completedSteps++;
 
     // -------------------------------------------------------------------------
     // Step 11: Phase 3B — Authoritative Server Scoring & Attempt Verification
@@ -482,6 +525,7 @@ export async function runLiveTests() {
       throw new Error('SECURITY VIOLATION: Server-scored attempt was not marked is_verified=true!');
     }
     console.log(`  ✓ Authoritative score computed: ${storedAttempt.score_obtained}/${storedAttempt.max_score} (${storedAttempt.percentage}%) with is_verified=true.`);
+    completedSteps++;
 
     // -------------------------------------------------------------------------
     // Step 12: Phase 3B — Post-Submission Solution Unlocking
@@ -509,14 +553,19 @@ export async function runLiveTests() {
       throw new Error('SECURITY VIOLATION: Student B without an attempt was able to view solutions!');
     }
     console.log('  ✓ Student B without an attempt remained strictly blocked from solutions.');
+    completedSteps++;
+
+    if (completedSteps !== 12) {
+      throw new Error(`Incomplete test suite execution: Only ${completedSteps}/12 tests completed successfully.`);
+    }
 
     console.log('\n=============================================================================');
-    console.log('  ALL 12 HARDENED STAGING E2E SECURITY INTEGRATION TESTS PASSED CLEANLY!     ');
+    console.log(`  ${SUCCESS_BANNER}     `);
     console.log('=============================================================================');
   } catch (err) {
     console.error('\n[FAILED] Live Supabase integration test encountered an error:');
     console.error(err.message);
-    process.exit(1);
+    failureError = err;
   } finally {
     console.log('\n[Teardown] Cleaning up temporary test fixtures and disposable accounts...');
     if (createdAssessment) {
@@ -544,6 +593,19 @@ export async function runLiveTests() {
       }
     }
   }
+
+  if (failureError) {
+    if (options.throwOnError) {
+      throw failureError;
+    }
+    process.exit(1);
+  }
+
+  return {
+    status: 'PASSED',
+    completedSteps,
+    testRunId,
+  };
 }
 
 const isDirectRun =
