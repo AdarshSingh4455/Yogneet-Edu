@@ -12,6 +12,7 @@
 DROP POLICY IF EXISTS "assessment_questions_select_active" ON public.assessment_questions;
 
 -- Policy A: Staff / Instructors / Admins have unrestricted access to full questions & explanations
+DROP POLICY IF EXISTS "assessment_questions_select_staff" ON public.assessment_questions;
 CREATE POLICY "assessment_questions_select_staff"
   ON public.assessment_questions
   FOR SELECT
@@ -19,6 +20,7 @@ CREATE POLICY "assessment_questions_select_staff"
   USING (public.is_staff());
 
 -- Policy B: Students can only view full questions & explanations AFTER submitting an attempt
+DROP POLICY IF EXISTS "assessment_questions_select_post_submission" ON public.assessment_questions;
 CREATE POLICY "assessment_questions_select_post_submission"
   ON public.assessment_questions
   FOR SELECT
