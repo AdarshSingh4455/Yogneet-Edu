@@ -17,6 +17,7 @@ import {
   TrendingUp,
   CheckCircle2,
   Users,
+  Youtube,
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -47,37 +48,117 @@ export const StudentDashboard: React.FC = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-900 via-brand-800 to-slate-900 p-6 sm:p-8 text-white border border-brand-700/50 shadow-xl">
-        <div className="relative z-10 max-w-2xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/30 border border-brand-400/40 text-brand-200 backdrop-blur-sm">
-              <Sparkles className="w-3.5 h-3.5 text-brand-300" /> Tech Geek Adarsh Learning Hub
-            </span>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-yogneet-navy via-[#12224A] to-[#0A1329] p-6 sm:p-8 text-white border border-yogneet-cyan/20 shadow-2xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-yogneet-cyan/15 border border-yogneet-cyan/30 text-yogneet-cyan backdrop-blur-sm">
+                <Sparkles className="w-3.5 h-3.5 text-yogneet-cyan" /> Tech Geek Adarsh Learning Hub
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
+              Welcome back, {currentUser.name.split(' ')[0]}! 👋
+            </h1>
+            <p className="text-sm sm:text-base text-slate-300 mt-2 leading-relaxed">
+              Ready to master Python internals and conquer algorithms today? You are on a <strong className="text-yogneet-orange">7-day study streak</strong>. Keep the momentum going!
+            </p>
+            <div className="flex flex-wrap items-center gap-3 mt-5">
+              <Link to={`/videos?lesson=${currentLesson.id}`}>
+                <Button size="md" className="bg-yogneet-cyan hover:bg-yogneet-cyanHover text-yogneet-navy font-bold border-none shadow-md shadow-yogneet-cyan/25" leftIcon={<Play className="w-4 h-4 fill-yogneet-navy" />}>
+                  Resume Lesson
+                </Button>
+              </Link>
+              <Link to="/coding">
+                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<Code2 className="w-4 h-4 text-yogneet-orange" />}>
+                  Solve Daily Problem
+                </Button>
+              </Link>
+            </div>
           </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
-            Welcome back, {currentUser.name.split(' ')[0]}! 👋
-          </h1>
-          <p className="text-sm sm:text-base text-brand-100/90 mt-2 leading-relaxed">
-            Ready to master Python internals and conquer algorithms today? You are on a <strong>7-day study streak</strong>. Keep the momentum going!
-          </p>
-          <div className="flex flex-wrap items-center gap-3 mt-5">
-            <Link to={`/videos?lesson=${currentLesson.id}`}>
-              <Button size="md" leftIcon={<Play className="w-4 h-4 fill-white" />}>
-                Resume Lesson
-              </Button>
-            </Link>
-            <Link to="/coding">
-              <Button variant="secondary" size="md" leftIcon={<Code2 className="w-4 h-4" />}>
-                Solve Daily Problem
-              </Button>
-            </Link>
-          </div>
-        </div>
 
-        {/* Decorative graphic element */}
-        <div className="absolute right-0 bottom-0 top-0 w-1/3 opacity-15 pointer-events-none hidden md:flex items-center justify-end pr-8">
-          <Trophy className="w-64 h-64 text-white" />
+          {/* Dedicated Hero Phoenix Emblem */}
+          <div className="flex items-center justify-center md:justify-end shrink-0 self-center">
+            <div className="relative w-48 h-32 sm:w-60 sm:h-36 md:w-72 md:h-44 flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/20 to-orange-500/25 blur-2xl rounded-full pointer-events-none" />
+              <img
+                src="/brand/yogneet-emblem.png"
+                alt="Yogneet Edu Phoenix Emblem"
+                className="relative max-h-28 sm:max-h-36 md:max-h-40 w-auto object-contain drop-shadow-[0_0_25px_rgba(0,200,232,0.35)] transition-transform duration-300 hover:scale-105"
+              />
+            </div>
+          </div>
         </div>
+      </div>
+
+      {/* 4 Feature Pillars */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <Link
+          to="/videos"
+          className="group rounded-2xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-3.5 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/10 transition-all flex items-center gap-3"
+        >
+          <div className="w-11 h-11 rounded-xl bg-red-500/10 border border-red-500/25 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform text-red-500 dark:text-red-400">
+            <Youtube className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors truncate">
+              Video Lectures
+            </h3>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              Tech Geek Adarsh
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          to="/notes"
+          className="group rounded-2xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-3.5 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 transition-all flex items-center gap-3"
+        >
+          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform text-emerald-500 dark:text-emerald-400">
+            <FileText className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors truncate">
+              Study Notes &amp; PDFs
+            </h3>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              Revision Sheets
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          to="/coding"
+          className="group rounded-2xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-3.5 hover:border-yogneet-orange/50 hover:shadow-lg hover:shadow-yogneet-orange/10 transition-all flex items-center gap-3"
+        >
+          <div className="w-11 h-11 rounded-xl bg-orange-500/10 border border-yogneet-orange/25 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform text-yogneet-orange">
+            <Code2 className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-yogneet-orange transition-colors truncate">
+              Coding Arena
+            </h3>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              Daily Challenges
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          to="/community"
+          className="group rounded-2xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-3.5 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 transition-all flex items-center gap-3"
+        >
+          <div className="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform text-purple-500 dark:text-purple-400">
+            <Users className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-400 transition-colors truncate">
+              Community Forum
+            </h3>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              Discussions &amp; Help
+            </p>
+          </div>
+        </Link>
       </div>
 
       {/* Metric Cards Row */}

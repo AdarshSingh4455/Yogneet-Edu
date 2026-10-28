@@ -93,8 +93,10 @@ export const CommunityForumPage: React.FC = () => {
             </Badge>
             <span className="text-xs text-slate-400">Peer Learning & Mentorship</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
-            <MessageSquare className="w-6 h-6 text-brand-500" />
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center shrink-0 text-purple-500 dark:text-purple-400">
+              <Users className="w-4 h-4" />
+            </div>
             Student Discussion Forum
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">

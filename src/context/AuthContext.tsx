@@ -36,6 +36,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [users, setUsers] = useState<UserProfile[]>(() => ApiService.getUsers());
   const [currentUserId, setCurrentUserId] = useState<string>(() => {
     try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlUser = urlParams.get('persona') || urlParams.get('user');
+      if (urlUser && ApiService.getUserById(urlUser)) {
+        localStorage.setItem(CURRENT_USER_KEY, urlUser);
+        return urlUser;
+      }
       const saved = localStorage.getItem(CURRENT_USER_KEY);
       if (saved && ApiService.getUserById(saved)) return saved;
     } catch {

@@ -27,87 +27,136 @@ export const AdminDashboard: React.FC = () => {
   const notes = ApiService.getNotes();
   const tests = ApiService.getTests();
   const auditLogs = ApiService.getAuditLogs();
+  const students = users.filter(u => u.role === 'student');
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
-      {/* Page Header */}
-      <div className="pb-4 border-b border-light-border dark:border-dark-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Badge variant="brand" size="sm">
-              👑 Super Admin Authority
-            </Badge>
-            <span className="text-xs text-slate-400">Full Platform Management Console</span>
+      {/* Authority Hero Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-yogneet-navy via-[#12224A] to-[#0A1329] p-6 sm:p-8 text-white border border-yogneet-cyan/20 shadow-2xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-yogneet-cyan/15 border border-yogneet-cyan/30 text-yogneet-cyan backdrop-blur-sm">
+                👑 Super Admin Authority • Full Platform Console
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
+              YOGNEET <span className="text-yogneet-cyan">EDU</span> Administration Portal
+            </h1>
+            <p className="text-sm sm:text-base text-slate-300 mt-2 leading-relaxed">
+              Oversee platform staff, configure fine-grained RBAC permissions, audit operational compliance, and manage technical education curricula.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 mt-5">
+              <Link to="/admin/permissions">
+                <Button size="md" className="bg-yogneet-cyan hover:bg-yogneet-cyanHover text-yogneet-navy font-bold border-none shadow-md shadow-yogneet-cyan/25" leftIcon={<Key className="w-4 h-4 fill-yogneet-navy" />}>
+                  RBAC Permissions
+                </Button>
+              </Link>
+              <Link to="/admin/audit-logs">
+                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<FileSpreadsheet className="w-4 h-4 text-yogneet-orange" />}>
+                  Audit Logs
+                </Button>
+              </Link>
+              <Link to="/admin/subadmins">
+                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<Shield className="w-4 h-4 text-purple-400" />}>
+                  Manage Staff
+                </Button>
+              </Link>
+            </div>
           </div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
-            <Shield className="w-6 h-6 text-brand-500" />
-            Yogneet Edu Administration Portal
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Oversee platform staff, configure fine-grained RBAC permissions, audit operational compliance, and publish educational curricula.
-          </p>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <Link to="/admin/permissions">
-            <Button size="sm" variant="primary" leftIcon={<Key className="w-4 h-4" />}>
-              RBAC Permissions
-            </Button>
-          </Link>
-          <Link to="/admin/audit-logs">
-            <Button size="sm" variant="outline" leftIcon={<FileSpreadsheet className="w-4 h-4" />}>
-              Audit Logs
-            </Button>
-          </Link>
+          {/* Dedicated Hero Phoenix Emblem */}
+          <div className="flex items-center justify-center md:justify-end shrink-0 self-center">
+            <div className="relative w-48 h-32 sm:w-60 sm:h-36 md:w-72 md:h-44 flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/20 to-orange-500/25 blur-2xl rounded-full pointer-events-none" />
+              <img
+                src="/brand/yogneet-emblem.png"
+                alt="Yogneet Edu Phoenix Emblem"
+                className="relative max-h-28 sm:max-h-36 md:max-h-40 w-auto object-contain drop-shadow-[0_0_25px_rgba(0,200,232,0.35)] transition-transform duration-300 hover:scale-105"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Primary KPI Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <Card padding="sm" className="space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-bold uppercase">
-            <span>Sub-Admin Staff</span>
+      {/* Primary KPI Row - 6 Metric Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        <Card padding="sm" className="space-y-1 bg-white dark:bg-dark-card/90 border border-light-border dark:border-dark-border">
+          <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+            <span>Staff / Sub-Admins</span>
             <Shield className="w-4 h-4 text-purple-500" />
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
+          <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
             {subAdmins.length}
           </p>
-          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 block truncate">
             {subAdmins.filter(s => s.status === 'active').length} Active • {subAdmins.filter(s => s.status === 'suspended').length} Suspended
           </span>
         </Card>
 
-        <Card padding="sm" className="space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-bold uppercase">
+        <Card padding="sm" className="space-y-1 bg-white dark:bg-dark-card/90 border border-light-border dark:border-dark-border">
+          <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
             <span>Video Lectures</span>
-            <Video className="w-4 h-4 text-brand-500" />
+            <Video className="w-4 h-4 text-yogneet-cyan" />
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
+          <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
             {videos.length}
           </p>
-          <span className="text-[11px] text-brand-500 font-semibold">Tech Geek Adarsh Channel</span>
+          <span className="text-[10px] text-yogneet-cyan font-semibold block truncate">
+            Tech Geek Adarsh
+          </span>
         </Card>
 
-        <Card padding="sm" className="space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-bold uppercase">
-            <span>Study Notes & PDFs</span>
+        <Card padding="sm" className="space-y-1 bg-white dark:bg-dark-card/90 border border-light-border dark:border-dark-border">
+          <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+            <span>Study Notes</span>
             <FileText className="w-4 h-4 text-emerald-500" />
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
+          <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
             {notes.length}
           </p>
-          <span className="text-[11px] text-emerald-500 font-semibold">All Published</span>
+          <span className="text-[10px] text-emerald-500 font-semibold block truncate">
+            100% Published
+          </span>
         </Card>
 
-        <Card padding="sm" className="space-y-1">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-bold uppercase">
-            <span>Audit Trail Events</span>
+        <Card padding="sm" className="space-y-1 bg-white dark:bg-dark-card/90 border border-light-border dark:border-dark-border">
+          <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+            <span>Assessment Series</span>
+            <CheckSquare className="w-4 h-4 text-yogneet-orange" />
+          </div>
+          <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
+            {tests.length}
+          </p>
+          <span className="text-[10px] text-yogneet-orange font-semibold block truncate">
+            Active Test Catalog
+          </span>
+        </Card>
+
+        <Card padding="sm" className="space-y-1 bg-white dark:bg-dark-card/90 border border-light-border dark:border-dark-border">
+          <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+            <span>Enrolled Students</span>
+            <Users className="w-4 h-4 text-blue-500" />
+          </div>
+          <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
+            {students.length}
+          </p>
+          <span className="text-[10px] text-blue-500 font-semibold block truncate">
+            Active Learners
+          </span>
+        </Card>
+
+        <Card padding="sm" className="space-y-1 bg-white dark:bg-dark-card/90 border border-light-border dark:border-dark-border">
+          <div className="flex items-center justify-between text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+            <span>Audit Trail</span>
             <FileSpreadsheet className="w-4 h-4 text-amber-500" />
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
+          <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
             {auditLogs.length}
           </p>
-          <span className="text-[11px] text-amber-500 font-semibold">Append-Only Active</span>
+          <span className="text-[10px] text-amber-500 font-semibold block truncate">
+            Append-Only Verified
+          </span>
         </Card>
       </div>
 
@@ -127,7 +176,7 @@ export const AdminDashboard: React.FC = () => {
             </Link>
           </div>
 
-          <Card padding="none" className="overflow-hidden border border-light-border dark:border-dark-border">
+          <Card padding="none" className="overflow-hidden border border-light-border dark:border-dark-border shadow-sm">
             <table className="w-full text-left text-xs sm:text-sm">
               <thead className="bg-slate-50 dark:bg-dark-sidebar border-b border-light-border dark:border-dark-border text-slate-400 text-[10px] font-bold uppercase tracking-wider">
                 <tr>
@@ -145,7 +194,7 @@ export const AdminDashboard: React.FC = () => {
                       <img
                         src={staff.avatar}
                         alt={staff.name}
-                        className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700"
+                        className="w-8 h-8 rounded-full object-cover ring-2 ring-yogneet-cyan/30"
                       />
                       <div>
                         <span className="font-bold text-slate-900 dark:text-slate-100 block">
@@ -202,7 +251,7 @@ export const AdminDashboard: React.FC = () => {
                 </Button>
               </Link>
               <Link to="/subadmin/content" className="block">
-                <Button size="sm" variant="outline" className="w-full justify-start" leftIcon={<FileText className="w-4 h-4 text-brand-500" />}>
+                <Button size="sm" variant="outline" className="w-full justify-start gap-2" leftIcon={<FileText className="w-4 h-4 text-emerald-500 inline-block" />}>
                   Content Workspace (Notes & Videos)
                 </Button>
               </Link>

@@ -76,9 +76,11 @@ export const NotesDirectoryPage: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-light-border dark:border-dark-border">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
-            <BookOpen className="w-6 h-6 text-brand-500" />
-            Study Notes & Reference PDFs
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center shrink-0 text-emerald-500 dark:text-emerald-400">
+              <FileText className="w-4 h-4" />
+            </div>
+            Study Notes &amp; Reference PDFs
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Handwritten revision sheets, architectural diagrams, and algorithmic cheat-sheets by <strong>Tech Geek Adarsh</strong>.

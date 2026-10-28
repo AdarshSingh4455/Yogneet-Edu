@@ -45,21 +45,25 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
             <Menu className="w-5 h-5" />
           </button>
 
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
-              <BookOpen className="w-5 h-5" />
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl bg-yogneet-navy border border-yogneet-cyan/30 flex items-center justify-center shadow-md shadow-yogneet-navy/50 group-hover:scale-105 transition-transform overflow-hidden p-1 shrink-0">
+              <img
+                src="/brand/yogneet-emblem.png"
+                alt="Yogneet Edu Emblem"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
-                  Yogneet<span className="text-brand-500">Edu</span>
+                  YOGNEET <span className="text-yogneet-cyan">EDU</span>
                 </span>
-                <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800/60">
+                <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-yogneet-cyan/10 text-yogneet-cyan border border-yogneet-cyan/30">
                   v1.0
                 </span>
               </div>
-              <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium tracking-wide">
-                Tech Geek Adarsh Platform
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold tracking-wider uppercase">
+                LEARN • CODE • PRACTICE • GROW
               </p>
             </div>
           </Link>

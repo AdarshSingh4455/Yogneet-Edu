@@ -60,9 +60,11 @@ export const CodingArenaPage: React.FC = () => {
           </Badge>
           <span className="text-xs text-slate-400">LeetCode & GFG Style Directory</span>
         </div>
-        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
-          <Code2 className="w-6 h-6 text-brand-500" />
-          DSA & Coding Practice Arena
+        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-yogneet-orange/25 flex items-center justify-center shrink-0 text-yogneet-orange">
+            <Code2 className="w-4 h-4" />
+          </div>
+          DSA &amp; Coding Practice Arena
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-3xl leading-relaxed">
           Solve curated algorithmic challenges hand-picked by <strong>Tech Geek Adarsh</strong>. Practice directly in our native code playground or access external LeetCode and GeeksforGeeks problems.
