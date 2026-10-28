@@ -47,37 +47,115 @@ export const StudentDashboard: React.FC = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-900 via-brand-800 to-slate-900 p-6 sm:p-8 text-white border border-brand-700/50 shadow-xl">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-yogneet-navy via-[#12224A] to-[#0A1329] p-6 sm:p-8 text-white border border-yogneet-cyan/20 shadow-2xl">
         <div className="relative z-10 max-w-2xl">
           <div className="flex items-center gap-2 mb-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/30 border border-brand-400/40 text-brand-200 backdrop-blur-sm">
-              <Sparkles className="w-3.5 h-3.5 text-brand-300" /> Tech Geek Adarsh Learning Hub
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-yogneet-cyan/15 border border-yogneet-cyan/30 text-yogneet-cyan backdrop-blur-sm">
+              <Sparkles className="w-3.5 h-3.5 text-yogneet-cyan" /> Tech Geek Adarsh Learning Hub
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
             Welcome back, {currentUser.name.split(' ')[0]}! 👋
           </h1>
-          <p className="text-sm sm:text-base text-brand-100/90 mt-2 leading-relaxed">
-            Ready to master Python internals and conquer algorithms today? You are on a <strong>7-day study streak</strong>. Keep the momentum going!
+          <p className="text-sm sm:text-base text-slate-300 mt-2 leading-relaxed">
+            Ready to master Python internals and conquer algorithms today? You are on a <strong className="text-yogneet-orange">7-day study streak</strong>. Keep the momentum going!
           </p>
           <div className="flex flex-wrap items-center gap-3 mt-5">
             <Link to={`/videos?lesson=${currentLesson.id}`}>
-              <Button size="md" leftIcon={<Play className="w-4 h-4 fill-white" />}>
+              <Button size="md" className="bg-yogneet-cyan hover:bg-yogneet-cyanHover text-yogneet-navy font-bold border-none shadow-md shadow-yogneet-cyan/25" leftIcon={<Play className="w-4 h-4 fill-yogneet-navy" />}>
                 Resume Lesson
               </Button>
             </Link>
             <Link to="/coding">
-              <Button variant="secondary" size="md" leftIcon={<Code2 className="w-4 h-4" />}>
+              <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<Code2 className="w-4 h-4 text-yogneet-orange" />}>
                 Solve Daily Problem
               </Button>
             </Link>
           </div>
         </div>
 
-        {/* Decorative graphic element */}
-        <div className="absolute right-0 bottom-0 top-0 w-1/3 opacity-15 pointer-events-none hidden md:flex items-center justify-end pr-8">
-          <Trophy className="w-64 h-64 text-white" />
+        {/* Brand Emblem Graphic */}
+        <div className="absolute right-0 bottom-0 top-0 w-2/5 pointer-events-none hidden md:flex items-center justify-end pr-6">
+          <div className="relative w-72 h-48 flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yogneet-cyan/10 to-yogneet-orange/20 blur-3xl rounded-full" />
+            <img
+              src="/brand/yogneet-emblem-glow.png"
+              alt="Yogneet Phoenix Emblem"
+              className="relative max-h-44 w-auto object-contain drop-shadow-[0_0_30px_rgba(0,200,232,0.3)] transition-transform duration-500 hover:scale-105"
+            />
+          </div>
         </div>
+      </div>
+
+      {/* 4 Feature Pillars (From 04_student_dashboard.png & 08-11 Feature Tiles) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <Link
+          to="/videos"
+          className="group rounded-2xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-3.5 hover:border-yogneet-cyan/50 hover:shadow-lg hover:shadow-yogneet-cyan/10 transition-all flex items-center gap-3"
+        >
+          <div className="w-11 h-11 rounded-xl bg-cyan-500/10 border border-yogneet-cyan/25 flex items-center justify-center shrink-0 p-1.5 group-hover:scale-105 transition-transform">
+            <img src="/brand/features/feature-youtube.png" alt="Video Lectures" className="w-full h-full object-contain" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-yogneet-cyan transition-colors truncate">
+              Video Lectures
+            </h3>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              Tech Geek Adarsh
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          to="/notes"
+          className="group rounded-2xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-3.5 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 transition-all flex items-center gap-3"
+        >
+          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center shrink-0 p-1.5 group-hover:scale-105 transition-transform">
+            <img src="/brand/features/feature-notes.png" alt="Study Notes" className="w-full h-full object-contain" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-500 transition-colors truncate">
+              Study Notes &amp; PDFs
+            </h3>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              Revision Sheets
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          to="/coding"
+          className="group rounded-2xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-3.5 hover:border-yogneet-orange/50 hover:shadow-lg hover:shadow-yogneet-orange/10 transition-all flex items-center gap-3"
+        >
+          <div className="w-11 h-11 rounded-xl bg-orange-500/10 border border-yogneet-orange/25 flex items-center justify-center shrink-0 p-1.5 group-hover:scale-105 transition-transform">
+            <img src="/brand/features/feature-coding.png" alt="Coding Practice" className="w-full h-full object-contain" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-yogneet-orange transition-colors truncate">
+              Coding Arena
+            </h3>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              Daily Challenges
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          to="/community"
+          className="group rounded-2xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-3.5 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 transition-all flex items-center gap-3"
+        >
+          <div className="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center shrink-0 p-1.5 group-hover:scale-105 transition-transform">
+            <img src="/brand/features/feature-community.png" alt="Community Forum" className="w-full h-full object-contain" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-400 transition-colors truncate">
+              Community Forum
+            </h3>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              Discussions &amp; Help
+            </p>
+          </div>
+        </Link>
       </div>
 
       {/* Metric Cards Row */}
