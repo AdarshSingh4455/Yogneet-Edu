@@ -2,6 +2,7 @@ import test, { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { validateStagingConfig, loadStagingEnv, KNOWN_PRODUCTION_HOST } from './test-supabase-live.mjs';
 
 // -----------------------------------------------------------------------------
 // Test Suite 1: Supabase Migrations & Relational Schema Integrity
@@ -970,5 +971,82 @@ describe('Frontend-to-Database RPC Contract & Demo Integrity Check', () => {
   it('Frontend returns isDemo = false and isVerified = true when authenticated submission succeeds', () => {
     assert.ok(serviceCode.includes('isVerified: true'));
     assert.ok(serviceCode.includes('isDemo: false'));
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Test Suite 9: Live Test Runner Staging Environment Safety Guards
+// -----------------------------------------------------------------------------
+describe('Live Test Runner Staging Environment Safety Guards', () => {
+  it('Production host constant matches acmhdklihpqzurzuthkw.supabase.co', () => {
+    assert.equal(KNOWN_PRODUCTION_HOST, 'acmhdklihpqzurzuthkw.supabase.co');
+  });
+
+  it('Rejects configuration targeting production host acmhdklihpqzurzuthkw.supabase.co', () => {
+    const invalidConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: `https://${KNOWN_PRODUCTION_HOST}`,
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key-12345678',
+      SUPABASE_SERVICE_ROLE_KEY: 'test-service-key-12345678',
+    };
+    const res = validateStagingConfig(invalidConfig);
+    assert.equal(res.isValid, false);
+    assert.ok(res.errors.some((e) => e.includes('Cannot target production host')));
+  });
+
+  it('Rejects configuration when VITE_ENVIRONMENT is not staging', () => {
+    const invalidConfig = {
+      VITE_ENVIRONMENT: 'production',
+      VITE_SUPABASE_URL: 'https://staging-test-ref.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key-12345678',
+      SUPABASE_SERVICE_ROLE_KEY: 'test-service-key-12345678',
+    };
+    const res = validateStagingConfig(invalidConfig);
+    assert.equal(res.isValid, false);
+    assert.ok(res.errors.some((e) => e.includes("VITE_ENVIRONMENT must be explicitly set to 'staging'")));
+  });
+
+  it('Rejects configuration with missing SUPABASE_SERVICE_ROLE_KEY to guarantee safe teardown', () => {
+    const invalidConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: 'https://staging-test-ref.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key-12345678',
+      SUPABASE_SERVICE_ROLE_KEY: '',
+    };
+    const res = validateStagingConfig(invalidConfig);
+    assert.equal(res.isValid, false);
+    assert.ok(res.errors.some((e) => e.includes('SUPABASE_SERVICE_ROLE_KEY is required')));
+  });
+
+  it('Rejects placeholder URLs and keys', () => {
+    const placeholderConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: 'https://<your-project-ref>.supabase.co',
+      VITE_SUPABASE_ANON_KEY: '<your-anon-public-key>',
+      SUPABASE_SERVICE_ROLE_KEY: '<your-staging-service-role-key>',
+    };
+    const res = validateStagingConfig(placeholderConfig);
+    assert.equal(res.isValid, false);
+    assert.equal(res.errors.length, 3);
+  });
+
+  it('loadStagingEnv strictly ignores .env and never falls back to production .env', () => {
+    // Pass a non-existent path to verify it does not load .env
+    const fakePath = path.resolve(process.cwd(), '.non-existent-staging-env');
+    const loaded = loadStagingEnv(fakePath);
+    // Even if .env exists in cwd, loadStagingEnv must NOT populate from .env
+    assert.equal(loaded.VITE_SUPABASE_URL, undefined);
+  });
+
+  it('Validates and accepts compliant staging configuration', () => {
+    const validConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: 'https://staging-test-abc1234.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'valid-staging-anon-token-xyz',
+      SUPABASE_SERVICE_ROLE_KEY: 'valid-staging-service-token-xyz',
+    };
+    const res = validateStagingConfig(validConfig);
+    assert.equal(res.isValid, true);
+    assert.equal(res.errors.length, 0);
   });
 });
