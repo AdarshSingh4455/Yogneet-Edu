@@ -95,7 +95,6 @@ export function buildAssessmentQuestionsFixture(testAssessmentId, testRunId) {
   ];
 }
 
-
 /**
  * Loads environment variables strictly from .env.local (or specified file).
  * Never reads or falls back to .env!
@@ -192,9 +191,9 @@ export async function runLiveTests(injectedEnv, options = {}) {
   console.log('      YOGNEET EDU — HARDENED STAGING E2E ASSESSMENT SECURITY TEST SUITE     ');
   console.log('=============================================================================');
 
-  const localEnvPath = path.resolve(process.cwd(), '.env.local');
-  const hasLocalEnv = injectedEnv ? true : fs.existsSync(localEnvPath);
-  const env = injectedEnv || loadStagingEnv();
+  const localEnvPath = options.envPath || path.resolve(process.cwd(), '.env.local');
+  const hasLocalEnv = injectedEnv !== undefined && injectedEnv !== null ? true : fs.existsSync(localEnvPath);
+  const env = injectedEnv || loadStagingEnv(options.envPath);
 
   // If .env.local does not exist, fail closed with safe setup instructions
   if (!hasLocalEnv && !env.VITE_SUPABASE_URL) {
@@ -446,11 +445,17 @@ export async function runLiveTests(injectedEnv, options = {}) {
 
     // Admin creates fixture assessment matching authoritative schema
     const assessmentPayload = buildAssessmentFixture(testAssessmentId, testRunId);
-    await adminClient.from('assessments').insert(assessmentPayload);
+    const { error: assessErr } = await adminClient.from('assessments').insert(assessmentPayload);
+    if (assessErr) {
+      throw new Error(`Failed to insert test assessment fixture: ${assessErr.message}`);
+    }
     createdAssessment = true;
 
     const questionsPayload = buildAssessmentQuestionsFixture(testAssessmentId, testRunId);
-    await adminClient.from('assessment_questions').insert(questionsPayload);
+    const { error: questionsErr } = await adminClient.from('assessment_questions').insert(questionsPayload);
+    if (questionsErr) {
+      throw new Error(`Failed to insert test assessment questions fixture: ${questionsErr.message}`);
+    }
 
     // Student A calls taking RPC
     const { data: takingQuestions, error: takingErr } = await clientA.rpc(
@@ -590,24 +595,36 @@ export async function runLiveTests(injectedEnv, options = {}) {
     console.log('\n[Teardown] Cleaning up temporary test fixtures and disposable accounts...');
     if (createdAssessment) {
       try {
-        await adminClient.from('assessments').delete().eq('id', testAssessmentId);
-        console.log(`  ✓ Cleaned up test assessment fixture: ${testAssessmentId}`);
+        const { error: delAssessErr } = await adminClient.from('assessments').delete().eq('id', testAssessmentId);
+        if (delAssessErr) {
+          console.warn(`  [!] Warning: Failed to delete test assessment: ${delAssessErr.message}`);
+        } else {
+          console.log(`  ✓ Cleaned up test assessment fixture: ${testAssessmentId}`);
+        }
       } catch (err) {
         console.warn(`  [!] Warning: Failed to delete test assessment: ${err.message}`);
       }
     }
     if (studentAId) {
       try {
-        await adminClient.auth.admin.deleteUser(studentAId);
-        console.log(`  ✓ Cleaned up disposable Student A: ${studentAId}`);
+        const { error: delUserAErr } = await adminClient.auth.admin.deleteUser(studentAId);
+        if (delUserAErr) {
+          console.warn(`  [!] Warning: Failed to delete Student A user: ${studentAId} (${delUserAErr.message})`);
+        } else {
+          console.log(`  ✓ Cleaned up disposable Student A: ${studentAId}`);
+        }
       } catch (err) {
         console.warn(`  [!] Warning: Failed to delete Student A user: ${studentAId} (${err.message})`);
       }
     }
     if (studentBId) {
       try {
-        await adminClient.auth.admin.deleteUser(studentBId);
-        console.log(`  ✓ Cleaned up disposable Student B: ${studentBId}`);
+        const { error: delUserBErr } = await adminClient.auth.admin.deleteUser(studentBId);
+        if (delUserBErr) {
+          console.warn(`  [!] Warning: Failed to delete Student B user: ${studentBId} (${delUserBErr.message})`);
+        } else {
+          console.log(`  ✓ Cleaned up disposable Student B: ${studentBId}`);
+        }
       } catch (err) {
         console.warn(`  [!] Warning: Failed to delete Student B user: ${studentBId} (${err.message})`);
       }
