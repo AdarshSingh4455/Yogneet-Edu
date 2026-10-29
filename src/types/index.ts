@@ -313,3 +313,93 @@ export interface AuditLogEntry {
     after?: Record<string, unknown>;
   };
 }
+
+// ==========================================
+// Phase 3C: Practical / Text-based Assignments
+// ==========================================
+export interface AssignmentRubricItem {
+  id?: string;
+  criteria: string;
+  marks: number;
+  description?: string;
+}
+
+export interface PracticalAssignment {
+  id: string;
+  title: string;
+  subject: string;
+  module: string;
+  problemStatement: string;
+  instructions: string;
+  topics: string[];
+  deliverables: string[];
+  submissionRequirements?: string;
+  deadline?: string;
+  totalMarks: number;
+  rubric: AssignmentRubricItem[];
+  status: ContentStatus;
+  authorId?: string;
+  authorName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ==========================================
+// Phase 3C: Student Directory Pre-Provisioning
+// ==========================================
+export type StudentAccessCategory = 'standard' | 'managed' | 'scholarship';
+
+export interface StudentDirectoryEntry {
+  id: string;
+  email: string;
+  name: string;
+  department: string;
+  institution?: string;
+  program?: string;
+  status: UserStatus;
+  accessCategory: StudentAccessCategory;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StudentImportRow {
+  name: string;
+  email: string;
+  department?: string;
+  institution?: string;
+  program?: string;
+  accessCategory?: StudentAccessCategory;
+}
+
+// ==========================================
+// Phase 3C: Assessment Import Contract
+// ==========================================
+export interface AssessmentImportQuestion {
+  question_text?: string;
+  text?: string;
+  code_snippet?: string;
+  code_language?: string;
+  options: Array<{ id: string; text: string }>;
+  correct_answer_id: string;
+  explanation?: string;
+  marks?: number;
+  negative_marks?: number;
+}
+
+export interface AssessmentImportPayload {
+  schemaVersion: number;
+  assessment: {
+    id?: string;
+    title: string;
+    description?: string;
+    subject: string;
+    module?: string;
+    duration_minutes?: number;
+    difficulty: DifficultyLevel;
+    type: TestType;
+    status?: 'available' | 'upcoming' | 'completed';
+    pass_percentage?: number;
+    tags?: string[];
+  };
+  questions: AssessmentImportQuestion[];
+}

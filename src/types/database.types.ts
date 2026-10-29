@@ -122,6 +122,7 @@ export interface Database {
           published_at: string;
           views: number;
           resources: Json;
+          status: 'draft' | 'published' | 'archived';
         };
         Insert: {
           id: string;
@@ -138,6 +139,7 @@ export interface Database {
           published_at?: string;
           views?: number;
           resources?: Json;
+          status?: 'draft' | 'published' | 'archived';
         };
         Update: {
           id?: string;
@@ -154,6 +156,7 @@ export interface Database {
           published_at?: string;
           views?: number;
           resources?: Json;
+          status?: 'draft' | 'published' | 'archived';
         };
       };
       study_notes: {
@@ -424,6 +427,103 @@ export interface Database {
           changes?: Json | null;
         };
       };
+      practical_assignments: {
+        Row: {
+          id: string;
+          title: string;
+          subject: string;
+          module: string;
+          problem_statement: string;
+          instructions: string;
+          topics: string[];
+          deliverables: string[];
+          submission_requirements: string | null;
+          deadline: string | null;
+          total_marks: number;
+          rubric: Json;
+          status: 'draft' | 'published' | 'archived';
+          author_id: string | null;
+          author_name: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          title: string;
+          subject: string;
+          module?: string;
+          problem_statement: string;
+          instructions: string;
+          topics?: string[];
+          deliverables?: string[];
+          submission_requirements?: string | null;
+          deadline?: string | null;
+          total_marks?: number;
+          rubric?: Json;
+          status?: 'draft' | 'published' | 'archived';
+          author_id?: string | null;
+          author_name?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          subject?: string;
+          module?: string;
+          problem_statement?: string;
+          instructions?: string;
+          topics?: string[];
+          deliverables?: string[];
+          submission_requirements?: string | null;
+          deadline?: string | null;
+          total_marks?: number;
+          rubric?: Json;
+          status?: 'draft' | 'published' | 'archived';
+          author_id?: string | null;
+          author_name?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      student_directory: {
+        Row: {
+          id: string;
+          email: string;
+          name: string;
+          department: string | null;
+          institution: string | null;
+          program: string | null;
+          status: 'active' | 'suspended';
+          access_category: 'standard' | 'managed' | 'scholarship';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          name: string;
+          department?: string | null;
+          institution?: string | null;
+          program?: string | null;
+          status?: 'active' | 'suspended';
+          access_category?: 'standard' | 'managed' | 'scholarship';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          name?: string;
+          department?: string | null;
+          institution?: string | null;
+          program?: string | null;
+          status?: 'active' | 'suspended';
+          access_category?: 'standard' | 'managed' | 'scholarship';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       student_assessment_questions: {
@@ -441,6 +541,18 @@ export interface Database {
       };
     };
     Functions: {
+      create_assessment_with_questions: {
+        Args: {
+          p_assessment: Json;
+          p_questions: Json;
+        };
+        Returns: {
+          success: boolean;
+          test_id: string;
+          title: string;
+          question_count: number;
+        };
+      };
       get_assessment_questions_for_taking: {
         Args: {
           p_test_id: string;
