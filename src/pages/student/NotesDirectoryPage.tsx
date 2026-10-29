@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { StudyNotesService } from '../../services/studyNotesService';
+import { StorageService } from '../../services/storageService';
 import { ApiService } from '../../services/api';
 import { StudyNote } from '../../types';
 import { useToast } from '../../context/ToastContext';
@@ -26,7 +28,8 @@ import { MarkdownRenderer } from '../../components/common/MarkdownRenderer';
 
 export const NotesDirectoryPage: React.FC = () => {
   const toast = useToast();
-  const [notes, setNotes] = useState<StudyNote[]>(() => ApiService.getNotes());
+  const [notes, setNotes] = useState<StudyNote[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -35,17 +38,34 @@ export const NotesDirectoryPage: React.FC = () => {
 
   const subjects = ['All', 'Python', 'Data Structures', 'SQL', 'Algorithms', 'Cloud Computing'];
 
+  useEffect(() => {
+    let isMounted = true;
+    StudyNotesService.getNotes(undefined, true)
+      .then(data => {
+        if (isMounted) {
+          setNotes(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load notes:', err);
+        if (isMounted) setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const filteredNotes = useMemo(() => {
     return notes
       .filter(note => {
-        // Only published notes visible to students
         if (note.status !== 'published') return false;
 
         const matchesSubject = selectedSubject === 'All' || note.subject === selectedSubject;
         const matchesQuery =
           note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           note.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          note.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+          (note.tags && note.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase())));
 
         return matchesSubject && matchesQuery;
       })
@@ -60,15 +80,32 @@ export const NotesDirectoryPage: React.FC = () => {
       });
   }, [notes, searchQuery, selectedSubject, sortBy]);
 
-  const handleDownload = (note: StudyNote) => {
-    if (!note.downloadAvailable || !note.fileUrl) {
-      toast.warning('Download Unavailable', `The PDF file for "${note.title}" is currently being processed by the curriculum team.`);
+  const handleDownload = async (note: StudyNote) => {
+    if (!note.fileUrl) {
+      toast.info('Text Note', `"${note.title}" is an in-browser Markdown note. Click "Read" to view.`);
       return;
     }
 
-    ApiService.incrementNoteDownloads(note.id);
-    setNotes(ApiService.getNotes());
-    toast.success('Download Initiated', `Downloading ${note.title} (${note.fileSize})...`);
+    try {
+      const downloadUrl = await StorageService.getDownloadUrl(note.fileUrl);
+      if (!downloadUrl) {
+        toast.warning('File Unavailable', `The attachment for "${note.title}" is currently unavailable.`);
+        return;
+      }
+
+      ApiService.incrementNoteDownloads(note.id);
+      toast.success('Download Started', `Downloading ${note.title}...`);
+
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.target = '_blank';
+      link.download = `${note.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err: any) {
+      toast.error('Download Failed', err.message || 'Could not download note.');
+    }
   };
 
   return (
@@ -243,20 +280,21 @@ export const NotesDirectoryPage: React.FC = () => {
                     onClick={() => setSelectedNote(note)}
                     leftIcon={<Eye className="w-3.5 h-3.5" />}
                   >
-                    Read
+                    Read Online
                   </Button>
 
-                  <Button
-                    size="sm"
-                    variant={note.downloadAvailable ? 'primary' : 'secondary'}
-                    className="flex-1"
-                    disabled={!note.downloadAvailable}
-                    onClick={() => handleDownload(note)}
-                    leftIcon={<Download className="w-3.5 h-3.5" />}
-                    title={note.downloadAvailable ? `Download ${note.fileSize}` : 'PDF download unavailable for this document'}
-                  >
-                    {note.downloadAvailable ? 'PDF' : 'Draft'}
-                  </Button>
+                  {note.fileUrl && (
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      className="flex-1"
+                      onClick={() => handleDownload(note)}
+                      leftIcon={<Download className="w-3.5 h-3.5" />}
+                      title={`Download ${note.fileSize || 'PDF'}`}
+                    >
+                      PDF
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
@@ -299,18 +337,19 @@ export const NotesDirectoryPage: React.FC = () => {
                   onClick={() => setSelectedNote(note)}
                   leftIcon={<Eye className="w-3.5 h-3.5" />}
                 >
-                  Read
+                  Read Online
                 </Button>
-                <Button
-                  size="sm"
-                  variant={note.downloadAvailable ? 'primary' : 'secondary'}
-                  disabled={!note.downloadAvailable}
-                  onClick={() => handleDownload(note)}
-                  leftIcon={<Download className="w-3.5 h-3.5" />}
-                  title={note.downloadAvailable ? `Download ${note.fileSize}` : 'File unavailable'}
-                >
-                  {note.downloadAvailable ? `PDF (${note.fileSize})` : 'Processing'}
-                </Button>
+                {note.fileUrl && (
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={() => handleDownload(note)}
+                    leftIcon={<Download className="w-3.5 h-3.5" />}
+                    title={`Download ${note.fileSize || 'PDF'}`}
+                  >
+                    PDF ({note.fileSize || 'PDF'})
+                  </Button>
+                )}
               </div>
             </Card>
           ))}
