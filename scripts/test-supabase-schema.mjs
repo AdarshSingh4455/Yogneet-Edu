@@ -2,7 +2,15 @@ import test, { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { validateStagingConfig, loadStagingEnv, KNOWN_PRODUCTION_HOST, runLiveTests, SUCCESS_BANNER } from './test-supabase-live.mjs';
+import {
+  validateStagingConfig,
+  loadStagingEnv,
+  KNOWN_PRODUCTION_HOST,
+  runLiveTests,
+  SUCCESS_BANNER,
+  buildAssessmentFixture,
+  buildAssessmentQuestionsFixture,
+} from './test-supabase-live.mjs';
 
 // -----------------------------------------------------------------------------
 // Test Suite 1: Supabase Migrations & Relational Schema Integrity
@@ -1091,7 +1099,15 @@ describe('Live Test Runner Staging Environment Safety Guards', () => {
               },
             },
             from: (table) => ({
-              insert: async () => ({ error: null }),
+              insert: async (data) => {
+                if (options.failInsertAssessment && table === 'assessments') {
+                  return { data: null, error: { message: "Could not find the 'category' column of 'assessments' in the schema cache", code: 'PGRST204' } };
+                }
+                if (options.failInsertQuestions && table === 'assessment_questions') {
+                  return { data: null, error: { message: 'insert or update on table "assessment_questions" violates foreign key constraint', code: '23503' } };
+                }
+                return { data, error: null };
+              },
               delete: () => ({
                 eq: async (col, val) => {
                   if (table === 'assessments') deletedAssessments.push(val);
@@ -1221,8 +1237,11 @@ describe('Live Test Runner Staging Environment Safety Guards', () => {
   }
 
   it('Safe missing-config skip: gracefully returns SKIPPED status without network access when .env.local is missing', async () => {
-    // When no staging configuration is provided, it must skip cleanly
-    const res = await runLiveTests(null, { exitOnSkip: false });
+    // When no staging configuration is provided and no local file exists, it must skip cleanly
+    const res = await runLiveTests(null, {
+      exitOnSkip: false,
+      envPath: path.resolve(process.cwd(), '.env.local.nonexistent'),
+    });
     assert.equal(res.status, 'SKIPPED');
     assert.ok(res.message.includes('No .env.local staging file detected'));
   });
@@ -1349,5 +1368,94 @@ describe('Live Test Runner Staging Environment Safety Guards', () => {
 
     // Teardown ran
     assert.equal(mock.deletedUsers.length, 2);
+  });
+
+  it('Assessment fixture strictly conforms to public.assessments schema without legacy fields', () => {
+    const fixture = buildAssessmentFixture('test-assess-1', 'run-1');
+    assert.equal(fixture.id, 'test-assess-1');
+    assert.equal(fixture.title, 'E2E Staging Assessment (run-1)');
+    assert.equal(fixture.subject, 'Security');
+    assert.equal(fixture.module, 'Phase 3B');
+    assert.equal(fixture.question_count, 2);
+    assert.equal(fixture.duration_minutes, 15);
+    assert.equal(fixture.difficulty, 'Medium');
+    assert.equal(fixture.type, 'Practice Quiz');
+    assert.equal(fixture.status, 'available');
+    assert.equal(fixture.pass_percentage, 50);
+
+    // Assert absence of invalid legacy columns
+    assert.equal(fixture.category, undefined);
+    assert.equal(fixture.total_marks, undefined);
+    assert.equal(fixture.total_questions, undefined);
+    assert.equal(fixture.passing_percentage, undefined);
+  });
+
+  it('Assessment questions fixture strictly conforms to public.assessment_questions schema', () => {
+    const questions = buildAssessmentQuestionsFixture('test-assess-1', 'run-1');
+    assert.equal(questions.length, 2);
+    for (const q of questions) {
+      assert.ok(q.id.startsWith('q'));
+      assert.equal(q.test_id, 'test-assess-1');
+      assert.ok(typeof q.question_number === 'number');
+      assert.ok(typeof q.text === 'string');
+      assert.ok(typeof q.marks === 'number');
+      assert.ok(typeof q.negative_marks === 'number');
+      assert.ok(Array.isArray(q.options));
+      assert.ok(typeof q.correct_answer_id === 'string');
+      assert.ok(typeof q.explanation === 'string');
+    }
+  });
+
+  it('Insertion error handling: throws and executes teardown if assessment fixture insertion fails', async () => {
+    const stagingConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: 'https://staging-test-abc1234.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'valid-staging-anon-token-xyz',
+      SUPABASE_SERVICE_ROLE_KEY: 'valid-staging-service-token-xyz',
+    };
+
+    const mock = createTestMockClientFactory({ failInsertAssessment: true });
+
+    await assert.rejects(
+      async () => {
+        await runLiveTests(stagingConfig, {
+          clientFactory: mock.clientFactory,
+          throwOnError: true,
+          delayMs: 0,
+        });
+      },
+      /Failed to insert test assessment fixture: Could not find the 'category' column/
+    );
+
+    // Teardown ran for both student users created prior to step 9
+    assert.equal(mock.deletedUsers.length, 2);
+    // Assessment fixture was not marked created because insert failed
+    assert.equal(mock.deletedAssessments.length, 0);
+  });
+
+  it('Insertion error handling: throws and executes teardown if question fixture insertion fails', async () => {
+    const stagingConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: 'https://staging-test-abc1234.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'valid-staging-anon-token-xyz',
+      SUPABASE_SERVICE_ROLE_KEY: 'valid-staging-service-token-xyz',
+    };
+
+    const mock = createTestMockClientFactory({ failInsertQuestions: true });
+
+    await assert.rejects(
+      async () => {
+        await runLiveTests(stagingConfig, {
+          clientFactory: mock.clientFactory,
+          throwOnError: true,
+          delayMs: 0,
+        });
+      },
+      /Failed to insert test assessment questions fixture: insert or update on table/
+    );
+
+    // Teardown ran for both student users and the created assessment fixture
+    assert.equal(mock.deletedUsers.length, 2);
+    assert.equal(mock.deletedAssessments.length, 1);
   });
 });
