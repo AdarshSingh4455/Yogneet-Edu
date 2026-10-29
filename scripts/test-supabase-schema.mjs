@@ -2,6 +2,15 @@ import test, { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import {
+  validateStagingConfig,
+  loadStagingEnv,
+  KNOWN_PRODUCTION_HOST,
+  runLiveTests,
+  SUCCESS_BANNER,
+  buildAssessmentFixture,
+  buildAssessmentQuestionsFixture,
+} from './test-supabase-live.mjs';
 
 // -----------------------------------------------------------------------------
 // Test Suite 1: Supabase Migrations & Relational Schema Integrity
@@ -970,5 +979,483 @@ describe('Frontend-to-Database RPC Contract & Demo Integrity Check', () => {
   it('Frontend returns isDemo = false and isVerified = true when authenticated submission succeeds', () => {
     assert.ok(serviceCode.includes('isVerified: true'));
     assert.ok(serviceCode.includes('isDemo: false'));
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Test Suite 9: Live Test Runner Staging Environment Safety Guards
+// -----------------------------------------------------------------------------
+describe('Live Test Runner Staging Environment Safety Guards', () => {
+  it('Production host constant matches acmhdklihpqzurzuthkw.supabase.co', () => {
+    assert.equal(KNOWN_PRODUCTION_HOST, 'acmhdklihpqzurzuthkw.supabase.co');
+  });
+
+  it('Rejects configuration targeting production host acmhdklihpqzurzuthkw.supabase.co', () => {
+    const invalidConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: `https://${KNOWN_PRODUCTION_HOST}`,
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key-12345678',
+      SUPABASE_SERVICE_ROLE_KEY: 'test-service-key-12345678',
+    };
+    const res = validateStagingConfig(invalidConfig);
+    assert.equal(res.isValid, false);
+    assert.ok(res.errors.some((e) => e.includes('Cannot target production host')));
+  });
+
+  it('Rejects configuration when VITE_ENVIRONMENT is not staging', () => {
+    const invalidConfig = {
+      VITE_ENVIRONMENT: 'production',
+      VITE_SUPABASE_URL: 'https://staging-test-ref.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key-12345678',
+      SUPABASE_SERVICE_ROLE_KEY: 'test-service-key-12345678',
+    };
+    const res = validateStagingConfig(invalidConfig);
+    assert.equal(res.isValid, false);
+    assert.ok(res.errors.some((e) => e.includes("VITE_ENVIRONMENT must be explicitly set to 'staging'")));
+  });
+
+  it('Rejects configuration with missing SUPABASE_SERVICE_ROLE_KEY to guarantee safe teardown', () => {
+    const invalidConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: 'https://staging-test-ref.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key-12345678',
+      SUPABASE_SERVICE_ROLE_KEY: '',
+    };
+    const res = validateStagingConfig(invalidConfig);
+    assert.equal(res.isValid, false);
+    assert.ok(res.errors.some((e) => e.includes('SUPABASE_SERVICE_ROLE_KEY is required')));
+  });
+
+  it('Rejects placeholder URLs and keys', () => {
+    const placeholderConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: 'https://<your-project-ref>.supabase.co',
+      VITE_SUPABASE_ANON_KEY: '<your-anon-public-key>',
+      SUPABASE_SERVICE_ROLE_KEY: '<your-staging-service-role-key>',
+    };
+    const res = validateStagingConfig(placeholderConfig);
+    assert.equal(res.isValid, false);
+    assert.equal(res.errors.length, 3);
+  });
+
+  it('loadStagingEnv strictly ignores .env and never falls back to production .env', () => {
+    // Pass a non-existent path to verify it does not load .env
+    const fakePath = path.resolve(process.cwd(), '.non-existent-staging-env');
+    const loaded = loadStagingEnv(fakePath);
+    // Even if .env exists in cwd, loadStagingEnv must NOT populate from .env
+    assert.equal(loaded.VITE_SUPABASE_URL, undefined);
+  });
+
+  it('Validates and accepts compliant staging configuration', () => {
+    const validConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: 'https://staging-test-abc1234.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'valid-staging-anon-token-xyz',
+      SUPABASE_SERVICE_ROLE_KEY: 'valid-staging-service-token-xyz',
+    };
+    const res = validateStagingConfig(validConfig);
+    assert.equal(res.isValid, true);
+    assert.equal(res.errors.length, 0);
+  });
+
+  // Helper to create mock Supabase client for runner unit tests
+  function createTestMockClientFactory(options = {}) {
+    const deletedUsers = [];
+    const deletedAssessments = [];
+    let studentACreated = false;
+    let studentBCreated = false;
+    let questionsQueryCountA = 0;
+
+    return {
+      deletedUsers,
+      deletedAssessments,
+      clientFactory: (url, key, clientOpts) => {
+        const isAuthClientA = clientOpts?.global?.headers?.Authorization?.includes('token-student-a');
+        const isAuthClientB = clientOpts?.global?.headers?.Authorization?.includes('token-student-b');
+        const isAdmin = key === 'valid-staging-service-token-xyz';
+
+        if (isAdmin) {
+          return {
+            auth: {
+              admin: {
+                createUser: async (params) => {
+                  if (options.failCreateUserA && !studentACreated) {
+                    return { data: null, error: { message: 'failed to create user A' } };
+                  }
+                  if (options.failCreateUserB && studentACreated) {
+                    return { data: null, error: { message: 'failed to create user B' } };
+                  }
+                  if (!studentACreated) {
+                    studentACreated = true;
+                    return { data: { user: { id: 'mock-user-a-uuid' } }, error: null };
+                  }
+                  studentBCreated = true;
+                  return { data: { user: { id: 'mock-user-b-uuid' } }, error: null };
+                },
+                deleteUser: async (id) => {
+                  deletedUsers.push(id);
+                  return { data: {}, error: null };
+                },
+              },
+            },
+            from: (table) => ({
+              insert: async (data) => {
+                if (options.failInsertAssessment && table === 'assessments') {
+                  return { data: null, error: { message: "Could not find the 'category' column of 'assessments' in the schema cache", code: 'PGRST204' } };
+                }
+                if (options.failInsertQuestions && table === 'assessment_questions') {
+                  return { data: null, error: { message: 'insert or update on table "assessment_questions" violates foreign key constraint', code: '23503' } };
+                }
+                return { data, error: null };
+              },
+              delete: () => ({
+                eq: async (col, val) => {
+                  if (table === 'assessments') deletedAssessments.push(val);
+                  return { error: null };
+                },
+              }),
+            }),
+          };
+        }
+
+        if (isAuthClientA) {
+          return {
+            from: (table) => ({
+              select: () => ({
+                eq: (col, val) => ({
+                  single: async () => {
+                    if (table === 'profiles') {
+                      return { data: { role: 'student', status: 'active', bio: '', department: '' }, error: null };
+                    }
+                    if (table === 'assessment_attempts') {
+                      return { data: { score_obtained: 4, max_score: 10, percentage: 40, is_verified: true }, error: null };
+                    }
+                    return { data: null, error: null };
+                  },
+                  select: async () => [],
+                  then: (resolve) => {
+                    if (table === 'assessment_questions') {
+                      questionsQueryCountA++;
+                      // Pre-submission query (1st time) -> 0 rows; Post-submission (2nd time) -> 2 rows
+                      if (questionsQueryCountA === 1) {
+                        return resolve({ data: [] });
+                      }
+                      return resolve({ data: [{ id: 'q1' }, { id: 'q2' }], error: null });
+                    }
+                    return resolve({ data: [] });
+                  },
+                }),
+                select: async () => [],
+                then: (resolve) => resolve({ data: [] }),
+              }),
+              update: (updateFields = {}) => ({
+                eq: (col, val) => {
+                  if (val === 'mock-user-b-uuid') {
+                    // Step 5: Cross-tenant tamper: 0 rows
+                    return { select: async () => ({ data: [] }) };
+                  }
+                  if (updateFields.role === 'admin') {
+                    if (options.failStep6) {
+                      return { select: async () => ({ data: [{ role: 'admin' }], error: null }) };
+                    }
+                    return { select: async () => ({ data: [], error: new Error('Access Denied: Role change blocked') }) };
+                  }
+                  if (updateFields.tests_completed_count !== undefined) {
+                    return { select: async () => ({ data: [], error: new Error('Access Denied: Counter change blocked') }) };
+                  }
+                  // Step 3: Own profile update
+                  return {
+                    select: () => ({
+                      single: async () => ({
+                        data: { bio: 'Aspiring Full Stack Engineer', department: 'Computer Science' },
+                        error: null,
+                      }),
+                    }),
+                  };
+                },
+              }),
+              insert: () => ({
+                select: async () => ({ data: [], error: new Error('RLS policy dropped') }),
+              }),
+            }),
+            rpc: async (fn) => {
+              if (fn === 'get_assessment_questions_for_taking') {
+                return {
+                  data: [
+                    { id: 'q1', text: 'Q1', marks: 5, negative_marks: 1 },
+                    { id: 'q2', text: 'Q2', marks: 5, negative_marks: 1 },
+                  ],
+                  error: null,
+                };
+              }
+              if (fn === 'submit_assessment_attempt') {
+                return {
+                  data: {
+                    attempt_id: 'mock-att-1',
+                    score_obtained: 4,
+                    passed: false,
+                  },
+                  error: null,
+                };
+              }
+              return { data: null, error: null };
+            },
+          };
+        }
+
+        if (isAuthClientB) {
+          return {
+            from: (table) => ({
+              select: () => ({
+                eq: () => ({
+                  then: (resolve) => resolve({ data: [] }),
+                }),
+              }),
+            }),
+          };
+        }
+
+        // Anon Client
+        return {
+          auth: {
+            signInWithPassword: async (credentials) => {
+              if (options.failSignInA && credentials.email.includes('staging.a')) {
+                return { data: { session: null }, error: new Error('Failed to sign in as Student A: Invalid credentials or unconfirmed email') };
+              }
+              if (options.noSessionToken) {
+                return { data: { session: null }, error: null };
+              }
+              if (credentials.email.includes('staging.a')) {
+                return { data: { session: { access_token: 'token-student-a' } }, error: null };
+              }
+              return { data: { session: { access_token: 'token-student-b' } }, error: null };
+            },
+          },
+        };
+      },
+    };
+  }
+
+  it('Safe missing-config skip: gracefully returns SKIPPED status without network access when .env.local is missing', async () => {
+    // When no staging configuration is provided and no local file exists, it must skip cleanly
+    const res = await runLiveTests(null, {
+      exitOnSkip: false,
+      envPath: path.resolve(process.cwd(), '.env.local.nonexistent'),
+    });
+    assert.equal(res.status, 'SKIPPED');
+    assert.ok(res.message.includes('No .env.local staging file detected'));
+  });
+
+  it('Production URL rejection before network/client initialization: fails closed and throws when configured with production host', async () => {
+    const prodConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: `https://${KNOWN_PRODUCTION_HOST}`,
+      VITE_SUPABASE_ANON_KEY: 'valid-staging-anon-token-xyz',
+      SUPABASE_SERVICE_ROLE_KEY: 'valid-staging-service-token-xyz',
+    };
+
+    await assert.rejects(
+      async () => {
+        await runLiveTests(prodConfig, { throwOnInvalid: true });
+      },
+      /Cannot target production host/
+    );
+  });
+
+  it('Email-confirmation or authentication failure: throws and fails closed without false success exit', async () => {
+    const stagingConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: 'https://staging-test-abc1234.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'valid-staging-anon-token-xyz',
+      SUPABASE_SERVICE_ROLE_KEY: 'valid-staging-service-token-xyz',
+    };
+
+    const mock = createTestMockClientFactory({ failSignInA: true });
+
+    await assert.rejects(
+      async () => {
+        await runLiveTests(stagingConfig, {
+          clientFactory: mock.clientFactory,
+          throwOnError: true,
+          delayMs: 0,
+        });
+      },
+      /Failed to sign in as Student A/
+    );
+
+    // Verify teardown still cleaned up the provisioned Student A
+    assert.equal(mock.deletedUsers.length, 1);
+    assert.equal(mock.deletedUsers[0], 'mock-user-a-uuid');
+  });
+
+  it('Partial setup failure and cleanup: cleans up partially created users when an intermediate step fails', async () => {
+    const stagingConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: 'https://staging-test-abc1234.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'valid-staging-anon-token-xyz',
+      SUPABASE_SERVICE_ROLE_KEY: 'valid-staging-service-token-xyz',
+    };
+
+    // Simulate failure during Student B creation after Student A is already created
+    const mock = createTestMockClientFactory({ failCreateUserB: true });
+
+    await assert.rejects(
+      async () => {
+        await runLiveTests(stagingConfig, {
+          clientFactory: mock.clientFactory,
+          throwOnError: true,
+          delayMs: 0,
+        });
+      },
+      /Failed to provision Test Student B/
+    );
+
+    // Verify Student A was cleaned up even though Student B failed to create
+    assert.equal(mock.deletedUsers.length, 1);
+    assert.equal(mock.deletedUsers[0], 'mock-user-a-uuid');
+  });
+
+  it('Genuine success requires all 12 steps and exact final banner: passes when all 12 assertions succeed', async () => {
+    assert.equal(
+      SUCCESS_BANNER,
+      'ALL 12 HARDENED STAGING E2E SECURITY INTEGRATION TESTS PASSED CLEANLY!'
+    );
+
+    // Step 12 select returns 2 questions for student A, 0 for student B
+    const stagingConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: 'https://staging-test-abc1234.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'valid-staging-anon-token-xyz',
+      SUPABASE_SERVICE_ROLE_KEY: 'valid-staging-service-token-xyz',
+    };
+
+    const mock = createTestMockClientFactory();
+
+    const res = await runLiveTests(stagingConfig, {
+      clientFactory: mock.clientFactory,
+      throwOnError: true,
+      delayMs: 0,
+    });
+
+    assert.equal(res.status, 'PASSED');
+    assert.equal(res.completedSteps, 12);
+    // Cleanup ran in finally
+    assert.equal(mock.deletedUsers.length, 2);
+    assert.equal(mock.deletedAssessments.length, 1);
+  });
+
+  it('No accidental success exit code for an incomplete run: rejects and fails if incomplete test count occurs', async () => {
+    const stagingConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: 'https://staging-test-abc1234.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'valid-staging-anon-token-xyz',
+      SUPABASE_SERVICE_ROLE_KEY: 'valid-staging-service-token-xyz',
+    };
+
+    // Simulate an unexpected privilege escalation flaw in Step 6
+    const mock = createTestMockClientFactory({ failStep6: true });
+
+    await assert.rejects(
+      async () => {
+        await runLiveTests(stagingConfig, {
+          clientFactory: mock.clientFactory,
+          throwOnError: true,
+          delayMs: 0,
+        });
+      },
+      /CRITICAL SECURITY VULNERABILITY: Student was able to escalate role to admin/
+    );
+
+    // Teardown ran
+    assert.equal(mock.deletedUsers.length, 2);
+  });
+
+  it('Assessment fixture strictly conforms to public.assessments schema without legacy fields', () => {
+    const fixture = buildAssessmentFixture('test-assess-1', 'run-1');
+    assert.equal(fixture.id, 'test-assess-1');
+    assert.equal(fixture.title, 'E2E Staging Assessment (run-1)');
+    assert.equal(fixture.subject, 'Security');
+    assert.equal(fixture.module, 'Phase 3B');
+    assert.equal(fixture.question_count, 2);
+    assert.equal(fixture.duration_minutes, 15);
+    assert.equal(fixture.difficulty, 'Medium');
+    assert.equal(fixture.type, 'Practice Quiz');
+    assert.equal(fixture.status, 'available');
+    assert.equal(fixture.pass_percentage, 50);
+
+    // Assert absence of invalid legacy columns
+    assert.equal(fixture.category, undefined);
+    assert.equal(fixture.total_marks, undefined);
+    assert.equal(fixture.total_questions, undefined);
+    assert.equal(fixture.passing_percentage, undefined);
+  });
+
+  it('Assessment questions fixture strictly conforms to public.assessment_questions schema', () => {
+    const questions = buildAssessmentQuestionsFixture('test-assess-1', 'run-1');
+    assert.equal(questions.length, 2);
+    for (const q of questions) {
+      assert.ok(q.id.startsWith('q'));
+      assert.equal(q.test_id, 'test-assess-1');
+      assert.ok(typeof q.question_number === 'number');
+      assert.ok(typeof q.text === 'string');
+      assert.ok(typeof q.marks === 'number');
+      assert.ok(typeof q.negative_marks === 'number');
+      assert.ok(Array.isArray(q.options));
+      assert.ok(typeof q.correct_answer_id === 'string');
+      assert.ok(typeof q.explanation === 'string');
+    }
+  });
+
+  it('Insertion error handling: throws and executes teardown if assessment fixture insertion fails', async () => {
+    const stagingConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: 'https://staging-test-abc1234.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'valid-staging-anon-token-xyz',
+      SUPABASE_SERVICE_ROLE_KEY: 'valid-staging-service-token-xyz',
+    };
+
+    const mock = createTestMockClientFactory({ failInsertAssessment: true });
+
+    await assert.rejects(
+      async () => {
+        await runLiveTests(stagingConfig, {
+          clientFactory: mock.clientFactory,
+          throwOnError: true,
+          delayMs: 0,
+        });
+      },
+      /Failed to insert test assessment fixture: Could not find the 'category' column/
+    );
+
+    // Teardown ran for both student users created prior to step 9
+    assert.equal(mock.deletedUsers.length, 2);
+    // Assessment fixture was not marked created because insert failed
+    assert.equal(mock.deletedAssessments.length, 0);
+  });
+
+  it('Insertion error handling: throws and executes teardown if question fixture insertion fails', async () => {
+    const stagingConfig = {
+      VITE_ENVIRONMENT: 'staging',
+      VITE_SUPABASE_URL: 'https://staging-test-abc1234.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'valid-staging-anon-token-xyz',
+      SUPABASE_SERVICE_ROLE_KEY: 'valid-staging-service-token-xyz',
+    };
+
+    const mock = createTestMockClientFactory({ failInsertQuestions: true });
+
+    await assert.rejects(
+      async () => {
+        await runLiveTests(stagingConfig, {
+          clientFactory: mock.clientFactory,
+          throwOnError: true,
+          delayMs: 0,
+        });
+      },
+      /Failed to insert test assessment questions fixture: insert or update on table/
+    );
+
+    // Teardown ran for both student users and the created assessment fixture
+    assert.equal(mock.deletedUsers.length, 2);
+    assert.equal(mock.deletedAssessments.length, 1);
   });
 });
