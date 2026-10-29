@@ -39,6 +39,64 @@ export const KNOWN_PRODUCTION_HOST = 'acmhdklihpqzurzuthkw.supabase.co';
 export const SUCCESS_BANNER = 'ALL 12 HARDENED STAGING E2E SECURITY INTEGRATION TESTS PASSED CLEANLY!';
 
 /**
+ * Builds the assessment test fixture payload matching authoritative schema (public.assessments).
+ */
+export function buildAssessmentFixture(testAssessmentId, testRunId) {
+  return {
+    id: testAssessmentId,
+    title: `E2E Staging Assessment (${testRunId})`,
+    description: 'Automated assessment security test',
+    subject: 'Security',
+    module: 'Phase 3B',
+    question_count: 2,
+    duration_minutes: 15,
+    difficulty: 'Medium',
+    type: 'Practice Quiz',
+    status: 'available',
+    pass_percentage: 50,
+  };
+}
+
+/**
+ * Builds the assessment questions test fixture payload matching authoritative schema (public.assessment_questions).
+ */
+export function buildAssessmentQuestionsFixture(testAssessmentId, testRunId) {
+  const q1Id = `q1-${testRunId}`;
+  const q2Id = `q2-${testRunId}`;
+  return [
+    {
+      id: q1Id,
+      test_id: testAssessmentId,
+      question_number: 1,
+      text: 'What is the standard principle of least privilege?',
+      marks: 5,
+      negative_marks: 1,
+      options: [
+        { id: 'opt_1a', text: 'Grant minimal necessary permissions' },
+        { id: 'opt_1b', text: 'Grant unrestricted superuser access' },
+      ],
+      correct_answer_id: 'opt_1a',
+      explanation: 'Least privilege minimizes the attack surface.',
+    },
+    {
+      id: q2Id,
+      test_id: testAssessmentId,
+      question_number: 2,
+      text: 'Where must assessment scoring calculations be performed?',
+      marks: 5,
+      negative_marks: 1,
+      options: [
+        { id: 'opt_2a', text: 'In the client browser' },
+        { id: 'opt_2b', text: 'On the authoritative server/database' },
+      ],
+      correct_answer_id: 'opt_2b',
+      explanation: 'Server-side scoring prevents student score tampering.',
+    },
+  ];
+}
+
+
+/**
  * Loads environment variables strictly from .env.local (or specified file).
  * Never reads or falls back to .env!
  */
@@ -386,51 +444,13 @@ export async function runLiveTests(injectedEnv, options = {}) {
     const q1Id = `q1-${testRunId}`;
     const q2Id = `q2-${testRunId}`;
 
-    // Admin creates fixture assessment
-    await adminClient.from('assessments').insert({
-      id: testAssessmentId,
-      title: `E2E Staging Assessment (${testRunId})`,
-      description: 'Automated assessment security test',
-      category: 'Security Testing',
-      difficulty: 'Intermediate',
-      total_marks: 10,
-      total_questions: 2,
-      duration_minutes: 15,
-      passing_percentage: 50,
-      status: 'active',
-    });
+    // Admin creates fixture assessment matching authoritative schema
+    const assessmentPayload = buildAssessmentFixture(testAssessmentId, testRunId);
+    await adminClient.from('assessments').insert(assessmentPayload);
     createdAssessment = true;
 
-    await adminClient.from('assessment_questions').insert([
-      {
-        id: q1Id,
-        test_id: testAssessmentId,
-        question_number: 1,
-        text: 'What is the standard principle of least privilege?',
-        marks: 5,
-        negative_marks: 1,
-        options: [
-          { id: 'opt_1a', text: 'Grant minimal necessary permissions' },
-          { id: 'opt_1b', text: 'Grant unrestricted superuser access' },
-        ],
-        correct_answer_id: 'opt_1a',
-        explanation: 'Least privilege minimizes the attack surface.',
-      },
-      {
-        id: q2Id,
-        test_id: testAssessmentId,
-        question_number: 2,
-        text: 'Where must assessment scoring calculations be performed?',
-        marks: 5,
-        negative_marks: 1,
-        options: [
-          { id: 'opt_2a', text: 'In the client browser' },
-          { id: 'opt_2b', text: 'On the authoritative server/database' },
-        ],
-        correct_answer_id: 'opt_2b',
-        explanation: 'Server-side scoring prevents student score tampering.',
-      },
-    ]);
+    const questionsPayload = buildAssessmentQuestionsFixture(testAssessmentId, testRunId);
+    await adminClient.from('assessment_questions').insert(questionsPayload);
 
     // Student A calls taking RPC
     const { data: takingQuestions, error: takingErr } = await clientA.rpc(
