@@ -38,7 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { label: 'Audit Trail Logs', path: '/admin/audit-logs', icon: FileSpreadsheet },
     { label: 'Students Directory', path: '/admin/students', icon: Users },
     { label: 'Content Workspace', path: '/subadmin/content', icon: FileText },
-    { label: 'Test Catalog Manager', path: '/tests', icon: CheckSquare },
+    { label: 'Test Catalog Manager', path: '/admin/tests', icon: CheckSquare },
     { label: 'Coding Arena', path: '/coding', icon: Code2 },
     { label: 'Community Forum', path: '/community', icon: MessageSquare },
     { label: 'Platform Analytics', path: '/admin/analytics', icon: BarChart3 },
@@ -47,11 +47,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   // Navigation items for Sub-Admin generated dynamically from assigned permissions
   const subAdminNav = [
     { label: 'Staff Dashboard', path: '/subadmin', icon: LayoutDashboard },
-    ...(hasPermission('videos.view') || hasPermission('videos.create') || hasPermission('notes.view') || hasPermission('notes.create') || hasPermission('tests.view')
+    ...(hasPermission('videos.view') || hasPermission('videos.create') || hasPermission('notes.view') || hasPermission('notes.create')
       ? [{ label: 'Content Workspace', path: '/subadmin/content', icon: FileText }]
       : []),
-    ...(hasPermission('tests.view')
-      ? [{ label: 'Assessment Catalog', path: '/tests', icon: CheckSquare }]
+    ...(hasPermission('tests.view') || hasPermission('tests.create') || hasPermission('tests.edit')
+      ? [{ label: 'Test Catalog Manager', path: '/admin/tests', icon: CheckSquare }]
       : []),
     ...(hasPermission('community.moderate')
       ? [{ label: 'Community Moderation', path: '/community', icon: MessageSquare, badge: 'Mod' }]
@@ -69,12 +69,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { label: 'My Permissions', path: '/profile', icon: User },
   ];
 
-  // Navigation items for Student
+  // Navigation items for Student (4 Core Learning Stages)
   const studentNav = [
     { label: 'Student Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { label: 'Video Lectures', path: '/videos', icon: Video },
-    { label: 'Study Notes & PDFs', path: '/notes', icon: FileText },
-    { label: 'Test Series & Mocks', path: '/tests', icon: CheckSquare },
+    { label: '1. Video Lessons', path: '/videos', icon: Video },
+    { label: '2. Study Notes & PDFs', path: '/notes', icon: FileText },
+    { label: '3. Practical Projects', path: '/practical', icon: Code2, badge: 'New' },
+    { label: '4. Test Series & Mocks', path: '/tests', icon: CheckSquare },
     { label: 'Coding Practice Arena', path: '/coding', icon: Code2, badge: 'Hot' },
     { label: 'Community Forum', path: '/community', icon: MessageSquare },
     { label: 'My Learning Progress', path: '/progress', icon: TrendingUp },

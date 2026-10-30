@@ -58,6 +58,31 @@ export const StudentManagementPage: React.FC = () => {
   } | null>(null);
   const [isSubmittingImport, setIsSubmittingImport] = useState(false);
 
+  // Entitlement Tier Modal State
+  const [studentToChangeTier, setStudentToChangeTier] = useState<UserProfile | null>(null);
+  const [selectedNewTier, setSelectedNewTier] = useState<StudentAccessCategory>('standard');
+  const [isUpdatingTier, setIsUpdatingTier] = useState(false);
+
+  const handleOpenTierModal = (student: UserProfile) => {
+    setStudentToChangeTier(student);
+    setSelectedNewTier(student.accessCategory || 'standard');
+  };
+
+  const handleUpdateTierConfirm = async () => {
+    if (!studentToChangeTier) return;
+    setIsUpdatingTier(true);
+    try {
+      await StudentDirectoryService.updateStudentEntitlement(currentUser, studentToChangeTier.id, selectedNewTier);
+      toast.success('Access Tier Updated', `Set ${studentToChangeTier.name} to ${selectedNewTier.toUpperCase()} tier.`);
+      setStudentToChangeTier(null);
+      await reloadStudents();
+    } catch (err: any) {
+      toast.error('Update Failed', err.message);
+    } finally {
+      setIsUpdatingTier(false);
+    }
+  };
+
   const canSuspendStudents = hasPermission('students.suspend');
 
   const reloadStudents = async () => {
@@ -354,6 +379,7 @@ export const StudentManagementPage: React.FC = () => {
                   <tr>
                     <th className="py-3 px-4 min-w-[220px]">Student Profile</th>
                     <th className="py-3 px-4 min-w-[160px]">Program / Institution</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Access Tier</th>
                     <th className="py-3 px-4 whitespace-nowrap">Solved Problems</th>
                     <th className="py-3 px-4 whitespace-nowrap">Tests Completed</th>
                     <th className="py-3 px-4 whitespace-nowrap">Status</th>
@@ -363,6 +389,7 @@ export const StudentManagementPage: React.FC = () => {
                 <tbody className="divide-y divide-light-border dark:divide-dark-border">
                   {filteredStudents.map(student => {
                     const isSuspended = student.status === 'suspended';
+                    const tier = student.accessCategory || 'standard';
 
                     return (
                       <tr
@@ -389,6 +416,15 @@ export const StudentManagementPage: React.FC = () => {
                           {student.department || 'Enrolled Student'}
                         </td>
 
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <Badge
+                            variant={tier === 'pro' ? 'purple' : tier === 'scholarship' ? 'brand' : tier === 'managed' ? 'info' : 'default'}
+                            size="sm"
+                          >
+                            {tier.toUpperCase()}
+                          </Badge>
+                        </td>
+
                         <td className="py-3.5 px-4 font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                           {student.solvedProblemsCount || 0} Solved
                         </td>
@@ -404,15 +440,27 @@ export const StudentManagementPage: React.FC = () => {
                         </td>
 
                         <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                          <Button
-                            size="sm"
-                            variant={isSuspended ? 'success' : 'outline'}
-                            disabled={!canSuspendStudents}
-                            onClick={() => setSelectedToSuspend(student)}
-                            leftIcon={isSuspended ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                          >
-                            {isSuspended ? 'Reactivate' : 'Suspend'}
-                          </Button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            {isAdmin && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleOpenTierModal(student)}
+                                className="text-xs text-purple-600 dark:text-purple-400"
+                              >
+                                Tier
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant={isSuspended ? 'success' : 'outline'}
+                              disabled={!canSuspendStudents}
+                              onClick={() => setSelectedToSuspend(student)}
+                              leftIcon={isSuspended ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                            >
+                              {isSuspended ? 'Reactivate' : 'Suspend'}
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -604,6 +652,70 @@ export const StudentManagementPage: React.FC = () => {
           confirmText={selectedToSuspend.status === 'active' ? 'Suspend Student' : 'Reactivate'}
           variant={selectedToSuspend.status === 'active' ? 'danger' : 'primary'}
         />
+      )}
+
+      {/* Tier Management Modal */}
+      {studentToChangeTier && (
+        <Modal
+          isOpen={!!studentToChangeTier}
+          onClose={() => setStudentToChangeTier(null)}
+          title={`Update Access Tier: ${studentToChangeTier.name}`}
+          maxWidth="md"
+        >
+          <div className="space-y-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Select the curriculum entitlement level for <strong>{studentToChangeTier.email}</strong>.
+            </p>
+
+            <div className="space-y-2">
+              {[
+                { value: 'standard', label: 'Standard / Free Tier', desc: 'Published videos, basic notes, standard practice tests.' },
+                { value: 'pro', label: 'Pro Tier', desc: 'Full offline PDF note downloads, premium mock exams, practical evaluations.' },
+                { value: 'managed', label: 'Managed Institutional', desc: 'Assigned cohort and college curriculum resources.' },
+                { value: 'scholarship', label: 'Scholarship Cohort', desc: 'Full platform access via scholarship grant.' },
+              ].map(opt => (
+                <label
+                  key={opt.value}
+                  className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                    selectedNewTier === opt.value
+                      ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/30'
+                      : 'border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-hover'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="student-tier"
+                    value={opt.value}
+                    checked={selectedNewTier === opt.value}
+                    onChange={() => setSelectedNewTier(opt.value as StudentAccessCategory)}
+                    className="mt-0.5 text-purple-600 focus:ring-purple-500"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">
+                      {opt.label}
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                      {opt.desc}
+                    </span>
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-light-border dark:border-dark-border">
+              <Button variant="ghost" onClick={() => setStudentToChangeTier(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleUpdateTierConfirm}
+                disabled={isUpdatingTier}
+              >
+                {isUpdatingTier ? 'Saving...' : 'Save Entitlement Tier'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );

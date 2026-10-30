@@ -161,6 +161,112 @@ export const StudentDashboard: React.FC = () => {
         </Link>
       </div>
 
+      {/* 4-Stage Learning Journey Banner: Learn → Practice → Evaluate → Prepare */}
+      <div className="rounded-3xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-cyan-300 border border-brand-200 dark:border-brand-800">
+                Core Learning Path
+              </span>
+              <span className="text-xs text-slate-400">Structured 4-Stage Mastery</span>
+            </div>
+            <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight mt-1">
+              Learn &rarr; Practice &rarr; Evaluate &rarr; Prepare for Competitive Exams
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Follow our structured pedagogical path from foundational video lectures to timed competitive mock examinations.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Stage 1 */}
+          <div className="p-4 rounded-2xl border border-light-border dark:border-dark-border bg-slate-50 dark:bg-dark-bg/50 flex flex-col justify-between space-y-3">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                  Stage 1: Learn
+                </span>
+                <Play className="w-4 h-4 text-blue-500" />
+              </div>
+              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Video Lessons</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                Conceptual deep dives and architecture walkthroughs by Tech Geek Adarsh.
+              </p>
+            </div>
+            <Link to="/videos">
+              <Button size="sm" variant="outline" className="w-full text-xs font-semibold justify-center">
+                Continue Learning
+              </Button>
+            </Link>
+          </div>
+
+          {/* Stage 2 */}
+          <div className="p-4 rounded-2xl border border-light-border dark:border-dark-border bg-slate-50 dark:bg-dark-bg/50 flex flex-col justify-between space-y-3">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                  Stage 2: Revise
+                </span>
+                <FileText className="w-4 h-4 text-emerald-500" />
+              </div>
+              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Study Notes & PDFs</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                Curated markdown notes and downloadable PDF revision guides.
+              </p>
+            </div>
+            <Link to="/notes">
+              <Button size="sm" variant="outline" className="w-full text-xs font-semibold justify-center">
+                Read Notes
+              </Button>
+            </Link>
+          </div>
+
+          {/* Stage 3 */}
+          <div className="p-4 rounded-2xl border border-light-border dark:border-dark-border bg-slate-50 dark:bg-dark-bg/50 flex flex-col justify-between space-y-3">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">
+                  Stage 3: Practice
+                </span>
+                <Code2 className="w-4 h-4 text-purple-500" />
+              </div>
+              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Practical Projects</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                Lecture assignments, architecture challenges &amp; official rubrics.
+              </p>
+            </div>
+            <Link to="/practical">
+              <Button size="sm" variant="primary" className="w-full text-xs font-semibold justify-center !bg-purple-600 hover:!bg-purple-700 text-white">
+                Practice Now
+              </Button>
+            </Link>
+          </div>
+
+          {/* Stage 4 */}
+          <div className="p-4 rounded-2xl border border-light-border dark:border-dark-border bg-slate-50 dark:bg-dark-bg/50 flex flex-col justify-between space-y-3">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
+                  Stage 4: Evaluate
+                </span>
+                <CheckSquare className="w-4 h-4 text-amber-500" />
+              </div>
+              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Test Series & Mocks</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                Timed competitive mock tests with instant scoring and explanations.
+              </p>
+            </div>
+            <Link to="/tests">
+              <Button size="sm" variant="outline" className="w-full text-xs font-semibold justify-center">
+                Explore Test Series
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Metric Cards Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <Card padding="sm" className="flex items-center gap-4">

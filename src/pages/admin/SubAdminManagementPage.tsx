@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ApiService } from '../../services/api';
+import { StaffAdminService } from '../../services/staffAdminService';
 import { UserProfile, PermissionKey } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -33,6 +34,7 @@ export const SubAdminManagementPage: React.FC = () => {
   const [subAdmins, setSubAdmins] = useState<UserProfile[]>(() => ApiService.getSubAdmins());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'suspended'>('all');
+  const [isLoadingStaff, setIsLoadingStaff] = useState(false);
 
   // Modals state
   const [selectedForPermissions, setSelectedForPermissions] = useState<UserProfile | null>(null);
@@ -46,11 +48,24 @@ export const SubAdminManagementPage: React.FC = () => {
   const [newDepartment, setNewDepartment] = useState('Curriculum & Video Authoring');
   const [newBio, setNewBio] = useState('');
   const [selectedPreset, setSelectedPreset] = useState<string>('content_creator');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const reloadData = () => {
-    setSubAdmins(ApiService.getSubAdmins());
-    refreshUsers();
-  };
+  const reloadData = useCallback(async () => {
+    setIsLoadingStaff(true);
+    try {
+      const data = await StaffAdminService.getStaffMembers();
+      setSubAdmins(data);
+      refreshUsers();
+    } catch (err) {
+      console.error('Failed to load staff members:', err);
+    } finally {
+      setIsLoadingStaff(false);
+    }
+  }, [refreshUsers]);
+
+  useEffect(() => {
+    reloadData();
+  }, [reloadData]);
 
   const filteredSubAdmins = subAdmins.filter(user => {
     const matchesSearch =
@@ -64,62 +79,66 @@ export const SubAdminManagementPage: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleToggleStatusConfirm = () => {
+  const handleToggleStatusConfirm = async () => {
     if (!userToToggleStatus) return;
     try {
-      ApiService.toggleSubAdminStatus(currentUser, userToToggleStatus.id);
+      await StaffAdminService.toggleStaffStatus(currentUser, userToToggleStatus.id);
       toast.success(
         'Account Status Updated',
         `${userToToggleStatus.name} is now ${userToToggleStatus.status === 'active' ? 'SUSPENDED' : 'ACTIVE'}.`
       );
       setUserToToggleStatus(null);
-      reloadData();
+      await reloadData();
     } catch (err: any) {
       toast.error('Operation Failed', err.message);
     }
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!userToDelete) return;
     try {
-      ApiService.deleteSubAdmin(currentUser, userToDelete.id);
+      await StaffAdminService.deleteStaff(currentUser, userToDelete.id);
       toast.success('Account Terminated', `Permanently removed ${userToDelete.name} from staff.`);
       setUserToDelete(null);
-      reloadData();
+      await reloadData();
     } catch (err: any) {
       toast.error('Deletion Failed', err.message);
     }
   };
 
-  const handleCreateSubAdmin = (e: React.FormEvent) => {
+  const handleCreateSubAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || !newEmail.trim()) {
       toast.warning('Form Incomplete', 'Please provide a name and company email.');
       return;
     }
 
-    const presetPerms = ROLE_PRESETS[selectedPreset]?.permissions || [];
+    const presetPerms = (ROLE_PRESETS[selectedPreset]?.permissions || []) as PermissionKey[];
 
+    setIsSubmitting(true);
     try {
-      const created = ApiService.addSubAdmin(currentUser, {
+      const result = await StaffAdminService.provisionStaff(currentUser, {
         name: newName.trim(),
         email: newEmail.trim(),
+        role: 'subadmin',
         department: newDepartment,
         bio: newBio,
         permissions: presetPerms,
       });
 
       toast.success(
-        'Sub-Admin Created',
-        `Account for ${created.name} provisioned with ${presetPerms.length} permissions.`
+        'Staff Account Provisioned',
+        result.message
       );
       setIsAddModalOpen(false);
       setNewName('');
       setNewEmail('');
       setNewBio('');
-      reloadData();
+      await reloadData();
     } catch (err: any) {
-      toast.error('Failed to create account', err.message);
+      toast.error('Failed to provision account', err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

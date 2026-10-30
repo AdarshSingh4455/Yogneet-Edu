@@ -5,6 +5,8 @@ export type UserRole = 'admin' | 'subadmin' | 'student';
 
 export type UserStatus = 'active' | 'suspended';
 
+export type StudentAccessCategory = 'standard' | 'pro' | 'managed' | 'scholarship';
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -18,6 +20,9 @@ export interface UserProfile {
   enrolledCourses?: string[];
   solvedProblemsCount?: number;
   testsCompletedCount?: number;
+  accessCategory?: StudentAccessCategory;
+  institution?: string;
+  program?: string;
   createdAt: string;
   lastActive: string;
 }
@@ -82,6 +87,8 @@ export interface VideoResource {
   hasDownload: boolean;
 }
 
+export type ContentStatus = 'draft' | 'in_review' | 'published' | 'archived';
+
 export interface VideoLesson {
   id: string;
   courseId: string;
@@ -98,12 +105,12 @@ export interface VideoLesson {
   views: number;
   completed: boolean;
   resources: VideoResource[];
+  status?: ContentStatus;
 }
 
 // ==========================================
 // Study Notes Types
 // ==========================================
-export type ContentStatus = 'draft' | 'in_review' | 'published' | 'archived';
 
 export interface StudyNote {
   id: string;
@@ -125,6 +132,8 @@ export interface StudyNote {
   views: number;
   downloads: number;
   status: ContentStatus;
+  isRestricted?: boolean;
+  requiredTier?: StudentAccessCategory;
 }
 
 // ==========================================
@@ -171,6 +180,8 @@ export interface TestSeriesItem {
   bestScore?: number;
   lastAttemptDate?: string;
   tags: string[];
+  isRestricted?: boolean;
+  requiredTier?: StudentAccessCategory;
 }
 
 export interface TestAttemptResult {
@@ -342,12 +353,13 @@ export interface PracticalAssignment {
   authorName: string;
   createdAt: string;
   updatedAt: string;
+  isRestricted?: boolean;
+  requiredTier?: StudentAccessCategory;
 }
 
 // ==========================================
 // Phase 3C: Student Directory Pre-Provisioning
 // ==========================================
-export type StudentAccessCategory = 'standard' | 'managed' | 'scholarship';
 
 export interface StudentDirectoryEntry {
   id: string;

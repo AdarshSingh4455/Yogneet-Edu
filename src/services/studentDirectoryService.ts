@@ -306,7 +306,7 @@ export const StudentDirectoryService = {
           department: typeof row.department === 'string' ? row.department.trim() : undefined,
           institution: typeof row.institution === 'string' ? row.institution.trim() : undefined,
           program: typeof row.program === 'string' ? row.program.trim() : undefined,
-          accessCategory: ['standard', 'managed', 'scholarship'].includes(row.accessCategory) ? row.accessCategory : 'standard',
+          accessCategory: ['standard', 'pro', 'managed', 'scholarship'].includes(row.accessCategory) ? row.accessCategory : 'standard',
         });
       }
     });
@@ -417,5 +417,48 @@ export const StudentDirectoryService = {
       ],
     };
     return JSON.stringify(template, null, 2);
+  },
+
+  /**
+   * Updates a student's access category / entitlement tier.
+   * Only administrators can grant or revoke tiers.
+   */
+  async updateStudentEntitlement(
+    actor: UserProfile,
+    studentId: string,
+    accessCategory: StudentAccessCategory
+  ): Promise<void> {
+    if (actor.role !== 'admin') {
+      throw new Error('Access Denied: Only platform administrators can change access tiers.');
+    }
+
+    if (!isSupabaseConfigured() || !supabase) {
+      const student = ApiService.getUserById(studentId);
+      if (student) {
+        student.accessCategory = accessCategory;
+      }
+      return;
+    }
+
+    try {
+      const { error } = await (supabase as any).rpc('admin_update_student_entitlement', {
+        p_student_id: studentId,
+        p_access_category: accessCategory,
+      });
+
+      if (error) throw new Error(formatSupabaseError(error));
+
+      AuditService.log(
+        actor,
+        'students.view' as any,
+        'StudentEntitlement',
+        studentId,
+        `Updated student ${studentId} access category to ${accessCategory}.`,
+        'SUCCESS'
+      );
+    } catch (err) {
+      console.error('[StudentDirectoryService.updateStudentEntitlement] Error:', err);
+      throw err;
+    }
   },
 };

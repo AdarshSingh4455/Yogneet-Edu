@@ -4,10 +4,19 @@ import { useAuth } from '../context/AuthContext';
 import { AppLayout } from '../components/layout/AppLayout';
 import { AdminRoute, PermissionRoute } from '../permissions/guards';
 
+// Auth Pages (Phase 4A Dual-Portal Architecture)
+import { PortalSelectionPage } from '../pages/auth/PortalSelectionPage';
+import { StudentLoginPage } from '../pages/auth/StudentLoginPage';
+import { StudentSignupPage } from '../pages/auth/StudentSignupPage';
+import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage';
+import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
+import { PlatformLoginPage } from '../pages/auth/PlatformLoginPage';
+
 // Student Pages
 import { StudentDashboard } from '../pages/student/StudentDashboard';
 import { VideoPlayerPage } from '../pages/student/VideoPlayerPage';
 import { NotesDirectoryPage } from '../pages/student/NotesDirectoryPage';
+import { PracticalAssignmentsPage } from '../pages/student/PracticalAssignmentsPage';
 import { TestSeriesPage } from '../pages/student/TestSeriesPage';
 import { AssessmentPage } from '../pages/student/AssessmentPage';
 import { AssessmentResultPage } from '../pages/student/AssessmentResultPage';
@@ -24,6 +33,7 @@ import { SubAdminManagementPage } from '../pages/admin/SubAdminManagementPage';
 import { AuditLogsPage } from '../pages/admin/AuditLogsPage';
 import { AnalyticsPage } from '../pages/admin/AnalyticsPage';
 import { StudentManagementPage } from '../pages/admin/StudentManagementPage';
+import { TestCatalogManagerPage } from '../pages/admin/TestCatalogManagerPage';
 
 // Sub-Admin Pages
 import { SubAdminDashboard } from '../pages/subadmin/SubAdminDashboard';
@@ -43,6 +53,17 @@ const RootRedirector: React.FC = () => {
 export const AppRoutes: React.FC = () => {
   return (
     <Routes>
+      {/* Standalone Auth Routes (Phase 4A Dual-Portal Architecture) */}
+      <Route path="/portal" element={<PortalSelectionPage />} />
+      <Route path="/login" element={<StudentLoginPage />} />
+      <Route path="/auth/student/login" element={<StudentLoginPage />} />
+      <Route path="/signup" element={<StudentSignupPage />} />
+      <Route path="/auth/student/signup" element={<StudentSignupPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/platform/login" element={<PlatformLoginPage />} />
+      <Route path="/auth/platform/login" element={<PlatformLoginPage />} />
+
       {/* Distraction-Free Fullscreen Assessment Route */}
       <Route path="/assessment/:testId" element={<AssessmentPage />} />
 
@@ -51,10 +72,12 @@ export const AppRoutes: React.FC = () => {
         {/* Root Redirect */}
         <Route path="/" element={<RootRedirector />} />
 
-        {/* Student Experience */}
+        {/* Student Experience: 4 Core Learning Stages */}
         <Route path="/dashboard" element={<StudentDashboard />} />
         <Route path="/videos" element={<VideoPlayerPage />} />
         <Route path="/notes" element={<NotesDirectoryPage />} />
+        <Route path="/practical" element={<PracticalAssignmentsPage />} />
+        <Route path="/assignments" element={<Navigate to="/practical" replace />} />
         <Route path="/tests" element={<TestSeriesPage />} />
         <Route path="/assessment/:testId/result" element={<AssessmentResultPage />} />
         <Route path="/coding" element={<CodingArenaPage />} />
@@ -69,11 +92,13 @@ export const AppRoutes: React.FC = () => {
         <Route
           path="/subadmin/content"
           element={
-            <PermissionRoute permissions={['videos.view', 'videos.create', 'notes.view', 'notes.create', 'tests.view']}>
+            <PermissionRoute permissions={['videos.view', 'videos.create', 'notes.view', 'notes.create']}>
               <ContentWorkspacePage />
             </PermissionRoute>
           }
         />
+        {/* Alias for subadmin test catalog to authoritative Test Catalog Manager */}
+        <Route path="/subadmin/tests" element={<Navigate to="/admin/tests" replace />} />
 
         {/* Admin Experience */}
         <Route
@@ -82,6 +107,14 @@ export const AppRoutes: React.FC = () => {
             <AdminRoute>
               <AdminDashboard />
             </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/tests"
+          element={
+            <PermissionRoute permissions={['tests.view', 'tests.create', 'tests.edit', 'tests.publish']}>
+              <TestCatalogManagerPage />
+            </PermissionRoute>
           }
         />
         <Route

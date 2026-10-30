@@ -162,6 +162,30 @@ export const StorageService = {
   },
 
   /**
+   * Resolves an authorized download URL for a study note by verifying server-side entitlement.
+   */
+  async getAuthorizedNoteDownloadUrl(noteId: string): Promise<string> {
+    if (!isSupabaseConfigured() || !supabase) {
+      return '';
+    }
+
+    const { data, error } = await (supabase as any).rpc('get_study_note_download_url', {
+      p_note_id: noteId,
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Access Denied: Insufficient entitlement.');
+    }
+
+    if (!data?.fileUrl) {
+      return '';
+    }
+
+    const isPrivate = Boolean(data.isRestricted || (data.requiredTier && data.requiredTier !== 'standard'));
+    return this.getDownloadUrl(data.fileUrl, isPrivate);
+  },
+
+  /**
    * Compensating cleanup: deletes an uploaded file if a database transaction fails.
    */
   async deleteFile(storagePath: string, isPrivate = false): Promise<void> {

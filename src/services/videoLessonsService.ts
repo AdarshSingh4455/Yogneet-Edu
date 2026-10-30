@@ -92,6 +92,7 @@ function rowToVideoLesson(row: VideoRow): VideoLesson {
     views: row.views || 0,
     completed: false,
     resources: Array.isArray(row.resources) ? (row.resources as any) : [],
+    status: (row.status as ContentStatus) || 'published',
   };
 }
 

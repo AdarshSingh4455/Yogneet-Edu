@@ -26,6 +26,9 @@ export interface Database {
           status: 'active' | 'suspended';
           department: string | null;
           bio: string | null;
+          access_category: 'standard' | 'pro' | 'managed' | 'scholarship';
+          institution: string | null;
+          program: string | null;
           enrolled_courses: string[];
           solved_problems_count: number;
           tests_completed_count: number;
@@ -41,6 +44,9 @@ export interface Database {
           status?: 'active' | 'suspended';
           department?: string | null;
           bio?: string | null;
+          access_category?: 'standard' | 'pro' | 'managed' | 'scholarship';
+          institution?: string | null;
+          program?: string | null;
           enrolled_courses?: string[];
           solved_problems_count?: number;
           tests_completed_count?: number;
@@ -56,6 +62,9 @@ export interface Database {
           status?: 'active' | 'suspended';
           department?: string | null;
           bio?: string | null;
+          access_category?: 'standard' | 'pro' | 'managed' | 'scholarship';
+          institution?: string | null;
+          program?: string | null;
           enrolled_courses?: string[];
           solved_problems_count?: number;
           tests_completed_count?: number;
@@ -495,7 +504,7 @@ export interface Database {
           institution: string | null;
           program: string | null;
           status: 'active' | 'suspended';
-          access_category: 'standard' | 'managed' | 'scholarship';
+          access_category: 'standard' | 'pro' | 'managed' | 'scholarship';
           created_at: string;
           updated_at: string;
         };
@@ -507,7 +516,7 @@ export interface Database {
           institution?: string | null;
           program?: string | null;
           status?: 'active' | 'suspended';
-          access_category?: 'standard' | 'managed' | 'scholarship';
+          access_category?: 'standard' | 'pro' | 'managed' | 'scholarship';
           created_at?: string;
           updated_at?: string;
         };
@@ -519,7 +528,48 @@ export interface Database {
           institution?: string | null;
           program?: string | null;
           status?: 'active' | 'suspended';
-          access_category?: 'standard' | 'managed' | 'scholarship';
+          access_category?: 'standard' | 'pro' | 'managed' | 'scholarship';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      staff_invitations: {
+        Row: {
+          id: string;
+          email: string;
+          name: string;
+          role: 'subadmin' | 'admin';
+          department: string;
+          bio: string;
+          permissions: string[];
+          invited_by: string | null;
+          status: 'pending' | 'accepted' | 'revoked';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          name: string;
+          role?: 'subadmin' | 'admin';
+          department?: string;
+          bio?: string;
+          permissions?: string[];
+          invited_by?: string | null;
+          status?: 'pending' | 'accepted' | 'revoked';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          name?: string;
+          role?: 'subadmin' | 'admin';
+          department?: string;
+          bio?: string;
+          permissions?: string[];
+          invited_by?: string | null;
+          status?: 'pending' | 'accepted' | 'revoked';
           created_at?: string;
           updated_at?: string;
         };

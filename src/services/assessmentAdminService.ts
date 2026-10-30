@@ -474,4 +474,66 @@ export const AssessmentAdminService = {
 
     return JSON.stringify(template, null, 2);
   },
+
+  /**
+   * Alias for validating assessment JSON strings.
+   */
+  validateAssessmentJson(jsonString: string): JsonValidationResult {
+    return this.validateJsonImport(jsonString);
+  },
+
+  /**
+   * Alias for generating sample JSON template.
+   */
+  getSampleJsonTemplate(): string {
+    return this.generateJsonTemplate();
+  },
+
+  /**
+   * Executes validated bulk import from a JSON string.
+   */
+  async importAssessmentFromJson(
+    actor: UserProfile,
+    jsonString: string
+  ): Promise<{ testId: string; title: string; questionCount: number }> {
+    const val = this.validateJsonImport(jsonString);
+    if (!val.isValid || !val.payload) {
+      throw new Error(val.errors.join('; '));
+    }
+    const { assessment, questions } = val.payload;
+    const formattedQuestions: QuestionDraft[] = questions.map((q: AssessmentImportQuestion, idx: number) => ({
+      text: q.text || q.question_text || `Question ${idx + 1}`,
+      codeSnippet: q.code_snippet,
+      codeLanguage: q.code_language,
+      options: q.options,
+      correctAnswerId: q.correct_answer_id,
+      explanation: q.explanation || '',
+      marks: q.marks || 4,
+      negativeMarks: q.negative_marks ?? 1,
+    }));
+
+    const res = await this.saveAssessmentWithQuestions(
+      actor,
+      {
+        id: assessment.id,
+        title: assessment.title,
+        description: assessment.description || '',
+        subject: assessment.subject,
+        module: assessment.module || 'Core',
+        durationMinutes: assessment.duration_minutes || 30,
+        difficulty: assessment.difficulty,
+        type: assessment.type,
+        status: assessment.status || 'available',
+        passPercentage: assessment.pass_percentage || 50,
+        tags: assessment.tags || [assessment.subject],
+      },
+      formattedQuestions
+    );
+
+    return {
+      testId: res.testId,
+      title: assessment.title,
+      questionCount: res.questionCount,
+    };
+  },
 };
