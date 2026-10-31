@@ -21,6 +21,7 @@ import {
   Filter,
   CheckCircle2,
   Trash2,
+  Edit2,
   Eye,
   Download,
   FileCode,
@@ -67,10 +68,12 @@ export const ContentWorkspacePage: React.FC = () => {
   const canCreateNotes = hasPermission('notes.create') || isAdmin;
   const canPublishNotes = hasPermission('notes.publish') || isAdmin;
   const canDeleteNotes = hasPermission('notes.delete') || isAdmin;
+  const canEditNotes = hasPermission('notes.edit') || isAdmin;
 
   const canCreateVideos = hasPermission('videos.create') || isAdmin;
   const canPublishVideos = hasPermission('videos.publish') || isAdmin;
   const canDeleteVideos = hasPermission('videos.delete') || isAdmin;
+  const canEditVideos = hasPermission('videos.edit') || isAdmin;
 
   // =========================================================================
   // Note Creation State
@@ -90,6 +93,16 @@ export const ContentWorkspacePage: React.FC = () => {
   const [noteToDelete, setNoteToDelete] = useState<StudyNote | null>(null);
   const [noteToPublish, setNoteToPublish] = useState<StudyNote | null>(null);
 
+  // Edit Note State
+  const [noteToEdit, setNoteToEdit] = useState<StudyNote | null>(null);
+  const [editNoteTitle, setEditNoteTitle] = useState('');
+  const [editNoteSubject, setEditNoteSubject] = useState('Python');
+  const [editNoteCategory, setEditNoteCategory] = useState('Study Guide');
+  const [editNoteExcerpt, setEditNoteExcerpt] = useState('');
+  const [editNoteMarkdown, setEditNoteMarkdown] = useState('');
+  const [editNoteStatus, setEditNoteStatus] = useState<ContentStatus>('draft');
+  const [isUpdatingNote, setIsUpdatingNote] = useState(false);
+
   // =========================================================================
   // Video Creation State
   // =========================================================================
@@ -104,6 +117,17 @@ export const ContentWorkspacePage: React.FC = () => {
   const [videoStatus, setVideoStatus] = useState<'draft' | 'published' | 'archived'>('published');
   const [isSubmittingVideo, setIsSubmittingVideo] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState<VideoLesson | null>(null);
+
+  // Edit Video State
+  const [videoToEdit, setVideoToEdit] = useState<VideoLesson | null>(null);
+  const [editVideoTitle, setEditVideoTitle] = useState('');
+  const [editVideoCourse, setEditVideoCourse] = useState('Python');
+  const [editVideoModule, setEditVideoModule] = useState('Core Architecture');
+  const [editVideoUrl, setEditVideoUrl] = useState('');
+  const [editVideoDuration, setEditVideoDuration] = useState('18:45');
+  const [editVideoDescription, setEditVideoDescription] = useState('');
+  const [editVideoStatus, setEditVideoStatus] = useState<'draft' | 'published' | 'archived'>('published');
+  const [isUpdatingVideo, setIsUpdatingVideo] = useState(false);
 
   // =========================================================================
   // Practical Assignment State
@@ -259,6 +283,43 @@ export const ContentWorkspacePage: React.FC = () => {
     }
   };
 
+  const handleOpenEditNote = (note: StudyNote) => {
+    setNoteToEdit(note);
+    setEditNoteTitle(note.title);
+    setEditNoteSubject(note.subject);
+    setEditNoteCategory(note.category || 'Study Guide');
+    setEditNoteExcerpt(note.excerpt);
+    setEditNoteMarkdown(note.fullMarkdown || '');
+    setEditNoteStatus(note.status);
+  };
+
+  const handleUpdateNoteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!noteToEdit) return;
+    if (!canEditNotes) {
+      toast.error('Permission Denied', 'You lack "notes.edit" authorization.');
+      return;
+    }
+    setIsUpdatingNote(true);
+    try {
+      await StudyNotesService.updateNote(currentUser, noteToEdit.id, {
+        title: editNoteTitle.trim(),
+        subject: editNoteSubject.trim(),
+        category: editNoteCategory.trim(),
+        excerpt: editNoteExcerpt.trim(),
+        fullMarkdown: editNoteMarkdown,
+        status: editNoteStatus,
+      });
+      toast.success('Note Updated', `"${editNoteTitle}" has been updated.`);
+      setNoteToEdit(null);
+      await reloadData();
+    } catch (err: any) {
+      toast.error('Update Failed', err.message);
+    } finally {
+      setIsUpdatingNote(false);
+    }
+  };
+
   // =========================================================================
   // Handlers: Video Lessons
   // =========================================================================
@@ -319,6 +380,45 @@ export const ContentWorkspacePage: React.FC = () => {
       await reloadData();
     } catch (err: any) {
       toast.error('Delete Failed', err.message);
+    }
+  };
+
+  const handleOpenEditVideo = (video: VideoLesson) => {
+    setVideoToEdit(video);
+    setEditVideoTitle(video.title);
+    setEditVideoCourse(video.courseTitle);
+    setEditVideoModule(video.moduleName);
+    setEditVideoUrl(`https://www.youtube.com/watch?v=${video.youtubeId}`);
+    setEditVideoDuration(video.duration);
+    setEditVideoDescription(video.description || '');
+    setEditVideoStatus((video.status as 'draft' | 'published' | 'archived') || 'published');
+  };
+
+  const handleUpdateVideoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!videoToEdit) return;
+    if (!canEditVideos) {
+      toast.error('Permission Denied', 'You lack "videos.edit" authorization.');
+      return;
+    }
+    setIsUpdatingVideo(true);
+    try {
+      await VideoLessonsService.updateVideoLesson(currentUser, videoToEdit.id, {
+        title: editVideoTitle.trim(),
+        courseTitle: editVideoCourse.trim(),
+        moduleName: editVideoModule.trim(),
+        videoUrl: editVideoUrl.trim(),
+        duration: editVideoDuration.trim(),
+        description: editVideoDescription.trim(),
+        status: editVideoStatus,
+      });
+      toast.success('Video Updated', `"${editVideoTitle}" has been updated.`);
+      setVideoToEdit(null);
+      await reloadData();
+    } catch (err: any) {
+      toast.error('Update Failed', err.message);
+    } finally {
+      setIsUpdatingVideo(false);
     }
   };
 
@@ -610,6 +710,14 @@ export const ContentWorkspacePage: React.FC = () => {
                             </Button>
                           )}
                           <button
+                            onClick={() => handleOpenEditNote(note)}
+                            disabled={!canEditNotes}
+                            className="p-1.5 rounded-lg border border-slate-300 dark:border-dark-border text-slate-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors"
+                            title="Edit note"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={() => setNoteToDelete(note)}
                             disabled={!canDeleteNotes}
                             className="p-1.5 rounded-lg border border-slate-300 dark:border-dark-border text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
@@ -672,13 +780,24 @@ export const ContentWorkspacePage: React.FC = () => {
 
                     <div className="pt-2 flex items-center justify-between border-t border-light-border dark:border-dark-border">
                       <span className="text-[11px] text-slate-400">{video.publishedAt}</span>
-                      <button
-                        onClick={() => setVideoToDelete(video)}
-                        className="p-1.5 rounded-lg border border-slate-300 dark:border-dark-border text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                        title="Delete video lesson"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => handleOpenEditVideo(video)}
+                          disabled={!canEditVideos}
+                          className="p-1.5 rounded-lg border border-slate-300 dark:border-dark-border text-slate-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors"
+                          title="Edit video lesson"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setVideoToDelete(video)}
+                          disabled={!canDeleteVideos}
+                          className="p-1.5 rounded-lg border border-slate-300 dark:border-dark-border text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                          title="Delete video lesson"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </Card>
                 );
@@ -1193,6 +1312,227 @@ export const ContentWorkspacePage: React.FC = () => {
               </div>
             )}
           </div>
+        </Modal>
+      )}
+
+      {/* =================================================================== */}
+      {/* MODAL: EDIT STUDY NOTE */}
+      {/* =================================================================== */}
+      {noteToEdit && (
+        <Modal
+          isOpen={!!noteToEdit}
+          onClose={() => setNoteToEdit(null)}
+          title={`Edit Study Note: ${noteToEdit.title}`}
+          maxWidth="2xl"
+        >
+          <form onSubmit={handleUpdateNoteSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Document Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editNoteTitle}
+                  onChange={e => setEditNoteTitle(e.target.value)}
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Subject / Track
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editNoteSubject}
+                  onChange={e => setEditNoteSubject(e.target.value)}
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Category
+                </label>
+                <input
+                  type="text"
+                  value={editNoteCategory}
+                  onChange={e => setEditNoteCategory(e.target.value)}
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Publication Status
+                </label>
+                <select
+                  value={editNoteStatus}
+                  onChange={e => setEditNoteStatus(e.target.value as ContentStatus)}
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                >
+                  <option value="draft">Draft (Private)</option>
+                  <option value="published">Published (Visible to Students)</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Short Excerpt
+              </label>
+              <textarea
+                rows={2}
+                value={editNoteExcerpt}
+                onChange={e => setEditNoteExcerpt(e.target.value)}
+                className="w-full text-xs px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Markdown Content
+              </label>
+              <textarea
+                rows={6}
+                value={editNoteMarkdown}
+                onChange={e => setEditNoteMarkdown(e.target.value)}
+                className="w-full text-xs font-mono px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setNoteToEdit(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" size="sm" isLoading={isUpdatingNote}>
+                Save Changes
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* =================================================================== */}
+      {/* MODAL: EDIT VIDEO LESSON */}
+      {/* =================================================================== */}
+      {videoToEdit && (
+        <Modal
+          isOpen={!!videoToEdit}
+          onClose={() => setVideoToEdit(null)}
+          title={`Edit Video Lesson: ${videoToEdit.title}`}
+          maxWidth="2xl"
+        >
+          <form onSubmit={handleUpdateVideoSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Lesson Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editVideoTitle}
+                  onChange={e => setEditVideoTitle(e.target.value)}
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Course / Subject
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editVideoCourse}
+                  onChange={e => setEditVideoCourse(e.target.value)}
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Module Name
+                </label>
+                <input
+                  type="text"
+                  value={editVideoModule}
+                  onChange={e => setEditVideoModule(e.target.value)}
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Duration (mm:ss)
+                </label>
+                <input
+                  type="text"
+                  value={editVideoDuration}
+                  onChange={e => setEditVideoDuration(e.target.value)}
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Status
+                </label>
+                <select
+                  value={editVideoStatus}
+                  onChange={e => setEditVideoStatus(e.target.value as any)}
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                YouTube URL or 11-char Video ID
+              </label>
+              <input
+                type="text"
+                required
+                value={editVideoUrl}
+                onChange={e => setEditVideoUrl(e.target.value)}
+                className="w-full text-xs px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Description
+              </label>
+              <textarea
+                rows={3}
+                value={editVideoDescription}
+                onChange={e => setEditVideoDescription(e.target.value)}
+                className="w-full text-xs px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setVideoToEdit(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" size="sm" isLoading={isUpdatingVideo}>
+                Save Changes
+              </Button>
+            </div>
+          </form>
         </Modal>
       )}
 
