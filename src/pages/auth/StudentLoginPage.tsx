@@ -14,7 +14,6 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
-  Sparkles,
   Info,
   ShieldAlert,
   CheckCircle2,
@@ -22,7 +21,7 @@ import {
 
 export const StudentLoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signInWithEmail, signInWithGoogle, switchUser, backendMode } = useAuth();
+  const { signInWithEmail, signInWithGoogle, backendMode } = useAuth();
   const toast = useToast();
 
   const [email, setEmail] = useState('');
@@ -74,17 +73,6 @@ export const StudentLoginPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleQuickDemoStudent = () => {
-    setEmail('student@yogneet.edu');
-    setPassword('student123');
-    switchUser('usr_student_1');
-    toast.info(
-      'Demo Student Session Initialized',
-      'Entering student learning journey in prototype mode.'
-    );
-    navigate('/dashboard');
   };
 
   const handleGoogleSignInClick = async () => {
@@ -206,20 +194,6 @@ export const StudentLoginPage: React.FC = () => {
           <span>Sign in with Google</span>
         </button>
 
-        {/* Prototype / Demo Quick Access */}
-        {backendMode === 'local-mock' && (
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={handleQuickDemoStudent}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-brand-700 dark:text-cyan-300 bg-brand-50 dark:bg-cyan-950/30 hover:bg-brand-100 dark:hover:bg-cyan-950/50 border border-brand-200 dark:border-cyan-800/40 transition-colors"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-brand-500 dark:text-cyan-400" />
-              <span>Explore as Demo Student (Instant Access)</span>
-            </button>
-          </div>
-        )}
-
         {/* Sign Up Link */}
         <div className="text-center text-xs text-slate-500 dark:text-slate-400 pt-2">
           New to Yogneet Edu?{' '}
@@ -269,24 +243,13 @@ export const StudentLoginPage: React.FC = () => {
             <p className="font-medium">In the meantime, you can:</p>
             <ul className="space-y-1.5 pl-4 list-disc text-slate-600 dark:text-slate-300">
               <li>Sign in using your student email and password</li>
-              <li>Use the one-click demo student access button to preview the full student portal</li>
               <li>Register a new student account using the signup form</li>
             </ul>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" size="sm" onClick={() => setShowGoogleModal(false)}>
-              Close
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => {
-                setShowGoogleModal(false);
-                handleQuickDemoStudent();
-              }}
-            >
-              Continue as Demo Student
+            <Button variant="primary" size="sm" onClick={() => setShowGoogleModal(false)}>
+              Got it
             </Button>
           </div>
         </div>

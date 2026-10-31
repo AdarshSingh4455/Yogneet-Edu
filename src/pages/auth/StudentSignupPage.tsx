@@ -23,7 +23,7 @@ import {
 
 export const StudentSignupPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signUpStudent, switchUser } = useAuth();
+  const { signUpStudent } = useAuth();
   const toast = useToast();
 
   const [fullName, setFullName] = useState('');

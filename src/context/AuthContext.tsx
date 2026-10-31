@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { PermissionKey, UserProfile, UserRole } from '../types';
 import { ApiService } from '../services/api';
 import { ProfileService, ProfileUpdatePayload } from '../services/profileService';
-import { supabase, isSupabaseConfigured, getBackendMode, BackendMode, supabaseConfig } from '../services/supabaseClient';
+import { supabase, isSupabaseConfigured, getBackendMode, BackendMode, supabaseConfig, formatSupabaseError } from '../services/supabaseClient';
 import {
   hasPermission as checkPermission,
   hasAnyPermission as checkAnyPermission,
@@ -22,7 +22,7 @@ export interface AuthContextType {
   isSubAdmin: boolean;
   isStudent: boolean;
   refreshUsers: () => void;
-  updateUserPermissions: (userId: string, permissions: PermissionKey[]) => void;
+  updateUserPermissions: (userId: string, permissions: PermissionKey[]) => Promise<void> | void;
   updateCurrentUserProfile: (updates: ProfileUpdatePayload) => Promise<UserProfile>;
   backendMode: BackendMode;
   isLoading: boolean;
@@ -58,12 +58,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [currentUserId, setCurrentUserId] = useState<string>(() => {
     try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlUser = urlParams.get('persona') || urlParams.get('user');
-      if (urlUser && ApiService.getUserById(urlUser)) {
-        localStorage.setItem(CURRENT_USER_KEY, urlUser);
-        return urlUser;
-      }
       const saved = localStorage.getItem(CURRENT_USER_KEY);
       if (saved && ApiService.getUserById(saved)) return saved;
     } catch {
@@ -158,12 +152,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const switchUser = (userId: string) => {
     // In live Supabase mode, switching personas is not allowed to bypass real authentication
-    if (backendMode === 'supabase' && activeProfile) {
+    if (backendMode === 'supabase' || activeProfile) {
       console.warn('[AuthProvider] Persona switching is disabled when authenticated with real Supabase credentials.');
       return;
     }
 
-    if (supabaseConfig.isFatalConfigError) {
+    if (supabaseConfig.isFatalConfigError || Boolean((import.meta as unknown as { env?: Record<string, string | undefined> }).env?.PROD)) {
       console.warn('[AuthProvider] Persona switching is blocked in production fail-closed mode.');
       return;
     }
@@ -180,7 +174,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateUserPermissions = (userId: string, newPermissions: PermissionKey[]) => {
+  const updateUserPermissions = async (userId: string, newPermissions: PermissionKey[]): Promise<void> => {
+    if (isSupabaseConfigured() && supabase) {
+      // 1. Delete existing permissions from Supabase user_permissions table
+      const { error: delErr } = await (supabase as any)
+        .from('user_permissions')
+        .delete()
+        .eq('user_id', userId);
+
+      if (delErr) {
+        throw new Error(formatSupabaseError(delErr));
+      }
+
+      // 2. Insert updated permissions
+      if (newPermissions.length > 0) {
+        const rows = newPermissions.map(p => ({
+          user_id: userId,
+          permission_key: p,
+        }));
+        const { error: insErr } = await (supabase as any)
+          .from('user_permissions')
+          .insert(rows);
+
+        if (insErr) {
+          throw new Error(formatSupabaseError(insErr));
+        }
+      }
+
+      if (activeProfile && activeProfile.id === userId) {
+        setActiveProfile({
+          ...activeProfile,
+          permissions: newPermissions,
+        });
+      }
+    }
+
     ApiService.updateUserPermissions(currentUser, userId, newPermissions);
     refreshUsers();
   };
