@@ -134,9 +134,9 @@ export const PlatformLoginPage: React.FC = () => {
       cardSubtitle="Restricted access for authorized faculty, subject experts, and system administrators."
       securityNotice="Staff access is monitored. Role assignments and security permissions are enforced by server-side claims in Supabase Auth."
     >
-      <form onSubmit={handleSignIn} className="space-y-4" noValidate>
+      <form onSubmit={handleSignIn} className="space-y-3 lg:space-y-2 xl:space-y-3.5" noValidate>
         {errors.general && (
-          <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300">
+          <div className="p-2.5 xl:p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start gap-2 text-xs text-rose-700 dark:text-rose-300">
             <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
             <span>{errors.general}</span>
           </div>
@@ -201,14 +201,14 @@ export const PlatformLoginPage: React.FC = () => {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-sm font-bold shadow-lg shadow-purple-500/25 transition-all duration-150 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="w-full flex items-center justify-center gap-2 py-2.5 xl:py-3 px-4 rounded-xl bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs sm:text-sm font-bold shadow-lg shadow-purple-500/25 transition-all duration-150 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
           <span>{isLoading ? 'Authenticating...' : 'Sign In to Platform Portal'}</span>
           {!isLoading && <ArrowRight className="w-4 h-4" />}
         </button>
 
         {/* Divider matching Ref-1 */}
-        <div className="relative my-3 flex items-center justify-center">
+        <div className="relative my-2 xl:my-2.5 flex items-center justify-center">
           <div className="w-full border-t border-slate-200 dark:border-slate-800" />
           <span className="absolute px-3 bg-white dark:bg-[#0E172A] text-[10px] font-bold uppercase tracking-wider text-slate-400">
             OR
@@ -218,7 +218,7 @@ export const PlatformLoginPage: React.FC = () => {
         {/* Switch to Student Portal button matching Ref-1 */}
         <Link
           to="/login"
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-white dark:bg-dark-card hover:bg-blue-50/50 dark:hover:bg-blue-950/30 text-blue-600 dark:text-blue-400 text-xs sm:text-sm font-semibold transition-all shadow-2xs"
+          className="w-full flex items-center justify-center gap-2 py-2 xl:py-2.5 px-4 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-white dark:bg-dark-card hover:bg-blue-50/50 dark:hover:bg-blue-950/30 text-blue-600 dark:text-blue-400 text-xs sm:text-sm font-semibold transition-all shadow-2xs"
         >
           <GraduationCap className="w-4 h-4" />
           <span>Switch to Student Learning Portal</span>

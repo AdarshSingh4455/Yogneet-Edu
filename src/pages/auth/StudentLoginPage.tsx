@@ -145,16 +145,16 @@ export const StudentLoginPage: React.FC = () => {
       cardTitle="Student Sign In"
       cardSubtitle="Continue your structured learning journey — video lessons, study notes, practicals, and test series."
     >
-      <form onSubmit={handleSignIn} className="space-y-4" noValidate>
+      <form onSubmit={handleSignIn} className="space-y-3 lg:space-y-2 xl:space-y-3.5" noValidate>
         {errors.general && (
-          <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300">
+          <div className="p-2.5 xl:p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start gap-2 text-xs text-rose-700 dark:text-rose-300">
             <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
             <span>{errors.general}</span>
           </div>
         )}
 
         {searchParams.get('oauth_callback') === 'true' && isAuthLoading && (
-          <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 flex items-center gap-2.5 text-xs text-blue-700 dark:text-blue-300">
+          <div className="p-2.5 xl:p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 flex items-center gap-2 text-xs text-blue-700 dark:text-blue-300">
             <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin shrink-0" />
             <span>Completing Google Single Sign-On session...</span>
           </div>
@@ -225,14 +225,14 @@ export const StudentLoginPage: React.FC = () => {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white text-sm font-bold shadow-lg shadow-cyan-500/25 transition-all duration-150 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+          className="w-full flex items-center justify-center gap-2 py-2.5 xl:py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white text-xs sm:text-sm font-bold shadow-lg shadow-cyan-500/25 transition-all duration-150 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-cyan-500"
         >
           <span>{isLoading ? 'Signing In...' : 'Sign In to Student Portal'}</span>
           {!isLoading && <ArrowRight className="w-4 h-4" />}
         </button>
 
         {/* Divider */}
-        <div className="relative my-3 flex items-center justify-center">
+        <div className="relative my-2 xl:my-2.5 flex items-center justify-center">
           <div className="w-full border-t border-slate-200 dark:border-slate-800" />
           <span className="absolute px-3 bg-white dark:bg-[#0E172A] text-[10px] font-bold uppercase tracking-wider text-slate-400">
             Or continue with
@@ -243,14 +243,14 @@ export const StudentLoginPage: React.FC = () => {
         <button
           type="button"
           onClick={handleGoogleSignInClick}
-          className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-dark-bg/60 hover:bg-slate-50 dark:hover:bg-dark-card hover:border-slate-300 dark:hover:border-blue-700/60 text-slate-700 dark:text-slate-200 text-sm font-semibold transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-2xs"
+          className="w-full flex items-center justify-center gap-3 px-4 py-2 xl:py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-dark-bg/60 hover:bg-slate-50 dark:hover:bg-dark-card hover:border-slate-300 dark:hover:border-blue-700/60 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-2xs"
         >
           <GoogleIcon className="w-4 h-4 shrink-0" />
           <span>Sign in with Google</span>
         </button>
 
         {/* Sign Up Link */}
-        <div className="text-center text-xs text-slate-500 dark:text-slate-400 pt-1">
+        <div className="text-center text-xs text-slate-500 dark:text-slate-400 pt-0.5">
           New to Yogneet Edu?{' '}
           <Link
             to="/signup"
@@ -261,7 +261,7 @@ export const StudentLoginPage: React.FC = () => {
         </div>
 
         {/* Platform Portal Link */}
-        <div className="pt-3 border-t border-slate-100 dark:border-dark-border/60 text-center">
+        <div className="pt-2 xl:pt-3 border-t border-slate-100 dark:border-dark-border/60 text-center">
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
             Internal faculty, staff, or administrator?{' '}
             <Link
