@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "test": "node --test scripts/test-permissions.mjs scripts/test-supabase-schema.mjs",
+    "test": "node --test scripts/test-permissions.mjs scripts/test-supabase-schema.mjs scripts/test-phase-3c.mjs scripts/test-phase-4a.mjs scripts/test-phase-4b.mjs",
     "test:live": "node scripts/test-supabase-live.mjs",
+    "test:admin": "node scripts/test-admin-live-operations.mjs",
     "lint": "tsc --noEmit",
     "preview": "vite preview"
   },

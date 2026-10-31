@@ -26,6 +26,9 @@ export interface Database {
           status: 'active' | 'suspended';
           department: string | null;
           bio: string | null;
+          access_category: 'standard' | 'pro' | 'managed' | 'scholarship';
+          institution: string | null;
+          program: string | null;
           enrolled_courses: string[];
           solved_problems_count: number;
           tests_completed_count: number;
@@ -41,6 +44,9 @@ export interface Database {
           status?: 'active' | 'suspended';
           department?: string | null;
           bio?: string | null;
+          access_category?: 'standard' | 'pro' | 'managed' | 'scholarship';
+          institution?: string | null;
+          program?: string | null;
           enrolled_courses?: string[];
           solved_problems_count?: number;
           tests_completed_count?: number;
@@ -56,6 +62,9 @@ export interface Database {
           status?: 'active' | 'suspended';
           department?: string | null;
           bio?: string | null;
+          access_category?: 'standard' | 'pro' | 'managed' | 'scholarship';
+          institution?: string | null;
+          program?: string | null;
           enrolled_courses?: string[];
           solved_problems_count?: number;
           tests_completed_count?: number;
@@ -122,6 +131,7 @@ export interface Database {
           published_at: string;
           views: number;
           resources: Json;
+          status: 'draft' | 'published' | 'archived';
         };
         Insert: {
           id: string;
@@ -138,6 +148,7 @@ export interface Database {
           published_at?: string;
           views?: number;
           resources?: Json;
+          status?: 'draft' | 'published' | 'archived';
         };
         Update: {
           id?: string;
@@ -154,6 +165,7 @@ export interface Database {
           published_at?: string;
           views?: number;
           resources?: Json;
+          status?: 'draft' | 'published' | 'archived';
         };
       };
       study_notes: {
@@ -424,6 +436,144 @@ export interface Database {
           changes?: Json | null;
         };
       };
+      practical_assignments: {
+        Row: {
+          id: string;
+          title: string;
+          subject: string;
+          module: string;
+          problem_statement: string;
+          instructions: string;
+          topics: string[];
+          deliverables: string[];
+          submission_requirements: string | null;
+          deadline: string | null;
+          total_marks: number;
+          rubric: Json;
+          status: 'draft' | 'published' | 'archived';
+          author_id: string | null;
+          author_name: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          title: string;
+          subject: string;
+          module?: string;
+          problem_statement: string;
+          instructions: string;
+          topics?: string[];
+          deliverables?: string[];
+          submission_requirements?: string | null;
+          deadline?: string | null;
+          total_marks?: number;
+          rubric?: Json;
+          status?: 'draft' | 'published' | 'archived';
+          author_id?: string | null;
+          author_name?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          subject?: string;
+          module?: string;
+          problem_statement?: string;
+          instructions?: string;
+          topics?: string[];
+          deliverables?: string[];
+          submission_requirements?: string | null;
+          deadline?: string | null;
+          total_marks?: number;
+          rubric?: Json;
+          status?: 'draft' | 'published' | 'archived';
+          author_id?: string | null;
+          author_name?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      student_directory: {
+        Row: {
+          id: string;
+          email: string;
+          name: string;
+          department: string | null;
+          institution: string | null;
+          program: string | null;
+          status: 'active' | 'suspended';
+          access_category: 'standard' | 'pro' | 'managed' | 'scholarship';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          name: string;
+          department?: string | null;
+          institution?: string | null;
+          program?: string | null;
+          status?: 'active' | 'suspended';
+          access_category?: 'standard' | 'pro' | 'managed' | 'scholarship';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          name?: string;
+          department?: string | null;
+          institution?: string | null;
+          program?: string | null;
+          status?: 'active' | 'suspended';
+          access_category?: 'standard' | 'pro' | 'managed' | 'scholarship';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      staff_invitations: {
+        Row: {
+          id: string;
+          email: string;
+          name: string;
+          role: 'subadmin' | 'admin';
+          department: string;
+          bio: string;
+          permissions: string[];
+          invited_by: string | null;
+          status: 'pending' | 'accepted' | 'revoked';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          name: string;
+          role?: 'subadmin' | 'admin';
+          department?: string;
+          bio?: string;
+          permissions?: string[];
+          invited_by?: string | null;
+          status?: 'pending' | 'accepted' | 'revoked';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          name?: string;
+          role?: 'subadmin' | 'admin';
+          department?: string;
+          bio?: string;
+          permissions?: string[];
+          invited_by?: string | null;
+          status?: 'pending' | 'accepted' | 'revoked';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       student_assessment_questions: {
@@ -441,6 +591,18 @@ export interface Database {
       };
     };
     Functions: {
+      create_assessment_with_questions: {
+        Args: {
+          p_assessment: Json;
+          p_questions: Json;
+        };
+        Returns: {
+          success: boolean;
+          test_id: string;
+          title: string;
+          question_count: number;
+        };
+      };
       get_assessment_questions_for_taking: {
         Args: {
           p_test_id: string;

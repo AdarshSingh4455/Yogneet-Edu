@@ -17,6 +17,10 @@ import {
   Sparkles,
   Info,
   Youtube,
+  BookOpen,
+  FileCode,
+  CheckSquare,
+  ArrowRight,
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
@@ -239,6 +243,50 @@ export const VideoPlayerPage: React.FC = () => {
                       </li>
                     ))}
                   </ul>
+                </div>
+
+                {/* 4-Stage Next Steps Callout */}
+                <div className="p-4 rounded-2xl border border-light-border dark:border-dark-border bg-slate-50 dark:bg-dark-bg/60 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-brand-600 dark:text-cyan-400">
+                      Next Steps in Your Learning Journey
+                    </span>
+                    <span className="text-[10px] text-slate-400">Learn &rarr; Revise &rarr; Practice &rarr; Evaluate</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <Link
+                      to="/notes"
+                      className="p-3 rounded-xl bg-white dark:bg-dark-card border border-light-border dark:border-dark-border hover:border-emerald-400 transition-colors flex items-center gap-2.5"
+                    >
+                      <BookOpen className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase font-bold text-slate-400">Step 2</p>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Read Notes</p>
+                      </div>
+                    </Link>
+
+                    <Link
+                      to="/practical"
+                      className="p-3 rounded-xl bg-white dark:bg-dark-card border border-light-border dark:border-dark-border hover:border-purple-400 transition-colors flex items-center gap-2.5"
+                    >
+                      <FileCode className="w-4 h-4 text-purple-500 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase font-bold text-slate-400">Step 3</p>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Practice Coding</p>
+                      </div>
+                    </Link>
+
+                    <Link
+                      to="/tests"
+                      className="p-3 rounded-xl bg-white dark:bg-dark-card border border-light-border dark:border-dark-border hover:border-amber-400 transition-colors flex items-center gap-2.5"
+                    >
+                      <CheckSquare className="w-4 h-4 text-amber-500 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase font-bold text-slate-400">Step 4</p>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Take Test Series</p>
+                      </div>
+                    </Link>
+                  </div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-dark-card border border-light-border dark:border-dark-border text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">

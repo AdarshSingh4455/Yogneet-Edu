@@ -20,7 +20,7 @@ export const UnauthorizedView: React.FC<{ missingPermission?: string }> = ({ mis
       </h1>
 
       <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mt-2 leading-relaxed">
-        Your active persona (<span className="font-semibold text-slate-800 dark:text-slate-200">{currentUser.name}</span>, role: <span className="font-semibold capitalize">{currentUser.role}</span>) does not possess the requisite RBAC authorization for this path.
+        Your account (<span className="font-semibold text-slate-800 dark:text-slate-200">{currentUser.name}</span>, role: <span className="font-semibold capitalize">{currentUser.role}</span>) does not possess the requisite RBAC authorization for this path.
       </p>
 
       {missingPermission && (

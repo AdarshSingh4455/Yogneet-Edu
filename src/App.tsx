@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import { AppRoutes } from './routes/AppRoutes';
+import { WelcomeToast } from './components/common/WelcomeToast';
 
 export const App: React.FC = () => {
   return (
@@ -12,6 +13,7 @@ export const App: React.FC = () => {
         <ToastProvider>
           <AuthProvider>
             <AppRoutes />
+            <WelcomeToast />
           </AuthProvider>
         </ToastProvider>
       </ThemeProvider>

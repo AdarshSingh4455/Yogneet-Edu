@@ -30,6 +30,9 @@ export function rowToUserProfile(row: ProfileRow, permissions: PermissionKey[] =
     enrolledCourses: row.enrolled_courses,
     solvedProblemsCount: row.solved_problems_count,
     testsCompletedCount: row.tests_completed_count,
+    accessCategory: ((row as any).access_category as any) || 'standard',
+    institution: ((row as any).institution as string) || undefined,
+    program: ((row as any).program as string) || undefined,
     createdAt: row.created_at,
     lastActive: row.last_active,
   };
