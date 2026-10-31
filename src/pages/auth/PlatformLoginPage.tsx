@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthLayout } from '../../components/layout/AuthLayout';
+import { Ref1AuthLayout, Ref1FeatureItem } from '../../components/layout/Ref1AuthLayout';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { supabase, isSupabaseConfigured } from '../../services/supabaseClient';
 import {
   Mail,
   Lock,
@@ -13,12 +12,36 @@ import {
   EyeOff,
   ArrowRight,
   ShieldAlert,
-  Building2,
+  Layers,
+  CheckSquare,
+  Users,
+  GraduationCap,
 } from 'lucide-react';
+
+const staffFeatures: Ref1FeatureItem[] = [
+  {
+    title: 'Curriculum Management',
+    description: 'Create, organize and maintain structured learning content with verified study material.',
+    icon: Layers,
+    color: 'purple',
+  },
+  {
+    title: 'Assessment Engine',
+    description: 'Conduct tests, manage question banks, and evaluate student performance.',
+    icon: CheckSquare,
+    color: 'cyan',
+  },
+  {
+    title: 'Platform Governance',
+    description: 'Manage staff roles, permissions, and monitor overall platform activity.',
+    icon: Users,
+    color: 'blue',
+  },
+];
 
 export const PlatformLoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signInWithEmail } = useAuth();
+  const { signInWithEmail, isAuthenticated, currentUser } = useAuth();
   const toast = useToast();
 
   const [email, setEmail] = useState('');
@@ -26,6 +49,20 @@ export const PlatformLoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+
+  // Redirect already authenticated users to their authorized dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (currentUser.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else if (currentUser.role === 'subadmin') {
+        navigate('/subadmin', { replace: true });
+      } else {
+        // Never redirect a student into staff/admin routes
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [isAuthenticated, currentUser.role, navigate]);
 
   const validate = (): boolean => {
     const newErrors: { email?: string; password?: string } = {};
@@ -70,9 +107,9 @@ export const PlatformLoginPage: React.FC = () => {
 
       // Route based on verified role
       if (result.user?.role === 'admin') {
-        navigate('/admin/dashboard');
+        navigate('/admin');
       } else {
-        navigate('/subadmin/dashboard');
+        navigate('/subadmin');
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -83,11 +120,19 @@ export const PlatformLoginPage: React.FC = () => {
   };
 
   return (
-    <AuthLayout
-      portalTitle="Platform Portal"
-      portalSubtitle="Restricted access for authorized faculty, subject experts, and system administrators."
-      badgeText="Internal Staff & Admin Portal"
-      badgeVariant="purple"
+    <Ref1AuthLayout
+      role="platform"
+      badgeText="Platform Portal"
+      headlinePrimary="Empower Learners."
+      headlineAccent1="Shape"
+      headlineAccent2="Careers."
+      description="The Yogneet Edu Platform Portal provides educators, mentors, and administrators with powerful tools to design curriculum, mentor students, conduct assessments, and manage platform operations."
+      features={staffFeatures}
+      cardBadge="INTERNAL STAFF & ADMIN PORTAL"
+      cardBadgeVariant="purple"
+      cardTitle="Platform Portal"
+      cardSubtitle="Restricted access for authorized faculty, subject experts, and system administrators."
+      securityNotice="Staff access is monitored. Role assignments and security permissions are enforced by server-side claims in Supabase Auth."
     >
       <form onSubmit={handleSignIn} className="space-y-4" noValidate>
         {errors.general && (
@@ -96,14 +141,6 @@ export const PlatformLoginPage: React.FC = () => {
             <span>{errors.general}</span>
           </div>
         )}
-
-        {/* Security Notice */}
-        <div className="p-3 rounded-xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-900/50 flex items-start gap-2.5">
-          <Building2 className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
-          <p className="text-[11px] text-purple-800 dark:text-purple-300 leading-relaxed">
-            Staff access is monitored. Role assignments and security permissions are enforced by server-side claims in Supabase Auth.
-          </p>
-        </div>
 
         {/* Staff Email */}
         <div>
@@ -147,7 +184,7 @@ export const PlatformLoginPage: React.FC = () => {
           />
         </div>
 
-        {/* Forgot Credentials notice */}
+        {/* Forgot Credentials notice matching Ref-1 */}
         <div className="flex items-center justify-between text-xs pt-0.5">
           <span className="text-[11px] text-slate-500 dark:text-slate-400">
             Forgot internal credentials? Contact IT Security.
@@ -156,37 +193,37 @@ export const PlatformLoginPage: React.FC = () => {
             to="/forgot-password"
             className="font-medium text-purple-600 hover:text-purple-500 dark:text-purple-400 dark:hover:text-purple-300 transition-colors text-[11px]"
           >
-            Reset
+            Reset Password
           </Link>
         </div>
 
-        {/* Submit Button */}
-        <Button
+        {/* Submit Button matching Ref-1 solid purple */}
+        <button
           type="submit"
-          variant="primary"
-          size="lg"
-          isLoading={isLoading}
-          className="w-full justify-center !bg-purple-600 hover:!bg-purple-700 shadow-md shadow-purple-600/20 text-white"
-          rightIcon={<ArrowRight className="w-4 h-4" />}
+          disabled={isLoading}
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-sm font-bold shadow-lg shadow-purple-500/25 transition-all duration-150 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
-          Sign In to Platform Portal
-        </Button>
+          <span>{isLoading ? 'Authenticating...' : 'Sign In to Platform Portal'}</span>
+          {!isLoading && <ArrowRight className="w-4 h-4" />}
+        </button>
 
-        {/* Self-registration disabled warning */}
-        <div className="pt-3 border-t border-slate-100 dark:border-dark-border/60 text-center space-y-1">
-          <p className="text-[11px] text-slate-400">
-            Internal accounts are provisioned via administrative invitation. Self-registration is disabled for platform security.
-          </p>
-          <div className="pt-1">
-            <Link
-              to="/login"
-              className="text-xs font-semibold text-brand-600 hover:text-brand-500 dark:text-cyan-400 dark:hover:text-cyan-300 inline-flex items-center gap-1"
-            >
-              &larr; Switch to Student Learning Portal
-            </Link>
-          </div>
+        {/* Divider matching Ref-1 */}
+        <div className="relative my-3 flex items-center justify-center">
+          <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+          <span className="absolute px-3 bg-white dark:bg-[#0E172A] text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            OR
+          </span>
         </div>
+
+        {/* Switch to Student Portal button matching Ref-1 */}
+        <Link
+          to="/login"
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-white dark:bg-dark-card hover:bg-blue-50/50 dark:hover:bg-blue-950/30 text-blue-600 dark:text-blue-400 text-xs sm:text-sm font-semibold transition-all shadow-2xs"
+        >
+          <GraduationCap className="w-4 h-4" />
+          <span>Switch to Student Learning Portal</span>
+        </Link>
       </form>
-    </AuthLayout>
+    </Ref1AuthLayout>
   );
 };
