@@ -60,7 +60,7 @@ export const AnalyticsPage: React.FC = () => {
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
-                <Sparkles className="w-3 h-3" /> Demo Persona Mode (Local Fallback)
+                <Sparkles className="w-3 h-3" /> Local Mock Mode (Prototype Fallback)
               </span>
             )}
           </div>

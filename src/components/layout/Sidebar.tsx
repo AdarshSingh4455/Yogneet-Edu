@@ -181,12 +181,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             })}
           </nav>
 
-          {/* Quick links between portals for quick testing */}
-          <div className="pt-2 border-t border-light-border dark:border-dark-border space-y-1">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 py-1">
-              Switch Portal View
-            </p>
-            {!isStudent && (
+          {/* Quick link to Student View for Staff & Admins */}
+          {!isStudent && (
+            <div className="pt-2 border-t border-light-border dark:border-dark-border space-y-1">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 py-1">
+                Student Learning Preview
+              </p>
               <NavLink
                 to="/dashboard"
                 onClick={() => { if (window.innerWidth < 1024) onClose(); }}
@@ -195,18 +195,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <span>View Student Dashboard</span>
                 <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
               </NavLink>
-            )}
-            {!isAdmin && (
-              <NavLink
-                to="/admin"
-                onClick={() => { if (window.innerWidth < 1024) onClose(); }}
-                className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-blue-200 hover:bg-slate-100 dark:hover:bg-dark-hover transition-colors"
-              >
-                <span>Inspect Admin Console</span>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              </NavLink>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Footer brand footer */}

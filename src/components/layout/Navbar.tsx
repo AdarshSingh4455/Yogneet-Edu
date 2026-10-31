@@ -25,7 +25,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }) => {
-  const { currentUser, isAdmin, isSubAdmin } = useAuth();
+  const { currentUser, isAdmin, isSubAdmin, signOut } = useAuth();
   const { mode, resolvedTheme, setMode } = useTheme();
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -308,22 +308,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
                       <Layers className="w-3.5 h-3.5 text-brand-500" />
                       <span>Portal Selection Gateway</span>
                     </Link>
-                    <Link
-                      to="/login"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-hover transition-colors"
+                    <button
+                      onClick={async () => {
+                        setShowUserMenu(false);
+                        await signOut();
+                        navigate('/portal');
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors text-left"
                     >
-                      <User className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>Student Portal Sign In</span>
-                    </Link>
-                    <Link
-                      to="/platform/login"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-hover transition-colors"
-                    >
-                      <Shield className="w-3.5 h-3.5 text-purple-500" />
-                      <span>Platform Staff Sign In</span>
-                    </Link>
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Sign Out</span>
+                    </button>
                   </div>
                 </div>
               </div>

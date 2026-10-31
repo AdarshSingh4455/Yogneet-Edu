@@ -13,15 +13,12 @@ import {
   EyeOff,
   ArrowRight,
   ShieldAlert,
-  ShieldCheck,
   Building2,
-  Sparkles,
-  Info,
 } from 'lucide-react';
 
 export const PlatformLoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signInWithEmail, switchUser, backendMode } = useAuth();
+  const { signInWithEmail } = useAuth();
   const toast = useToast();
 
   const [email, setEmail] = useState('');
@@ -82,28 +79,6 @@ export const PlatformLoginPage: React.FC = () => {
       setErrors({ general: message });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleQuickDemoRole = (role: 'admin' | 'staff') => {
-    if (role === 'admin') {
-      setEmail('admin@yogneet.edu');
-      setPassword('admin123');
-      switchUser('usr_admin_1');
-      toast.info(
-        'Admin Session Initialized',
-        'Entering administrator workspace in prototype mode.'
-      );
-      navigate('/admin/dashboard');
-    } else {
-      setEmail('staff@yogneet.edu');
-      setPassword('staff123');
-      switchUser('usr_staff_1');
-      toast.info(
-        'Staff Session Initialized',
-        'Entering content & assessment workspace in prototype mode.'
-      );
-      navigate('/admin/dashboard');
     }
   };
 
@@ -196,33 +171,6 @@ export const PlatformLoginPage: React.FC = () => {
         >
           Sign In to Platform Portal
         </Button>
-
-        {/* Prototype Quick Access */}
-        {backendMode === 'local-mock' && (
-          <div className="pt-2 space-y-1.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 text-center">
-              Prototype Testing Shortcuts
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickDemoRole('admin')}
-                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-950/60 border border-purple-200 dark:border-purple-800/60 transition-colors"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                <span>Demo Admin</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDemoRole('staff')}
-                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-950/60 border border-blue-200 dark:border-blue-800/60 transition-colors"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                <span>Demo Staff</span>
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Self-registration disabled warning */}
         <div className="pt-3 border-t border-slate-100 dark:border-dark-border/60 text-center space-y-1">
