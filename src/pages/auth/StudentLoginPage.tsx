@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { AuthLayout } from '../../components/layout/AuthLayout';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Ref1AuthLayout, Ref1FeatureItem } from '../../components/layout/Ref1AuthLayout';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 import { GoogleIcon } from '../../components/common/GoogleIcon';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { supabase, isSupabaseConfigured } from '../../services/supabaseClient';
 import {
   Mail,
   Lock,
@@ -16,12 +15,36 @@ import {
   ArrowRight,
   Info,
   ShieldAlert,
-  CheckCircle2,
+  BookOpen,
+  Code2,
+  TrendingUp,
 } from 'lucide-react';
+
+const studentFeatures: Ref1FeatureItem[] = [
+  {
+    title: 'Curriculum & Learning',
+    description: 'Structured video lectures and curated study materials.',
+    icon: BookOpen,
+    color: 'purple',
+  },
+  {
+    title: 'Practical Coding',
+    description: 'Hands-on coding assignments and real-world projects.',
+    icon: Code2,
+    color: 'cyan',
+  },
+  {
+    title: 'Assessments & Growth',
+    description: 'Competitive assessments, progress tracking and skill development.',
+    icon: TrendingUp,
+    color: 'blue',
+  },
+];
 
 export const StudentLoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signInWithEmail, signInWithGoogle, backendMode } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { signInWithEmail, signInWithGoogle, backendMode, isAuthenticated, currentUser, isLoading: isAuthLoading } = useAuth();
   const toast = useToast();
 
   const [email, setEmail] = useState('');
@@ -31,6 +54,26 @@ export const StudentLoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
   const [showGoogleModal, setShowGoogleModal] = useState(false);
+
+  // Redirect already authenticated users to their authorized destination
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (currentUser.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else if (currentUser.role === 'subadmin') {
+        navigate('/subadmin', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [isAuthenticated, currentUser.role, navigate]);
+
+  // Notice for email verified callback
+  useEffect(() => {
+    if (searchParams.get('email_verified') === 'true') {
+      toast.success('Email Verified!', 'Your email has been confirmed. Please sign in to continue.');
+    }
+  }, [searchParams, toast]);
 
   const validate = (): boolean => {
     const newErrors: { email?: string; password?: string } = {};
@@ -89,17 +132,31 @@ export const StudentLoginPage: React.FC = () => {
   };
 
   return (
-    <AuthLayout
-      portalTitle="Student Sign In"
-      portalSubtitle="Continue your structured learning journey — video lessons, study notes, practicals, and test series."
+    <Ref1AuthLayout
+      role="student"
       badgeText="Student Portal"
-      badgeVariant="brand"
+      headlinePrimary="Learn Today."
+      headlineAccent1="Build"
+      headlineAccent2="Tomorrow."
+      description="Build real technical skills through structured learning, practical coding and competitive assessments."
+      features={studentFeatures}
+      cardBadge="STUDENT LEARNING PORTAL"
+      cardBadgeVariant="cyan"
+      cardTitle="Student Sign In"
+      cardSubtitle="Continue your structured learning journey — video lessons, study notes, practicals, and test series."
     >
       <form onSubmit={handleSignIn} className="space-y-4" noValidate>
         {errors.general && (
           <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300">
             <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
             <span>{errors.general}</span>
+          </div>
+        )}
+
+        {searchParams.get('oauth_callback') === 'true' && isAuthLoading && (
+          <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 flex items-center gap-2.5 text-xs text-blue-700 dark:text-blue-300">
+            <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin shrink-0" />
+            <span>Completing Google Single Sign-On session...</span>
           </div>
         )}
 
@@ -165,21 +222,19 @@ export const StudentLoginPage: React.FC = () => {
         </div>
 
         {/* Primary Submit Button */}
-        <Button
+        <button
           type="submit"
-          variant="primary"
-          size="lg"
-          isLoading={isLoading}
-          className="w-full justify-center shadow-md shadow-brand-500/20"
-          rightIcon={<ArrowRight className="w-4 h-4" />}
+          disabled={isLoading}
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white text-sm font-bold shadow-lg shadow-cyan-500/25 transition-all duration-150 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-cyan-500"
         >
-          Sign In to Student Portal
-        </Button>
+          <span>{isLoading ? 'Signing In...' : 'Sign In to Student Portal'}</span>
+          {!isLoading && <ArrowRight className="w-4 h-4" />}
+        </button>
 
         {/* Divider */}
-        <div className="relative my-4 flex items-center justify-center">
-          <div className="w-full border-t border-slate-200 dark:border-dark-border" />
-          <span className="absolute px-3 bg-white dark:bg-dark-card text-[11px] font-medium uppercase tracking-wider text-slate-400">
+        <div className="relative my-3 flex items-center justify-center">
+          <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+          <span className="absolute px-3 bg-white dark:bg-[#0E172A] text-[10px] font-bold uppercase tracking-wider text-slate-400">
             Or continue with
           </span>
         </div>
@@ -188,14 +243,14 @@ export const StudentLoginPage: React.FC = () => {
         <button
           type="button"
           onClick={handleGoogleSignInClick}
-          className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-bg/60 hover:bg-slate-50 dark:hover:bg-dark-card hover:border-slate-300 dark:hover:border-blue-700/60 text-slate-700 dark:text-slate-200 text-sm font-semibold transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-2xs"
+          className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-dark-bg/60 hover:bg-slate-50 dark:hover:bg-dark-card hover:border-slate-300 dark:hover:border-blue-700/60 text-slate-700 dark:text-slate-200 text-sm font-semibold transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-2xs"
         >
           <GoogleIcon className="w-4 h-4 shrink-0" />
           <span>Sign in with Google</span>
         </button>
 
         {/* Sign Up Link */}
-        <div className="text-center text-xs text-slate-500 dark:text-slate-400 pt-2">
+        <div className="text-center text-xs text-slate-500 dark:text-slate-400 pt-1">
           New to Yogneet Edu?{' '}
           <Link
             to="/signup"
@@ -206,7 +261,7 @@ export const StudentLoginPage: React.FC = () => {
         </div>
 
         {/* Platform Portal Link */}
-        <div className="pt-4 border-t border-slate-100 dark:border-dark-border/60 text-center">
+        <div className="pt-3 border-t border-slate-100 dark:border-dark-border/60 text-center">
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
             Internal faculty, staff, or administrator?{' '}
             <Link
@@ -219,7 +274,7 @@ export const StudentLoginPage: React.FC = () => {
         </div>
       </form>
 
-      {/* Google OAuth Phase 4B Notice Modal */}
+      {/* Google OAuth Notice Modal */}
       <Modal
         isOpen={showGoogleModal}
         onClose={() => setShowGoogleModal(false)}
@@ -231,10 +286,10 @@ export const StudentLoginPage: React.FC = () => {
             <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
             <div className="text-xs space-y-1">
               <p className="font-semibold text-blue-900 dark:text-blue-200">
-                Phase 4B OAuth Integration In Progress
+                Phase 4B OAuth Integration
               </p>
               <p className="text-blue-700 dark:text-blue-300">
-                Google OAuth provider keys and authorized redirect URIs are configured in the platform architecture. Direct OAuth token exchange will be activated in Phase 4B with live Supabase authentication.
+                Google OAuth provider keys and authorized redirect URIs are configured in the platform architecture with dynamic origin resolution.
               </p>
             </div>
           </div>
@@ -254,6 +309,6 @@ export const StudentLoginPage: React.FC = () => {
           </div>
         </div>
       </Modal>
-    </AuthLayout>
+    </Ref1AuthLayout>
   );
 };
