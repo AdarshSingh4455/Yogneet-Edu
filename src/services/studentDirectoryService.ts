@@ -8,6 +8,7 @@ import { UserProfile, StudentDirectoryEntry, StudentImportRow, StudentAccessCate
 import { supabase, isSupabaseConfigured, formatSupabaseError } from './supabaseClient';
 import { ApiService, AuditService } from './api';
 import { Database } from '../types/database.types';
+import { hasPermission as checkPermission } from '../permissions/registry';
 
 type DirectoryRow = Database['public']['Tables']['student_directory']['Row'];
 type DirectoryInsert = Database['public']['Tables']['student_directory']['Insert'];
@@ -458,6 +459,197 @@ export const StudentDirectoryService = {
       );
     } catch (err) {
       console.error('[StudentDirectoryService.updateStudentEntitlement] Error:', err);
+      throw err;
+    }
+  },
+
+  /**
+   * Toggles active / suspended status of a student.
+   * Enforces students.suspend permission before mutation.
+   */
+  async toggleStudentStatus(actor: UserProfile, studentId: string): Promise<UserProfile> {
+    if (!checkPermission(actor, 'students.suspend') && actor.role !== 'admin') {
+      throw new Error('Access Denied: You lack "students.suspend" authorization.');
+    }
+
+    if (!isSupabaseConfigured() || !supabase) {
+      const mockResult = ApiService.toggleSubAdminStatus(actor, studentId);
+      return mockResult;
+    }
+
+    try {
+      // 1. Try profiles table first
+      const { data: targetProfile } = await (supabase as any)
+        .from('profiles')
+        .select('*')
+        .eq('id', studentId)
+        .maybeSingle();
+
+      if (targetProfile) {
+        if (targetProfile.role !== 'student') {
+          throw new Error('Cannot toggle status of non-student via student directory.');
+        }
+        const newStatus = targetProfile.status === 'active' ? 'suspended' : 'active';
+        const { data: updated, error: updateErr } = await (supabase as any)
+          .from('profiles')
+          .update({ status: newStatus, last_active: new Date().toISOString() })
+          .eq('id', studentId)
+          .select()
+          .single();
+
+        if (updateErr) throw new Error(formatSupabaseError(updateErr));
+
+        AuditService.log(
+          actor,
+          'students.suspend',
+          'StudentProfile',
+          targetProfile.email,
+          `Changed student status of ${targetProfile.name} to ${newStatus.toUpperCase()}.`,
+          'SUCCESS'
+        );
+
+        return {
+          id: updated.id,
+          name: updated.name,
+          email: updated.email,
+          avatar: updated.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
+          role: updated.role,
+          status: updated.status,
+          permissions: [],
+          department: updated.department || undefined,
+          createdAt: updated.created_at,
+          lastActive: updated.last_active,
+        };
+      }
+
+      // 2. Try student_directory table
+      const { data: targetDir } = await (supabase as any)
+        .from('student_directory')
+        .select('*')
+        .eq('id', studentId)
+        .maybeSingle();
+
+      if (targetDir) {
+        const newStatus = targetDir.status === 'active' ? 'suspended' : 'active';
+        const { data: updated, error: updateErr } = await (supabase as any)
+          .from('student_directory')
+          .update({ status: newStatus, updated_at: new Date().toISOString() })
+          .eq('id', studentId)
+          .select()
+          .single();
+
+        if (updateErr) throw new Error(formatSupabaseError(updateErr));
+
+        AuditService.log(
+          actor,
+          'students.suspend',
+          'StudentDirectory',
+          targetDir.email,
+          `Changed pre-provisioned student status of ${targetDir.name} to ${newStatus.toUpperCase()}.`,
+          'SUCCESS'
+        );
+
+        return {
+          id: updated.id,
+          name: updated.name,
+          email: updated.email,
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
+          role: 'student',
+          status: updated.status,
+          permissions: [],
+          department: updated.department || updated.institution || 'Pre-enrolled Student',
+          createdAt: updated.created_at,
+          lastActive: 'Pre-provisioned',
+        };
+      }
+
+      throw new Error('Student not found.');
+    } catch (err: any) {
+      console.error('[StudentDirectoryService.toggleStudentStatus] Error:', err);
+      throw err;
+    }
+  },
+
+  /**
+   * Updates permitted student information (name, department, institution, program).
+   * Email and ID remain immutable, and role cannot be escalated.
+   */
+  async updateStudentInfo(
+    actor: UserProfile,
+    studentId: string,
+    updates: {
+      name?: string;
+      department?: string;
+      institution?: string;
+      program?: string;
+    }
+  ): Promise<void> {
+    if (actor.role !== 'admin' && !checkPermission(actor, 'students.view')) {
+      throw new Error('Access Denied: You lack authorization to modify student details.');
+    }
+
+    if (!isSupabaseConfigured() || !supabase) {
+      const student = ApiService.getUserById(studentId);
+      if (student) {
+        if (updates.name) student.name = updates.name.trim();
+        if (updates.department) student.department = updates.department.trim();
+      }
+      return;
+    }
+
+    try {
+      let updatedRows = 0;
+
+      // 1. Try profiles
+      const profileUpdates: Record<string, any> = {
+        last_active: new Date().toISOString(),
+      };
+      if (updates.name) profileUpdates.name = updates.name.trim();
+      if (updates.department) profileUpdates.department = updates.department.trim();
+
+      const { data: profData, error: profErr } = await (supabase as any)
+        .from('profiles')
+        .update(profileUpdates)
+        .eq('id', studentId)
+        .select();
+
+      if (!profErr && profData && profData.length > 0) {
+        updatedRows += profData.length;
+      }
+
+      // 2. Try student_directory
+      const dirUpdates: Record<string, any> = {
+        updated_at: new Date().toISOString(),
+      };
+      if (updates.name) dirUpdates.name = updates.name.trim();
+      if (updates.department) dirUpdates.department = updates.department.trim();
+      if (updates.institution) dirUpdates.institution = updates.institution.trim();
+      if (updates.program) dirUpdates.program = updates.program.trim();
+
+      const { data: dirData, error: dirErr } = await (supabase as any)
+        .from('student_directory')
+        .update(dirUpdates)
+        .eq('id', studentId)
+        .select();
+
+      if (!dirErr && dirData && dirData.length > 0) {
+        updatedRows += dirData.length;
+      }
+
+      if (updatedRows === 0 && profErr) {
+        throw new Error(formatSupabaseError(profErr));
+      }
+
+      AuditService.log(
+        actor,
+        'students.view' as any,
+        'StudentProfile',
+        studentId,
+        `Updated student information for ${studentId}.`,
+        'SUCCESS'
+      );
+    } catch (err: any) {
+      console.error('[StudentDirectoryService.updateStudentInfo] Error:', err);
       throw err;
     }
   },

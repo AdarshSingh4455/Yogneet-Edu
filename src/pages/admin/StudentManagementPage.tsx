@@ -20,6 +20,7 @@ import {
   X,
   Sparkles,
   Info,
+  Edit2,
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -83,6 +84,47 @@ export const StudentManagementPage: React.FC = () => {
     }
   };
 
+  // Edit Student Modal State
+  const [studentToEdit, setStudentToEdit] = useState<UserProfile | null>(null);
+  const [editStudentName, setEditStudentName] = useState('');
+  const [editStudentDepartment, setEditStudentDepartment] = useState('');
+  const [editStudentInstitution, setEditStudentInstitution] = useState('');
+  const [editStudentProgram, setEditStudentProgram] = useState('');
+  const [isUpdatingStudent, setIsUpdatingStudent] = useState(false);
+
+  const handleOpenEditModal = (student: UserProfile) => {
+    setStudentToEdit(student);
+    setEditStudentName(student.name);
+    setEditStudentDepartment(student.department || '');
+    setEditStudentInstitution(student.institution || '');
+    setEditStudentProgram(student.program || '');
+  };
+
+  const handleUpdateStudentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!studentToEdit) return;
+    if (!editStudentName.trim()) {
+      toast.error('Name Required', 'Student name cannot be empty.');
+      return;
+    }
+    setIsUpdatingStudent(true);
+    try {
+      await StudentDirectoryService.updateStudentInfo(currentUser, studentToEdit.id, {
+        name: editStudentName.trim(),
+        department: editStudentDepartment.trim(),
+        institution: editStudentInstitution.trim(),
+        program: editStudentProgram.trim(),
+      });
+      toast.success('Student Updated', `Updated details for ${editStudentName}.`);
+      setStudentToEdit(null);
+      await reloadStudents();
+    } catch (err: any) {
+      toast.error('Update Failed', err.message);
+    } finally {
+      setIsUpdatingStudent(false);
+    }
+  };
+
   const canSuspendStudents = hasPermission('students.suspend');
 
   const reloadStudents = async () => {
@@ -109,7 +151,7 @@ export const StudentManagementPage: React.FC = () => {
     );
   });
 
-  const handleToggleSuspendConfirm = () => {
+  const handleToggleSuspendConfirm = async () => {
     if (!selectedToSuspend) return;
     if (!canSuspendStudents) {
       toast.error('Permission Denied', 'You lack "students.suspend" authorization.');
@@ -118,13 +160,13 @@ export const StudentManagementPage: React.FC = () => {
     }
 
     try {
-      ApiService.toggleSubAdminStatus(currentUser, selectedToSuspend.id);
+      await StudentDirectoryService.toggleStudentStatus(currentUser, selectedToSuspend.id);
       toast.success(
         'Student Status Updated',
         `${selectedToSuspend.name} is now ${selectedToSuspend.status === 'active' ? 'SUSPENDED' : 'ACTIVE'}.`
       );
       setSelectedToSuspend(null);
-      reloadStudents();
+      await reloadStudents();
     } catch (err: any) {
       toast.error('Failed', err.message);
     }
@@ -354,16 +396,36 @@ export const StudentManagementPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pt-1 flex justify-end">
+                  <div className="pt-1 flex items-center justify-end gap-2">
+                    {isAdmin && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleOpenTierModal(student)}
+                          className="text-xs text-purple-600 dark:text-purple-400"
+                        >
+                          Tier
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleOpenEditModal(student)}
+                          className="text-xs text-brand-600 dark:text-brand-400"
+                        >
+                          Edit
+                        </Button>
+                      </>
+                    )}
                     <Button
                       size="sm"
                       variant={isSuspended ? 'success' : 'outline'}
                       disabled={!canSuspendStudents}
                       onClick={() => setSelectedToSuspend(student)}
                       leftIcon={isSuspended ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                      className="w-full justify-center"
+                      className="flex-1 justify-center"
                     >
-                      {isSuspended ? 'Reactivate Student' : 'Suspend Access'}
+                      {isSuspended ? 'Reactivate' : 'Suspend'}
                     </Button>
                   </div>
                 </Card>
@@ -442,14 +504,24 @@ export const StudentManagementPage: React.FC = () => {
                         <td className="py-3.5 px-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5">
                             {isAdmin && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleOpenTierModal(student)}
-                                className="text-xs text-purple-600 dark:text-purple-400"
-                              >
-                                Tier
-                              </Button>
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleOpenTierModal(student)}
+                                  className="text-xs text-purple-600 dark:text-purple-400"
+                                >
+                                  Tier
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleOpenEditModal(student)}
+                                  className="text-xs text-brand-600 dark:text-brand-400"
+                                >
+                                  Edit
+                                </Button>
+                              </>
                             )}
                             <Button
                               size="sm"
@@ -715,6 +787,75 @@ export const StudentManagementPage: React.FC = () => {
               </Button>
             </div>
           </div>
+        </Modal>
+      )}
+
+      {/* Edit Student Information Modal */}
+      {studentToEdit && (
+        <Modal
+          isOpen={!!studentToEdit}
+          onClose={() => setStudentToEdit(null)}
+          title={`Edit Student Information: ${studentToEdit.name}`}
+          maxWidth="md"
+        >
+          <form onSubmit={handleUpdateStudentSubmit} className="space-y-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Update permitted student demographic and institutional fields. Email ({studentToEdit.email}) and account role are immutable.
+            </p>
+
+            <div>
+              <Input
+                id="edit-student-name"
+                label="Full Name"
+                value={editStudentName}
+                onChange={e => setEditStudentName(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <Input
+                id="edit-student-department"
+                label="Department / Specialization"
+                placeholder="e.g. Computer Science & Engineering"
+                value={editStudentDepartment}
+                onChange={e => setEditStudentDepartment(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Input
+                id="edit-student-institution"
+                label="Institution / College"
+                placeholder="e.g. National Institute of Technology"
+                value={editStudentInstitution}
+                onChange={e => setEditStudentInstitution(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Input
+                id="edit-student-program"
+                label="Program / Degree"
+                placeholder="e.g. B.Tech Computer Science"
+                value={editStudentProgram}
+                onChange={e => setEditStudentProgram(e.target.value)}
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-light-border dark:border-dark-border">
+              <Button type="button" variant="ghost" onClick={() => setStudentToEdit(null)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                isLoading={isUpdatingStudent}
+              >
+                Save Details
+              </Button>
+            </div>
+          </form>
         </Modal>
       )}
     </div>
