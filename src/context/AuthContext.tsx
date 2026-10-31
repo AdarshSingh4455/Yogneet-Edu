@@ -28,6 +28,7 @@ export interface AuthContextType {
   isLoading: boolean;
   authError: string | null;
   clearAuthError: () => void;
+  isAuthenticated: boolean;
   isRecoverySession: boolean;
   isFatalConfigError: boolean;
   configError?: string;
@@ -67,6 +68,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [activeProfile, setActiveProfile] = useState<UserProfile | null>(null);
+  const [isMockAuthenticated, setIsMockAuthenticated] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('yogneet_auth_session') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const isAuthenticated = backendMode === 'supabase' ? activeProfile !== null : isMockAuthenticated;
 
   const clearAuthError = useCallback(() => {
     setAuthError(null);
@@ -132,8 +142,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } else if (event === 'SIGNED_OUT') {
         setActiveProfile(null);
+        setIsMockAuthenticated(false);
         setCurrentUserId('usr_student_1');
         setIsRecoverySession(false);
+        try {
+          localStorage.removeItem('yogneet_auth_session');
+        } catch {
+          // ignore
+        }
       }
 
       if (isMounted) setIsLoading(false);
@@ -341,8 +357,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setCurrentUserId(targetUser.id);
     setActiveProfile(targetUser);
+    setIsMockAuthenticated(true);
     try {
       localStorage.setItem(CURRENT_USER_KEY, targetUser.id);
+      localStorage.setItem('yogneet_auth_session', 'true');
     } catch {
       // ignore
     }
@@ -376,6 +394,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Live Supabase Mode
     if (isSupabaseConfigured() && supabase) {
       try {
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+        const emailRedirectTo = origin ? `${origin}/login?email_verified=true` : undefined;
+
         const { data, error } = await supabase.auth.signUp({
           email: normalizedEmail,
           password,
@@ -383,6 +404,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             data: {
               name: trimmedName,
             },
+            emailRedirectTo,
           },
         });
 
@@ -430,6 +452,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUsers(prev => [newStudent, ...prev]);
     setCurrentUserId(newStudent.id);
     setActiveProfile(newStudent);
+    setIsMockAuthenticated(true);
+    try {
+      localStorage.setItem('yogneet_auth_session', 'true');
+    } catch {
+      // ignore
+    }
     return { success: true, requiresEmailConfirmation: false, user: newStudent };
   };
 
@@ -563,10 +591,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     setActiveProfile(null);
+    setIsMockAuthenticated(false);
     setCurrentUserId('usr_student_1');
     setIsRecoverySession(false);
     try {
       localStorage.removeItem(CURRENT_USER_KEY);
+      localStorage.removeItem('yogneet_auth_session');
     } catch {
       // ignore
     }
@@ -605,6 +635,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateCurrentUserProfile,
         backendMode,
         isLoading,
+        isAuthenticated,
         authError,
         clearAuthError,
         isRecoverySession,

@@ -160,10 +160,14 @@ serve(async (req: Request) => {
       );
     }
 
-    // 5. Send official Supabase Auth invitation email
+    // 5. Send official Supabase Auth invitation email with dynamic origin redirect
+    const requestOrigin = req.headers.get('origin') || (body as any)?.appUrl;
+    const inviteRedirectTo = requestOrigin ? `${requestOrigin}/platform/login` : undefined;
+
     const { data: inviteData, error: inviteErr } = await adminClient.auth.admin.inviteUserByEmail(
       normalizedEmail,
       {
+        redirectTo: inviteRedirectTo,
         data: {
           name: trimmedName,
           role,

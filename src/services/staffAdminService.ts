@@ -123,6 +123,7 @@ export const StaffAdminService = {
           department: input.department || 'Curriculum & Video Authoring',
           bio: input.bio || '',
           permissions: input.permissions,
+          appUrl: typeof window !== 'undefined' ? window.location.origin : undefined,
         },
       });
 
