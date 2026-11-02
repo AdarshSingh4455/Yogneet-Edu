@@ -39,36 +39,40 @@ export const MyProgressPage: React.FC = () => {
 
       {/* Top 4 Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card padding="sm" className="space-y-1">
+        <Card padding="sm" className="space-y-1 border border-light-border dark:border-dark-border">
           <span className="text-[11px] font-bold uppercase text-slate-400">Total Solved</span>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-            {solvedProblems.length + (currentUser.solvedProblemsCount || 0)}
+            {(currentUser.solvedProblemsCount || 0) + solvedProblems.length}
           </p>
-          <span className="text-[11px] text-emerald-500 font-semibold">+4 this week</span>
+          <span className="text-[11px] text-slate-500 font-medium">Coding Challenges</span>
         </Card>
 
-        <Card padding="sm" className="space-y-1">
+        <Card padding="sm" className="space-y-1 border border-light-border dark:border-dark-border">
           <span className="text-[11px] font-bold uppercase text-slate-400">Lessons Finished</span>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
             {completedLessons.length}
           </p>
-          <span className="text-[11px] text-brand-500 font-semibold">Of {videos.length} Lectures</span>
+          <span className="text-[11px] text-brand-500 font-semibold">{videos.length} Published Lectures</span>
         </Card>
 
-        <Card padding="sm" className="space-y-1">
+        <Card padding="sm" className="space-y-1 border border-light-border dark:border-dark-border">
           <span className="text-[11px] font-bold uppercase text-slate-400">Assessments Taken</span>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-            {Math.max(testAttempts.length, currentUser.testsCompletedCount || 6)}
+            {currentUser.testsCompletedCount || testAttempts.length}
           </p>
-          <span className="text-[11px] text-purple-500 font-semibold">Avg Score: 86%</span>
+          <span className="text-[11px] text-purple-500 font-semibold">
+            {testAttempts.length > 0
+              ? `Avg Score: ${Math.round(testAttempts.reduce((acc, t) => acc + t.percentage, 0) / testAttempts.length)}%`
+              : 'No attempts yet'}
+          </span>
         </Card>
 
-        <Card padding="sm" className="space-y-1">
-          <span className="text-[11px] font-bold uppercase text-slate-400">Active Study Streak</span>
-          <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-            7 Days 🔥
+        <Card padding="sm" className="space-y-1 border border-light-border dark:border-dark-border">
+          <span className="text-[11px] font-bold uppercase text-slate-400">Learner Status</span>
+          <p className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-slate-100 truncate">
+            {currentUser.accessCategory === 'pro' || (currentUser as any).isPremium ? 'Premium (Pro)' : 'Standard Tier'}
           </p>
-          <span className="text-[11px] text-amber-500 font-semibold">Consistency Record</span>
+          <span className="text-[11px] text-emerald-500 font-semibold">Verified Account</span>
         </Card>
       </div>
 

@@ -59,6 +59,9 @@ export const CodingArenaPage: React.FC = () => {
             Coding Arena
           </Badge>
           <span className="text-xs text-slate-400">LeetCode & GFG Style Directory</span>
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+            Interactive Preview
+          </span>
         </div>
         <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-yogneet-orange/25 flex items-center justify-center shrink-0 text-yogneet-orange">
@@ -69,6 +72,15 @@ export const CodingArenaPage: React.FC = () => {
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-3xl leading-relaxed">
           Solve curated algorithmic challenges hand-picked by <strong>Tech Geek Adarsh</strong>. Practice directly in our native code playground or access external LeetCode and GeeksforGeeks problems.
         </p>
+      </div>
+
+      {/* Prototype Preview Notice */}
+      <div className="flex items-start sm:items-center gap-3 p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs">
+        <Sparkles className="w-4 h-4 shrink-0 mt-0.5 sm:mt-0 text-amber-500" />
+        <div className="flex-1">
+          <span className="font-semibold">Interactive Sandbox Preview:</span>{' '}
+          Coding Arena runs in local interactive mode. Problem attempts and playground edits are saved in your current browser session. Cloud synchronization with user profiles is scheduled for an upcoming release.
+        </div>
       </div>
 
       {/* Solved Stats Banner */}
