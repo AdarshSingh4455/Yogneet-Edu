@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { AppLayout } from '../components/layout/AppLayout';
-import { AdminRoute, PermissionRoute } from '../permissions/guards';
+import { AdminRoute, PermissionRoute, StudentModuleRoute } from '../permissions/guards';
 
 // Auth Pages (Phase 4A Dual-Portal Architecture)
 import { PortalSelectionPage } from '../pages/auth/PortalSelectionPage';
@@ -38,6 +38,11 @@ import { TestCatalogManagerPage } from '../pages/admin/TestCatalogManagerPage';
 import { SubjectManagementPage } from '../pages/admin/SubjectManagementPage';
 import { MicroLessonsManagementPage } from '../pages/admin/MicroLessonsManagementPage';
 import { PremiumStudentManagementPage } from '../pages/admin/PremiumStudentManagementPage';
+import { StudentAccessManagementPage } from '../pages/admin/StudentAccessManagementPage';
+import { FeedbackManagementPage } from '../pages/admin/FeedbackManagementPage';
+
+// Shared Pages
+import { FeedbackPage } from '../pages/shared/FeedbackPage';
 
 // Sub-Admin Pages
 import { SubAdminDashboard } from '../pages/subadmin/SubAdminDashboard';
@@ -77,21 +82,22 @@ export const AppRoutes: React.FC = () => {
         <Route path="/" element={<RootRedirector />} />
 
         {/* Student Experience: 4 Core Learning Stages + Micro Lessons Shorts */}
-        <Route path="/dashboard" element={<StudentDashboard />} />
-        <Route path="/videos" element={<VideoPlayerPage />} />
-        <Route path="/notes" element={<NotesDirectoryPage />} />
-        <Route path="/practical" element={<PracticalAssignmentsPage />} />
+        <Route path="/dashboard" element={<StudentModuleRoute moduleKey="dashboard"><StudentDashboard /></StudentModuleRoute>} />
+        <Route path="/videos" element={<StudentModuleRoute moduleKey="videos"><VideoPlayerPage /></StudentModuleRoute>} />
+        <Route path="/notes" element={<StudentModuleRoute moduleKey="notes"><NotesDirectoryPage /></StudentModuleRoute>} />
+        <Route path="/practical" element={<StudentModuleRoute moduleKey="practical"><PracticalAssignmentsPage /></StudentModuleRoute>} />
         <Route path="/assignments" element={<Navigate to="/practical" replace />} />
-        <Route path="/tests" element={<TestSeriesPage />} />
-        <Route path="/micro-lessons" element={<MicroLessonsPage />} />
+        <Route path="/tests" element={<StudentModuleRoute moduleKey="tests"><TestSeriesPage /></StudentModuleRoute>} />
+        <Route path="/micro-lessons" element={<StudentModuleRoute moduleKey="micro_lessons"><MicroLessonsPage /></StudentModuleRoute>} />
         <Route path="/shorts" element={<Navigate to="/micro-lessons" replace />} />
         <Route path="/assessment/:testId/result" element={<AssessmentResultPage />} />
-        <Route path="/coding" element={<CodingArenaPage />} />
-        <Route path="/coding/:slug" element={<CodingProblemPage />} />
-        <Route path="/community" element={<CommunityForumPage />} />
-        <Route path="/community/:threadId" element={<CommunityThreadPage />} />
-        <Route path="/progress" element={<MyProgressPage />} />
+        <Route path="/coding" element={<StudentModuleRoute moduleKey="coding"><CodingArenaPage /></StudentModuleRoute>} />
+        <Route path="/coding/:slug" element={<StudentModuleRoute moduleKey="coding"><CodingProblemPage /></StudentModuleRoute>} />
+        <Route path="/community" element={<StudentModuleRoute moduleKey="community"><CommunityForumPage /></StudentModuleRoute>} />
+        <Route path="/community/:threadId" element={<StudentModuleRoute moduleKey="community"><CommunityThreadPage /></StudentModuleRoute>} />
+        <Route path="/progress" element={<StudentModuleRoute moduleKey="progress"><MyProgressPage /></StudentModuleRoute>} />
         <Route path="/profile" element={<StudentProfilePage />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
 
         {/* Sub-Admin Experience */}
         <Route path="/subadmin" element={<SubAdminDashboard />} />
@@ -185,6 +191,22 @@ export const AppRoutes: React.FC = () => {
             <PermissionRoute permissions={['premium_students.view', 'premium_students.manage', 'students.view']}>
               <PremiumStudentManagementPage />
             </PermissionRoute>
+          }
+        />
+        <Route
+          path="/admin/student-access"
+          element={
+            <AdminRoute>
+              <StudentAccessManagementPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/feedback"
+          element={
+            <AdminRoute>
+              <FeedbackManagementPage />
+            </AdminRoute>
           }
         />
         <Route path="/subadmin/subjects" element={<Navigate to="/admin/subjects" replace />} />

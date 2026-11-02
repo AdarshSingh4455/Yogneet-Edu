@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useStudentAccess } from '../../context/StudentAccessContext';
 import {
   LayoutDashboard,
   Video,
@@ -21,6 +22,7 @@ import {
   BookOpen,
   Film,
   Crown,
+  Layers,
 } from 'lucide-react';
 import { Badge } from '../common/Badge';
 
@@ -31,11 +33,16 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { currentUser, isAdmin, isSubAdmin, isStudent, hasPermission, isAuthenticated } = useAuth();
+  const { isModuleAccessible } = useStudentAccess();
   const location = useLocation();
+
+  const isPremium = currentUser.accessCategory === 'pro' || (currentUser as any).isPremium === true;
 
   // Navigation items for Super Admin
   const adminNav = [
     { label: 'Admin Dashboard', path: '/admin', icon: LayoutDashboard },
+    { label: 'Student Access Control', path: '/admin/student-access', icon: Layers, badge: 'Access' },
+    { label: 'Feedback Management', path: '/admin/feedback', icon: MessageSquare, badge: 'Support' },
     { label: 'Subjects', path: '/admin/subjects', icon: BookOpen },
     { label: 'Micro Lessons', path: '/admin/micro-lessons', icon: Film, badge: 'Shorts' },
     { label: 'Premium Students', path: '/admin/premium-students', icon: Crown, badge: 'Pro' },
@@ -81,24 +88,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       ? [{ label: 'Analytics', path: '/admin/analytics', icon: BarChart3 }]
       : []),
     { label: 'Coding Arena', path: '/coding', icon: Code2 },
+    { label: 'Feedback & Support', path: '/feedback', icon: HelpCircle },
     { label: 'My Permissions', path: '/profile', icon: User },
   ];
 
-  // Navigation items for Student (4 Core Learning Stages + Micro Lessons)
+  // Navigation items for Student (4 Core Learning Stages + Micro Lessons + Feedback)
   const studentNav = [
-    { label: 'Student Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { label: '1. Video Lessons', path: '/videos', icon: Video },
-    { label: '2. Study Notes & PDFs', path: '/notes', icon: FileText },
-    { label: '3. Practical Projects', path: '/practical', icon: Code2, badge: 'New' },
-    { label: '4. Test Series & Mocks', path: '/tests', icon: CheckSquare },
-    { label: 'Micro Lessons', path: '/micro-lessons', icon: Film, badge: 'Shorts' },
-    { label: 'Coding Practice Arena', path: '/coding', icon: Code2, badge: 'Hot' },
-    { label: 'Community Forum', path: '/community', icon: MessageSquare },
-    { label: 'My Learning Progress', path: '/progress', icon: TrendingUp },
+    { label: 'Student Dashboard', path: '/dashboard', icon: LayoutDashboard, moduleKey: 'dashboard' },
+    { label: '1. Video Lessons', path: '/videos', icon: Video, moduleKey: 'videos' },
+    { label: '2. Study Notes & PDFs', path: '/notes', icon: FileText, moduleKey: 'notes' },
+    { label: '3. Practical Projects', path: '/practical', icon: Code2, badge: 'New', moduleKey: 'practical' },
+    { label: '4. Test Series & Mocks', path: '/tests', icon: CheckSquare, moduleKey: 'tests' },
+    { label: 'Micro Lessons', path: '/micro-lessons', icon: Film, badge: 'Shorts', moduleKey: 'micro_lessons' },
+    { label: 'Coding Practice Arena', path: '/coding', icon: Code2, badge: 'Hot', moduleKey: 'coding' },
+    { label: 'Community Forum', path: '/community', icon: MessageSquare, moduleKey: 'community' },
+    { label: 'My Learning Progress', path: '/progress', icon: TrendingUp, moduleKey: 'progress' },
+    { label: 'Feedback & Support', path: '/feedback', icon: HelpCircle, moduleKey: 'feedback' },
     { label: 'Profile & Settings', path: '/profile', icon: User },
   ];
 
-  const currentNav = isAdmin ? adminNav : isSubAdmin ? subAdminNav : studentNav;
+  const filteredStudentNav = studentNav.filter(item => {
+    if (!item.moduleKey) return true;
+    return isModuleAccessible(item.moduleKey, isPremium);
+  });
+
+  const currentNav = isAdmin ? adminNav : isSubAdmin ? subAdminNav : filteredStudentNav;
 
   return (
     <>
@@ -154,7 +168,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   ? 'Full Platform Management'
                   : isSubAdmin
                   ? `${currentUser.permissions.length} module actions granted`
-                  : 'Enrolled in 2 Courses • 47 Solved')
+                  : `${currentUser.accessCategory === 'pro' || (currentUser as any).isPremium ? 'Premium Student' : 'Standard Student'} • Active Learner`)
                 : 'Sign in to access personalized progress & tests'}
             </p>
           </div>
