@@ -25,6 +25,7 @@ export interface UserProfile {
   program?: string;
   createdAt: string;
   lastActive: string;
+  mustChangePassword?: boolean;
 }
 
 // ==========================================
@@ -47,6 +48,16 @@ export type PermissionKey =
   | 'tests.publish'
   | 'tests.schedule'
   | 'tests.view_results'
+  | 'subjects.view'
+  | 'subjects.create'
+  | 'subjects.edit'
+  | 'subjects.delete'
+  | 'microlessons.view'
+  | 'microlessons.create'
+  | 'microlessons.edit'
+  | 'microlessons.delete'
+  | 'premium_students.view'
+  | 'premium_students.manage'
   | 'students.view'
   | 'students.suspend'
   | 'community.moderate'
@@ -60,6 +71,9 @@ export type PermissionModule =
   | 'videos'
   | 'notes'
   | 'tests'
+  | 'subjects'
+  | 'microlessons'
+  | 'premium_students'
   | 'students'
   | 'community'
   | 'subadmins'
@@ -414,4 +428,227 @@ export interface AssessmentImportPayload {
     tags?: string[];
   };
   questions: AssessmentImportQuestion[];
+}
+
+// ==========================================
+// Phase 1: Subject Management
+// ==========================================
+export interface SubjectContentCounts {
+  videos: number;
+  notes: number;
+  assignments: number;
+  assessments: number;
+  testSeries: number;
+}
+
+export interface Subject {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  icon: string; // Lucide icon identifier e.g. Code, Database, Globe, Cpu, Terminal, Layers, Brain
+  displayOrder: number;
+  isActive: boolean;
+  colorScheme?: string;
+  contentCounts: SubjectContentCounts;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSubjectInput {
+  name: string;
+  description: string;
+  icon: string;
+  displayOrder: number;
+  isActive: boolean;
+  colorScheme?: string;
+}
+
+export interface UpdateSubjectInput {
+  name?: string;
+  description?: string;
+  icon?: string;
+  displayOrder?: number;
+  isActive?: boolean;
+  colorScheme?: string;
+}
+
+// ==========================================
+// Phase 1: Micro Lessons (Shorts)
+// ==========================================
+export interface MicroSubject {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  coverImage: string;
+  displayOrder: number;
+  isActive: boolean;
+  videoCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMicroSubjectInput {
+  name: string;
+  description: string;
+  coverImage: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface UpdateMicroSubjectInput {
+  name?: string;
+  description?: string;
+  coverImage?: string;
+  displayOrder?: number;
+  isActive?: boolean;
+}
+
+export interface MicroLesson {
+  id: string;
+  microSubjectId: string;
+  microSubjectName: string;
+  title: string;
+  description: string;
+  youtubeShortsUrl: string;
+  youtubeId: string;
+  displayOrder: number;
+  status: 'published' | 'draft' | 'archived';
+  thumbnailUrl?: string;
+  authorName: string;
+  duration?: string;
+  likesCount?: number;
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMicroLessonInput {
+  microSubjectId: string;
+  title: string;
+  description: string;
+  youtubeShortsUrl: string;
+  displayOrder: number;
+  status: 'published' | 'draft' | 'archived';
+  authorName?: string;
+  thumbnailUrl?: string;
+}
+
+export interface UpdateMicroLessonInput {
+  microSubjectId?: string;
+  title?: string;
+  description?: string;
+  youtubeShortsUrl?: string;
+  displayOrder?: number;
+  status?: 'published' | 'draft' | 'archived';
+  authorName?: string;
+  thumbnailUrl?: string;
+}
+
+// ==========================================
+// Phase 1: Premium Student & Staff Management
+// ==========================================
+export interface PremiumStudent {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  yogneetEmail?: string; // Proposed convention: username@yogneet.edu
+  enrollmentNumber: string; // Format: YEAR + SEQUENTIAL e.g. 2026001, 20261000
+  admissionYear: number;
+  sequentialNumber: number;
+  phone?: string;
+  department: string;
+  institution?: string;
+  program?: string;
+  isPremiumActive: boolean;
+  status: UserStatus;
+  origin: 'google_converted' | 'direct_provisioned';
+  convertedAt?: string;
+  lastActive?: string;
+  createdAt: string;
+}
+
+export interface UpgradeStudentInput {
+  userId: string;
+  admissionYear: number;
+  phone?: string;
+  department?: string;
+  program?: string;
+  institution?: string;
+}
+
+export interface StaffMember {
+  id: string;
+  name: string;
+  email: string;
+  yogneetEmail?: string;
+  role: 'admin' | 'subadmin';
+  status: UserStatus;
+  phone?: string;
+  department?: string;
+  bio?: string;
+  permissions: PermissionKey[];
+  mustChangePassword?: boolean;
+  createdAt: string;
+  lastActive: string;
+}
+
+// ==========================================
+// Phase 1: Account Inspection (Admin UI)
+// ==========================================
+export interface AccountInspection {
+  student: UserProfile | PremiumStudent;
+  enrollmentNumber?: string;
+  role: UserRole;
+  accessCategory: StudentAccessCategory;
+  learningProgress: {
+    videosWatched: number;
+    totalVideos: number;
+    watchHours: number;
+    completionPercentage: number;
+  };
+  enrolledSubjects: Array<{
+    id: string;
+    name: string;
+    progress: number;
+    lastAccessed: string;
+  }>;
+  assessmentHistory: Array<{
+    id: string;
+    title: string;
+    score: number;
+    maxScore: number;
+    percentage: number;
+    percentile: number;
+    passed: boolean;
+    submittedAt: string;
+  }>;
+  notesSummary: {
+    notesViewed: number;
+    pdfsDownloaded: number;
+    lastReadNote?: string;
+  };
+  activityTimeline: Array<{
+    action: string;
+    timestamp: string;
+    details: string;
+  }>;
+}
+
+// ==========================================
+// Phase 1: Password Lifecycle State
+// ==========================================
+export interface PasswordLifecycleState {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  accountType: 'staff' | 'premium_student';
+  phone?: string;
+  enrollmentNumber?: string;
+  temporaryCredentialGenerated: boolean;
+  temporaryCredentialHint?: string; // Policy preview e.g. "Last 4 phone + Last 4 enrollment"
+  mustChangeAtFirstLogin: boolean;
+  lastPasswordResetAt?: string;
 }

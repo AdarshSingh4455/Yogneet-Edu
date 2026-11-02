@@ -35,6 +35,7 @@ export function rowToUserProfile(row: ProfileRow, permissions: PermissionKey[] =
     program: ((row as any).program as string) || undefined,
     createdAt: row.created_at,
     lastActive: row.last_active,
+    mustChangePassword: ((row as any).must_change_password as boolean) ?? false,
   };
 }
 

@@ -65,13 +65,17 @@ export function extractYouTubeId(urlOrId: string): string | null {
         const id = url.pathname.split('/')[2];
         return id && /^[a-zA-Z0-9_-]{11}$/.test(id) ? id : null;
       }
+      if (url.pathname.startsWith('/shorts/')) {
+        const id = url.pathname.split('/')[2];
+        return id && /^[a-zA-Z0-9_-]{11}$/.test(id) ? id : null;
+      }
     }
   } catch (e) {
     // Not a valid URL structure
   }
 
-  // Regex fallback
-  const match = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  // Regex fallback (including shorts)
+  const match = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
   return match ? match[1] : null;
 }
 

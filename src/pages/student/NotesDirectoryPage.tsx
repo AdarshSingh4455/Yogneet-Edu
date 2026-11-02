@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { StudyNotesService } from '../../services/studyNotesService';
 import { StorageService } from '../../services/storageService';
 import { ApiService } from '../../services/api';
-import { StudyNote } from '../../types';
+import { StudyNote, Subject } from '../../types';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { SubjectSelectionView } from '../../components/subjects/SubjectSelectionView';
 import {
   Search,
   Grid,
@@ -23,6 +24,7 @@ import {
   ArrowRight,
   FileCode,
   CheckSquare,
+  ChevronLeft,
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -32,6 +34,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { MarkdownRenderer } from '../../components/common/MarkdownRenderer';
 
 export const NotesDirectoryPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const toast = useToast();
   const { currentUser } = useAuth();
   const [notes, setNotes] = useState<StudyNote[]>([]);
@@ -41,6 +44,8 @@ export const NotesDirectoryPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'recent' | 'downloads' | 'title'>('recent');
   const [selectedNote, setSelectedNote] = useState<StudyNote | null>(null);
+
+  const currentSubject = searchParams.get('subject');
 
   const subjects = ['All', 'Python', 'Data Structures', 'SQL', 'Algorithms', 'Cloud Computing'];
 
@@ -67,13 +72,21 @@ export const NotesDirectoryPage: React.FC = () => {
       .filter(note => {
         if (note.status !== 'published') return false;
 
-        const matchesSubject = selectedSubject === 'All' || note.subject === selectedSubject;
+        const matchesSubj = !currentSubject || currentSubject === 'All'
+          ? (selectedSubject === 'All' || note.subject === selectedSubject)
+          : (note.subject.toLowerCase().includes(currentSubject.toLowerCase()) ||
+             currentSubject.toLowerCase().includes(note.subject.toLowerCase()) ||
+             (currentSubject.toLowerCase().includes('python') && note.subject.toLowerCase().includes('python')) ||
+             (currentSubject.toLowerCase().includes('dbms') && (note.subject.toLowerCase().includes('sql') || note.subject.toLowerCase().includes('dbms') || note.subject.toLowerCase().includes('database'))) ||
+             (currentSubject.toLowerCase().includes('dsa') && (note.subject.toLowerCase().includes('structure') || note.subject.toLowerCase().includes('algorithm'))) ||
+             (currentSubject.toLowerCase().includes('web') && (note.subject.toLowerCase().includes('web') || note.subject.toLowerCase().includes('cloud') || note.subject.toLowerCase().includes('javascript'))));
+
         const matchesQuery =
           note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           note.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
           (note.tags && note.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase())));
 
-        return matchesSubject && matchesQuery;
+        return matchesSubj && matchesQuery;
       })
       .sort((a, b) => {
         if (sortBy === 'recent') {
@@ -84,7 +97,7 @@ export const NotesDirectoryPage: React.FC = () => {
         }
         return a.title.localeCompare(b.title);
       });
-  }, [notes, searchQuery, selectedSubject, sortBy]);
+  }, [notes, searchQuery, selectedSubject, currentSubject, sortBy]);
 
   const handleDownload = async (note: StudyNote) => {
     if (!note.fileUrl) {
@@ -139,8 +152,42 @@ export const NotesDirectoryPage: React.FC = () => {
     }
   };
 
+  // FLOW 1: If no subject selected, render Subject Selection Grid!
+  if (!currentSubject) {
+    return (
+      <SubjectSelectionView
+        moduleTitle="2. Study Notes & Reference PDFs"
+        moduleSubtitle="Select a curriculum subject to access concise handwritten revision sheets, architecture diagrams, and downloadable study guides."
+        moduleType="notes"
+        onSelectSubject={(subj) => setSearchParams({ subject: subj.name })}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Subject Navigation Breadcrumb */}
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-light-border dark:border-dark-border">
+        <button
+          type="button"
+          onClick={() => setSearchParams({})}
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-cyan-400 transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span>Back to All Subjects</span>
+        </button>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-400 hidden sm:inline">Active Subject:</span>
+          <Badge variant="brand" size="sm">
+            {currentSubject}
+          </Badge>
+          <Button variant="ghost" size="sm" onClick={() => setSearchParams({})}>
+            Change Subject
+          </Button>
+        </div>
+      </div>
+
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-light-border dark:border-dark-border">
         <div>

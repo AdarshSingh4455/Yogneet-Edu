@@ -18,6 +18,9 @@ import {
   X,
   ChevronRight,
   Sparkles,
+  BookOpen,
+  Film,
+  Crown,
 } from 'lucide-react';
 import { Badge } from '../common/Badge';
 
@@ -33,6 +36,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   // Navigation items for Super Admin
   const adminNav = [
     { label: 'Admin Dashboard', path: '/admin', icon: LayoutDashboard },
+    { label: 'Subjects', path: '/admin/subjects', icon: BookOpen },
+    { label: 'Micro Lessons', path: '/admin/micro-lessons', icon: Film, badge: 'Shorts' },
+    { label: 'Premium Students', path: '/admin/premium-students', icon: Crown, badge: 'Pro' },
     { label: 'Sub-Admins & Staff', path: '/admin/subadmins', icon: Shield },
     { label: 'RBAC & Permissions', path: '/admin/permissions', icon: Shield, badge: 'Key' },
     { label: 'Audit Trail Logs', path: '/admin/audit-logs', icon: FileSpreadsheet },
@@ -47,6 +53,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   // Navigation items for Sub-Admin generated dynamically from assigned permissions
   const subAdminNav = [
     { label: 'Staff Dashboard', path: '/subadmin', icon: LayoutDashboard },
+    ...(hasPermission('subjects.view') || hasPermission('subjects.create')
+      ? [{ label: 'Subjects', path: '/admin/subjects', icon: BookOpen }]
+      : []),
+    ...(hasPermission('microlessons.view') || hasPermission('microlessons.create')
+      ? [{ label: 'Micro Lessons', path: '/admin/micro-lessons', icon: Film, badge: 'Shorts' }]
+      : []),
+    ...(hasPermission('premium_students.view') || hasPermission('premium_students.manage')
+      ? [{ label: 'Premium Students', path: '/admin/premium-students', icon: Crown, badge: 'Pro' }]
+      : []),
     ...(hasPermission('videos.view') || hasPermission('videos.create') || hasPermission('notes.view') || hasPermission('notes.create')
       ? [{ label: 'Content Workspace', path: '/subadmin/content', icon: FileText }]
       : []),
@@ -69,13 +84,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { label: 'My Permissions', path: '/profile', icon: User },
   ];
 
-  // Navigation items for Student (4 Core Learning Stages)
+  // Navigation items for Student (4 Core Learning Stages + Micro Lessons)
   const studentNav = [
     { label: 'Student Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { label: '1. Video Lessons', path: '/videos', icon: Video },
     { label: '2. Study Notes & PDFs', path: '/notes', icon: FileText },
     { label: '3. Practical Projects', path: '/practical', icon: Code2, badge: 'New' },
     { label: '4. Test Series & Mocks', path: '/tests', icon: CheckSquare },
+    { label: 'Micro Lessons', path: '/micro-lessons', icon: Film, badge: 'Shorts' },
     { label: 'Coding Practice Arena', path: '/coding', icon: Code2, badge: 'Hot' },
     { label: 'Community Forum', path: '/community', icon: MessageSquare },
     { label: 'My Learning Progress', path: '/progress', icon: TrendingUp },

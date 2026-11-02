@@ -18,6 +18,7 @@ import { VideoPlayerPage } from '../pages/student/VideoPlayerPage';
 import { NotesDirectoryPage } from '../pages/student/NotesDirectoryPage';
 import { PracticalAssignmentsPage } from '../pages/student/PracticalAssignmentsPage';
 import { TestSeriesPage } from '../pages/student/TestSeriesPage';
+import { MicroLessonsPage } from '../pages/student/MicroLessonsPage';
 import { AssessmentPage } from '../pages/student/AssessmentPage';
 import { AssessmentResultPage } from '../pages/student/AssessmentResultPage';
 import { CodingArenaPage } from '../pages/student/CodingArenaPage';
@@ -34,6 +35,9 @@ import { AuditLogsPage } from '../pages/admin/AuditLogsPage';
 import { AnalyticsPage } from '../pages/admin/AnalyticsPage';
 import { StudentManagementPage } from '../pages/admin/StudentManagementPage';
 import { TestCatalogManagerPage } from '../pages/admin/TestCatalogManagerPage';
+import { SubjectManagementPage } from '../pages/admin/SubjectManagementPage';
+import { MicroLessonsManagementPage } from '../pages/admin/MicroLessonsManagementPage';
+import { PremiumStudentManagementPage } from '../pages/admin/PremiumStudentManagementPage';
 
 // Sub-Admin Pages
 import { SubAdminDashboard } from '../pages/subadmin/SubAdminDashboard';
@@ -72,13 +76,15 @@ export const AppRoutes: React.FC = () => {
         {/* Root Redirect */}
         <Route path="/" element={<RootRedirector />} />
 
-        {/* Student Experience: 4 Core Learning Stages */}
+        {/* Student Experience: 4 Core Learning Stages + Micro Lessons Shorts */}
         <Route path="/dashboard" element={<StudentDashboard />} />
         <Route path="/videos" element={<VideoPlayerPage />} />
         <Route path="/notes" element={<NotesDirectoryPage />} />
         <Route path="/practical" element={<PracticalAssignmentsPage />} />
         <Route path="/assignments" element={<Navigate to="/practical" replace />} />
         <Route path="/tests" element={<TestSeriesPage />} />
+        <Route path="/micro-lessons" element={<MicroLessonsPage />} />
+        <Route path="/shorts" element={<Navigate to="/micro-lessons" replace />} />
         <Route path="/assessment/:testId/result" element={<AssessmentResultPage />} />
         <Route path="/coding" element={<CodingArenaPage />} />
         <Route path="/coding/:slug" element={<CodingProblemPage />} />
@@ -157,6 +163,32 @@ export const AppRoutes: React.FC = () => {
             </PermissionRoute>
           }
         />
+        <Route
+          path="/admin/subjects"
+          element={
+            <PermissionRoute permissions={['subjects.view', 'subjects.create', 'subjects.edit']}>
+              <SubjectManagementPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="/admin/micro-lessons"
+          element={
+            <PermissionRoute permissions={['microlessons.view', 'microlessons.create', 'microlessons.edit']}>
+              <MicroLessonsManagementPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="/admin/premium-students"
+          element={
+            <PermissionRoute permissions={['premium_students.view', 'premium_students.manage', 'students.view']}>
+              <PremiumStudentManagementPage />
+            </PermissionRoute>
+          }
+        />
+        <Route path="/subadmin/subjects" element={<Navigate to="/admin/subjects" replace />} />
+        <Route path="/subadmin/micro-lessons" element={<Navigate to="/admin/micro-lessons" replace />} />
 
         {/* Fallback 404 */}
         <Route path="*" element={<NotFoundPage />} />

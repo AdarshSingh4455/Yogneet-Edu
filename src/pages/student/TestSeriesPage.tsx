@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiService } from '../../services/api';
-import { TestSeriesItem } from '../../types';
+import { TestSeriesItem, Subject } from '../../types';
+import { SubjectSelectionView } from '../../components/subjects/SubjectSelectionView';
 import {
   CheckSquare,
   Clock,
@@ -11,28 +12,77 @@ import {
   RotateCcw,
   AlertCircle,
   Award,
+  ChevronLeft,
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 
 export const TestSeriesPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tests] = useState<TestSeriesItem[]>(() => ApiService.getTests());
   const [selectedSubject, setSelectedSubject] = useState<string>('All');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All');
   const navigate = useNavigate();
 
+  const currentSubject = searchParams.get('subject');
+
   const subjects = ['All', 'Python', 'Data Structures', 'SQL', 'Web Development'];
   const difficulties = ['All', 'Easy', 'Medium', 'Hard'];
 
   const filteredTests = tests.filter(test => {
-    const matchesSubject = selectedSubject === 'All' || test.subject === selectedSubject;
+    let matchesSubject = true;
+    if (currentSubject) {
+      const s = currentSubject.toLowerCase();
+      const ts = test.subject.toLowerCase();
+      matchesSubject =
+        ts.includes(s) ||
+        s.includes(ts) ||
+        (s.includes('python') && ts.includes('python')) ||
+        (s.includes('dbms') && (ts.includes('sql') || ts.includes('dbms') || ts.includes('database'))) ||
+        (s.includes('web') && (ts.includes('web') || ts.includes('full-stack'))) ||
+        (s.includes('dsa') && (ts.includes('structure') || ts.includes('algorithm') || ts.includes('dsa')));
+    } else {
+      matchesSubject = selectedSubject === 'All' || test.subject === selectedSubject;
+    }
     const matchesDifficulty = selectedDifficulty === 'All' || test.difficulty === selectedDifficulty;
     return matchesSubject && matchesDifficulty;
   });
 
+  if (!currentSubject) {
+    return (
+      <SubjectSelectionView
+        moduleTitle="4. Test Series & Examination Catalog"
+        moduleSubtitle="Select a curriculum subject to take timed mock examinations, algorithmic quizzes, and benchmark your knowledge."
+        moduleType="tests"
+        onSelectSubject={(subj) => setSearchParams({ subject: subj.name })}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Subject Navigation Breadcrumb */}
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-light-border dark:border-dark-border">
+        <button
+          type="button"
+          onClick={() => setSearchParams({})}
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-cyan-400 transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span>Back to All Subjects</span>
+        </button>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-400 hidden sm:inline">Active Subject:</span>
+          <Badge variant="brand" size="sm">
+            {currentSubject}
+          </Badge>
+          <Button variant="ghost" size="sm" onClick={() => setSearchParams({})}>
+            Change Subject
+          </Button>
+        </div>
+      </div>
       {/* Page Header */}
       <div className="pb-4 border-b border-light-border dark:border-dark-border">
         <div className="flex items-center gap-2 mb-1">
@@ -89,7 +139,25 @@ export const TestSeriesPage: React.FC = () => {
       </div>
 
       {/* Tests Catalog Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {filteredTests.length === 0 ? (
+        <div className="py-20 text-center space-y-4 max-w-md mx-auto">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
+            <CheckSquare className="w-7 h-7" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+            No Assessments Published for {currentSubject}
+          </h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Assessments and question banks for this subject are being added. Check back shortly or browse other curriculum tracks.
+          </p>
+          <div className="pt-2">
+            <Button variant="primary" onClick={() => setSearchParams({})}>
+              Choose Another Subject
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredTests.map(test => {
           const hasAttempted = test.lastScore !== undefined;
           const isPassed = hasAttempted && (test.lastScore || 0) >= test.passPercentage;
@@ -202,6 +270,7 @@ export const TestSeriesPage: React.FC = () => {
           );
         })}
       </div>
+      )}
     </div>
   );
 };

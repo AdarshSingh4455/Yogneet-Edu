@@ -144,6 +144,75 @@ export const PERMISSION_DEFINITIONS: PermissionDefinition[] = [
     isDangerous: true,
   },
 
+  // Subjects
+  {
+    key: 'subjects.view',
+    label: 'View Subjects',
+    description: 'Browse curriculum subjects, course outlines, and display orders.',
+    module: 'subjects',
+  },
+  {
+    key: 'subjects.create',
+    label: 'Create Subjects',
+    description: 'Add new foundational academic subjects to the curriculum.',
+    module: 'subjects',
+  },
+  {
+    key: 'subjects.edit',
+    label: 'Edit Subjects',
+    description: 'Modify subject names, descriptions, icons, and display ordering.',
+    module: 'subjects',
+  },
+  {
+    key: 'subjects.delete',
+    label: 'Delete Subjects',
+    description: 'Permanently remove subjects and associated curriculum structures.',
+    module: 'subjects',
+    isDangerous: true,
+  },
+
+  // Micro Lessons
+  {
+    key: 'microlessons.view',
+    label: 'View Micro Lessons',
+    description: 'Inspect short-form vertical lessons and micro topics.',
+    module: 'microlessons',
+  },
+  {
+    key: 'microlessons.create',
+    label: 'Create Micro Lessons',
+    description: 'Author micro subjects and link YouTube Shorts videos.',
+    module: 'microlessons',
+  },
+  {
+    key: 'microlessons.edit',
+    label: 'Edit Micro Lessons',
+    description: 'Update shorts links, descriptions, and sequence order.',
+    module: 'microlessons',
+  },
+  {
+    key: 'microlessons.delete',
+    label: 'Delete Micro Lessons',
+    description: 'Remove shorts and micro learning modules.',
+    module: 'microlessons',
+    isDangerous: true,
+  },
+
+  // Premium Students
+  {
+    key: 'premium_students.view',
+    label: 'View Premium Students',
+    description: 'Access directory of premium students and enrollment numbers.',
+    module: 'premium_students',
+  },
+  {
+    key: 'premium_students.manage',
+    label: 'Manage Premium Entitlements',
+    description: 'Upgrade accounts, toggle access, and inspect student records.',
+    module: 'premium_students',
+    isDangerous: true,
+  },
+
   // System & Logs
   {
     key: 'audit_logs.view',
@@ -180,6 +249,21 @@ export const MODULE_METADATA: Record<PermissionModule, { label: string; descript
     label: 'Assessment & Test Series',
     description: 'Permissions for test authoring, question banks, and score evaluations.',
     icon: 'CheckSquare',
+  },
+  subjects: {
+    label: 'Curriculum & Subjects',
+    description: 'Permissions governing subjects, syllabus hierarchy, and ordering.',
+    icon: 'BookOpen',
+  },
+  microlessons: {
+    label: 'Micro Lessons & Shorts',
+    description: 'Permissions governing vertical micro lessons and quick tips.',
+    icon: 'Film',
+  },
+  premium_students: {
+    label: 'Premium Students & Entitlements',
+    description: 'Permissions governing premium student conversions and enrollment records.',
+    icon: 'Crown',
   },
   students: {
     label: 'Student Directory',

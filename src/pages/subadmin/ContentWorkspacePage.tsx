@@ -36,6 +36,7 @@ import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { Input } from '../../components/common/Input';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
+import { SubjectSelector } from '../../components/common/SubjectSelector';
 
 type WorkspaceTab = 'notes' | 'videos' | 'assignments';
 
@@ -934,22 +935,12 @@ export const ContentWorkspacePage: React.FC = () => {
               required
             />
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Subject Track
-              </label>
-              <select
-                value={newSubject}
-                onChange={e => setNewSubject(e.target.value)}
-                className="w-full text-xs rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card p-2 text-slate-900 dark:text-slate-100"
-              >
-                <option value="Python">Python</option>
-                <option value="DSA">Data Structures & Algorithms</option>
-                <option value="SQL">SQL & Database Architecture</option>
-                <option value="System Design">System Design</option>
-                <option value="DevOps">DevOps & Cloud</option>
-              </select>
-            </div>
+            <SubjectSelector
+              label="Subject Track"
+              value={newSubject}
+              onChange={setNewSubject}
+              required
+            />
           </div>
 
           <Input
@@ -1032,11 +1023,10 @@ export const ContentWorkspacePage: React.FC = () => {
           />
 
           <div className="grid grid-cols-2 gap-3">
-            <Input
+            <SubjectSelector
               label="Course / Subject"
               value={videoCourse}
-              onChange={e => setVideoCourse(e.target.value)}
-              placeholder="e.g. Python Architecture"
+              onChange={setVideoCourse}
               required
             />
             <Input
@@ -1137,11 +1127,10 @@ export const ContentWorkspacePage: React.FC = () => {
           />
 
           <div className="grid grid-cols-2 gap-3">
-            <Input
+            <SubjectSelector
               label="Subject / Technology"
               value={asgSubject}
-              onChange={e => setAsgSubject(e.target.value)}
-              placeholder="Python"
+              onChange={setAsgSubject}
               required
             />
             <Input
@@ -1341,15 +1330,11 @@ export const ContentWorkspacePage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Subject / Track
-                </label>
-                <input
-                  type="text"
-                  required
+                <SubjectSelector
+                  label="Subject / Track"
                   value={editNoteSubject}
-                  onChange={e => setEditNoteSubject(e.target.value)}
-                  className="w-full text-xs px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  onChange={setEditNoteSubject}
+                  required
                 />
               </div>
             </div>
@@ -1445,15 +1430,11 @@ export const ContentWorkspacePage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Course / Subject
-                </label>
-                <input
-                  type="text"
-                  required
+                <SubjectSelector
+                  label="Course / Subject"
                   value={editVideoCourse}
-                  onChange={e => setEditVideoCourse(e.target.value)}
-                  className="w-full text-xs px-3 py-2 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  onChange={setEditVideoCourse}
+                  required
                 />
               </div>
             </div>

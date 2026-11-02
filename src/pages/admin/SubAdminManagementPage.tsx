@@ -25,6 +25,9 @@ import { Modal } from '../../components/common/Modal';
 import { Input } from '../../components/common/Input';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { PermissionEditorModal } from '../../components/admin/PermissionEditorModal';
+import { PasswordLifecycleModal } from '../../components/auth/PasswordLifecycleModal';
+import { Phase1NoticeBadge } from '../../components/common/Phase1NoticeBadge';
+import { generateProposedYogneetEmail } from '../../services/premiumStudentService';
 import { ROLE_PRESETS } from '../../permissions/registry';
 
 export const SubAdminManagementPage: React.FC = () => {
@@ -40,11 +43,13 @@ export const SubAdminManagementPage: React.FC = () => {
   const [selectedForPermissions, setSelectedForPermissions] = useState<UserProfile | null>(null);
   const [userToToggleStatus, setUserToToggleStatus] = useState<UserProfile | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
+  const [passwordTargetStaff, setPasswordTargetStaff] = useState<UserProfile | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // New Sub-Admin Form State
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [newPhone, setNewPhone] = useState('+91 98000 12345');
   const [newDepartment, setNewDepartment] = useState('Curriculum & Video Authoring');
   const [newBio, setNewBio] = useState('');
   const [selectedPreset, setSelectedPreset] = useState<string>('content_creator');
@@ -151,6 +156,7 @@ export const SubAdminManagementPage: React.FC = () => {
             <Badge variant="purple" size="sm">
               Staff RBAC Governance
             </Badge>
+            <Phase1NoticeBadge label="Staff Lifecycle • Phase 2 Credential Policy" />
             <span className="text-xs text-slate-400">Sub-Admin Directory</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
@@ -236,10 +242,18 @@ export const SubAdminManagementPage: React.FC = () => {
                           className="w-9 h-9 rounded-xl object-cover ring-1 ring-slate-200 dark:ring-slate-700"
                         />
                         <div>
-                          <span className="font-bold text-slate-900 dark:text-slate-100 block">
-                            {staff.name}
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-slate-900 dark:text-slate-100 block">
+                              {staff.name}
+                            </span>
+                            <span className="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300">
+                              {staff.role === 'admin' ? 'ADMIN' : 'STAFF'}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-400 block">{staff.email}</span>
+                          <span className="text-[10px] font-mono text-brand-600 dark:text-cyan-400 block">
+                            {generateProposedYogneetEmail(staff.name, staff.id)}
                           </span>
-                          <span className="text-[11px] text-slate-400">{staff.email}</span>
                         </div>
                       </div>
                     </td>
@@ -289,7 +303,17 @@ export const SubAdminManagementPage: React.FC = () => {
                           onClick={() => setSelectedForPermissions(staff)}
                           leftIcon={<Key className="w-3.5 h-3.5 text-purple-500" />}
                         >
-                          Edit RBAC
+                          RBAC
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setPasswordTargetStaff(staff)}
+                          leftIcon={<Lock className="w-3.5 h-3.5 text-indigo-500" />}
+                          title="Reset Password & Issue Temporary Credential (Phase 2 Preview)"
+                        >
+                          Password
                         </Button>
 
                         {isAdmin && (
@@ -360,6 +384,22 @@ export const SubAdminManagementPage: React.FC = () => {
             placeholder="e.g. vikram.s@yogneetedu.in"
             required
           />
+
+          <Input
+            label="Registered Phone Number"
+            type="tel"
+            value={newPhone}
+            onChange={e => setNewPhone(e.target.value)}
+            placeholder="+91 98000 12345"
+            helperText="Used for Phase 2 initial credential policy (last 4 digits)"
+            required
+          />
+
+          {/* Phase 2 Security policy preview banner */}
+          <div className="p-3 rounded-xl border border-indigo-200/80 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/20 text-[11px] text-indigo-900 dark:text-indigo-300">
+            <span className="font-bold block mb-0.5">Phase 2 Security Credential Policy</span>
+            <span>Initial credential will be generated from the last 4 digits of registered phone number. Plaintext passwords are never stored or transmitted in frontend state.</span>
+          </div>
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
@@ -436,6 +476,19 @@ export const SubAdminManagementPage: React.FC = () => {
           message={`This will permanently remove ${userToDelete.name} (${userToDelete.email}) from staff. This action is irreversible.`}
           confirmText="Delete Account"
           variant="danger"
+        />
+      )}
+
+      {/* Password Lifecycle Modal (Module 9) */}
+      {passwordTargetStaff && (
+        <PasswordLifecycleModal
+          isOpen={true}
+          onClose={() => setPasswordTargetStaff(null)}
+          userId={passwordTargetStaff.id}
+          userName={passwordTargetStaff.name}
+          userEmail={passwordTargetStaff.email}
+          accountType="staff"
+          phone="+91 98000 12345"
         />
       )}
     </div>

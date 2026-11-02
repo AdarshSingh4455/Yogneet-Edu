@@ -58,6 +58,10 @@ export const StudentLoginPage: React.FC = () => {
   // Redirect already authenticated users to their authorized destination
   useEffect(() => {
     if (isAuthenticated) {
+      if (currentUser?.mustChangePassword) {
+        navigate('/reset-password?mandatory=true', { replace: true });
+        return;
+      }
       if (currentUser.role === 'admin') {
         navigate('/admin', { replace: true });
       } else if (currentUser.role === 'subadmin') {
@@ -66,7 +70,7 @@ export const StudentLoginPage: React.FC = () => {
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [isAuthenticated, currentUser.role, navigate]);
+  }, [isAuthenticated, currentUser?.role, currentUser?.mustChangePassword, navigate]);
 
   // Notice for email verified callback
   useEffect(() => {
@@ -105,6 +109,12 @@ export const StudentLoginPage: React.FC = () => {
       if (!result.success) {
         setErrors({ general: result.error || 'Invalid email or password' });
         toast.error('Sign In Failed', result.error || 'Please check your credentials.');
+        return;
+      }
+
+      if (result.user?.mustChangePassword) {
+        toast.info('Mandatory Password Change', 'A password update is required before accessing your student portal.');
+        navigate('/reset-password?mandatory=true', { replace: true });
         return;
       }
 

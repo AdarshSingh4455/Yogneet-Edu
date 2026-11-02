@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { PracticalAssignment } from '../../types';
+import { Link, useSearchParams } from 'react-router-dom';
+import { PracticalAssignment, Subject } from '../../types';
 import { PracticalAssignmentsService } from '../../services/practicalAssignmentsService';
+import { SubjectSelectionView } from '../../components/subjects/SubjectSelectionView';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
+import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import {
   FileCode,
@@ -18,14 +20,18 @@ import {
   Video,
   CheckSquare,
   Sparkles,
+  ChevronLeft,
 } from 'lucide-react';
 
 export const PracticalAssignmentsPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [assignments, setAssignments] = useState<PracticalAssignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('all');
   const [selectedAssignment, setSelectedAssignment] = useState<PracticalAssignment | null>(null);
+
+  const currentSubject = searchParams.get('subject');
 
   useEffect(() => {
     const loadAssignments = async () => {
@@ -45,7 +51,21 @@ export const PracticalAssignmentsPage: React.FC = () => {
   const subjects = Array.from(new Set(assignments.map((a) => a.subject))).filter(Boolean);
 
   const filteredAssignments = assignments.filter((a) => {
-    if (subjectFilter !== 'all' && a.subject !== subjectFilter) return false;
+    if (currentSubject) {
+      const s = currentSubject.toLowerCase();
+      const as = a.subject.toLowerCase();
+      const match =
+        as.includes(s) ||
+        s.includes(as) ||
+        (s.includes('python') && as.includes('python')) ||
+        (s.includes('dbms') && (as.includes('sql') || as.includes('dbms') || as.includes('database'))) ||
+        (s.includes('web') && (as.includes('web') || as.includes('node') || as.includes('api'))) ||
+        (s.includes('dsa') && (as.includes('algorithm') || as.includes('structure') || as.includes('dsa')));
+      if (!match) return false;
+    } else if (subjectFilter !== 'all' && a.subject !== subjectFilter) {
+      return false;
+    }
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchTitle = a.title.toLowerCase().includes(q);
@@ -57,8 +77,41 @@ export const PracticalAssignmentsPage: React.FC = () => {
     return true;
   });
 
+  if (!currentSubject) {
+    return (
+      <SubjectSelectionView
+        moduleTitle="3. Practical Projects & Engineering Assignments"
+        moduleSubtitle="Select a curriculum subject to build real-world systems, complete lecture-wise problem statements, and submit evaluated code."
+        moduleType="practical"
+        onSelectSubject={(subj) => setSearchParams({ subject: subj.name })}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Subject Navigation Breadcrumb */}
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-light-border dark:border-dark-border">
+        <button
+          type="button"
+          onClick={() => setSearchParams({})}
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-cyan-400 transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span>Back to All Subjects</span>
+        </button>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-400 hidden sm:inline">Active Subject:</span>
+          <Badge variant="brand" size="sm">
+            {currentSubject}
+          </Badge>
+          <Button variant="ghost" size="sm" onClick={() => setSearchParams({})}>
+            Change Subject
+          </Button>
+        </div>
+      </div>
+
       {/* 4-Step Learning Journey Banner */}
       <div className="rounded-3xl border border-light-border dark:border-dark-border bg-gradient-to-r from-brand-500/10 via-purple-500/10 to-brand-500/5 p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

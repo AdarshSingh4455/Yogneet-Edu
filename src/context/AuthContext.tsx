@@ -564,6 +564,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { success: false, error: error.message };
         }
 
+        if (activeProfile?.id) {
+          try {
+            if (activeProfile.mustChangePassword) {
+              const { error: rpcErr } = await (supabase.rpc as any)('complete_mandatory_password_change', {
+                p_new_password: newPassword,
+              });
+              if (rpcErr) {
+                // Verified profile update fallback: trigger verifies auth.users update
+                await (supabase.from('profiles') as any)
+                  .update({ must_change_password: false })
+                  .eq('id', activeProfile.id);
+              }
+            } else {
+              await (supabase.from('profiles') as any)
+                .update({ must_change_password: false })
+                .eq('id', activeProfile.id);
+            }
+
+            setActiveProfile({
+              ...activeProfile,
+              mustChangePassword: false,
+            });
+          } catch (e) {
+            console.warn('[completePasswordReset] Profile flag update note:', e);
+          }
+        }
+
         setIsRecoverySession(false);
         return { success: true };
       } catch (err: any) {

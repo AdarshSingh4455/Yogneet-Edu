@@ -12,6 +12,7 @@ export interface ProvisionStaffInput {
   name: string;
   email: string;
   role: 'subadmin' | 'admin';
+  phone?: string;
   department?: string;
   bio?: string;
   permissions: PermissionKey[];

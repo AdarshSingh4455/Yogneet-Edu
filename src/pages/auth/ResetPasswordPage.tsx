@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthLayout } from '../../components/layout/AuthLayout';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../services/supabaseClient';
+import { PasswordStrengthMeter, analyzePassword } from '../../components/auth/PasswordStrengthMeter';
 import { Lock, Eye, EyeOff, ArrowRight, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 export const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const toast = useToast();
-  const { completePasswordReset, isRecoverySession, backendMode } = useAuth();
+  const { completePasswordReset, isRecoverySession, backendMode, currentUser, isAuthenticated } = useAuth();
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -21,20 +23,27 @@ export const ResetPasswordPage: React.FC = () => {
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string; general?: string }>({});
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const isMandatory = searchParams.get('mandatory') === 'true' || Boolean(currentUser?.mustChangePassword);
+
   const hasRecoveryToken = typeof window !== 'undefined' &&
     (window.location.hash.includes('type=recovery') ||
      new URLSearchParams(window.location.search).get('type') === 'recovery' ||
      new URLSearchParams(window.location.search).has('code'));
 
-  const isValidRecovery = isRecoverySession || hasRecoveryToken || backendMode === 'local-mock';
+  const isValidRecovery = isRecoverySession || hasRecoveryToken || (isAuthenticated && isMandatory) || backendMode === 'local-mock';
 
   const validate = (): boolean => {
     const newErrors: typeof errors = {};
 
     if (!password) {
       newErrors.password = 'New password is required';
-    } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters long';
+    } else {
+      const analysis = analyzePassword(password);
+      if (!analysis.requirements.hasUppercase || !analysis.requirements.hasLowercase || !analysis.requirements.hasNumber) {
+        newErrors.password = 'Password must include uppercase, lowercase, and a number';
+      }
     }
 
     if (!confirmPassword) {
@@ -83,7 +92,7 @@ export const ResetPasswordPage: React.FC = () => {
   return (
     <AuthLayout
       portalTitle="Set New Password"
-      portalSubtitle="Choose a secure password of at least 6 characters for your Yogneet Edu account."
+      portalSubtitle="Choose a secure password of at least 8 characters for your Yogneet Edu account."
       badgeText="Password Reset"
       badgeVariant="brand"
     >
@@ -134,7 +143,9 @@ export const ResetPasswordPage: React.FC = () => {
               Password Changed Successfully
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-              You can now sign in to your Yogneet Edu account using your new credentials.
+              {isAuthenticated
+                ? 'Your password has been updated and mandatory reset requirements are fulfilled. You may proceed.'
+                : 'You can now sign in to your Yogneet Edu account using your new credentials.'}
             </p>
           </div>
 
@@ -142,11 +153,19 @@ export const ResetPasswordPage: React.FC = () => {
             <Button
               variant="primary"
               size="md"
-              onClick={() => navigate('/login')}
+              onClick={() => {
+                if (isAuthenticated) {
+                  if (currentUser?.role === 'admin') navigate('/admin');
+                  else if (currentUser?.role === 'subadmin') navigate('/subadmin');
+                  else navigate('/dashboard');
+                } else {
+                  navigate('/login');
+                }
+              }}
               className="w-full justify-center"
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Sign In with New Password
+              {isAuthenticated ? 'Continue to Dashboard' : 'Sign In with New Password'}
             </Button>
           </div>
         </div>
@@ -164,7 +183,7 @@ export const ResetPasswordPage: React.FC = () => {
               id="reset-password-new"
               type={showPassword ? 'text' : 'password'}
               label="New Password"
-              placeholder="Min. 6 characters"
+              placeholder="Min. 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               error={errors.password}
@@ -182,6 +201,7 @@ export const ResetPasswordPage: React.FC = () => {
               autoComplete="new-password"
               required
             />
+            {password && <PasswordStrengthMeter password={password} />}
           </div>
 
           <div>
@@ -213,8 +233,11 @@ export const ResetPasswordPage: React.FC = () => {
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-dark-bg/60 border border-light-border dark:border-dark-border text-[11px] text-slate-500 dark:text-slate-400 space-y-1">
             <p className="font-semibold text-slate-700 dark:text-slate-300">Security Guidance:</p>
             <ul className="list-disc pl-4 space-y-0.5">
-              <li className={password.length >= 6 ? 'text-emerald-600 dark:text-emerald-400' : ''}>
-                Must be at least 6 characters long
+              <li className={password.length >= 8 ? 'text-emerald-600 dark:text-emerald-400' : ''}>
+                Must be at least 8 characters long
+              </li>
+              <li className={/[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password) ? 'text-emerald-600 dark:text-emerald-400' : ''}>
+                Must include uppercase, lowercase, and numbers
               </li>
               <li className={password && password === confirmPassword ? 'text-emerald-600 dark:text-emerald-400' : ''}>
                 Passwords must match exactly

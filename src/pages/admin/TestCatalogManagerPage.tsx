@@ -19,6 +19,7 @@ import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { Input } from '../../components/common/Input';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
+import { SubjectSelector } from '../../components/common/SubjectSelector';
 import {
   CheckSquare,
   Plus,
@@ -747,23 +748,12 @@ export const TestCatalogManagerPage: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                    Subject / Track
-                  </label>
-                  <select
-                    value={testSubject}
-                    onChange={(e) => setTestSubject(e.target.value)}
-                    className="w-full rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100"
-                  >
-                    <option value="Python">Python</option>
-                    <option value="TypeScript">TypeScript</option>
-                    <option value="PostgreSQL">PostgreSQL</option>
-                    <option value="System Design">System Design</option>
-                    <option value="Security">Security</option>
-                    <option value="DevOps">DevOps</option>
-                  </select>
-                </div>
+                <SubjectSelector
+                  label="Subject / Track"
+                  value={testSubject}
+                  onChange={setTestSubject}
+                  required
+                />
 
                 <div>
                   <Input

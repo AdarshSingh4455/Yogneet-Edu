@@ -32,6 +32,14 @@ export interface Database {
           enrolled_courses: string[];
           solved_problems_count: number;
           tests_completed_count: number;
+          enrollment_number: string | null;
+          admission_year: number | null;
+          sequential_number: number | null;
+          is_premium: boolean;
+          yogneet_email: string | null;
+          must_change_password: boolean;
+          phone: string | null;
+          converted_at: string | null;
           created_at: string;
           last_active: string;
         };
@@ -50,6 +58,14 @@ export interface Database {
           enrolled_courses?: string[];
           solved_problems_count?: number;
           tests_completed_count?: number;
+          enrollment_number?: string | null;
+          admission_year?: number | null;
+          sequential_number?: number | null;
+          is_premium?: boolean;
+          yogneet_email?: string | null;
+          must_change_password?: boolean;
+          phone?: string | null;
+          converted_at?: string | null;
           created_at?: string;
           last_active?: string;
         };
@@ -68,6 +84,14 @@ export interface Database {
           enrolled_courses?: string[];
           solved_problems_count?: number;
           tests_completed_count?: number;
+          enrollment_number?: string | null;
+          admission_year?: number | null;
+          sequential_number?: number | null;
+          is_premium?: boolean;
+          yogneet_email?: string | null;
+          must_change_password?: boolean;
+          phone?: string | null;
+          converted_at?: string | null;
           created_at?: string;
           last_active?: string;
         };
@@ -120,6 +144,7 @@ export interface Database {
           id: string;
           course_id: string | null;
           course_title: string;
+          subject_id: string | null;
           title: string;
           youtube_id: string;
           duration: string;
@@ -137,6 +162,7 @@ export interface Database {
           id: string;
           course_id?: string | null;
           course_title: string;
+          subject_id?: string | null;
           title: string;
           youtube_id: string;
           duration: string;
@@ -154,6 +180,7 @@ export interface Database {
           id?: string;
           course_id?: string | null;
           course_title?: string;
+          subject_id?: string | null;
           title?: string;
           youtube_id?: string;
           duration?: string;
@@ -173,6 +200,7 @@ export interface Database {
           id: string;
           title: string;
           subject: string;
+          subject_id: string | null;
           category: string;
           tags: string[];
           author_id: string | null;
@@ -196,6 +224,7 @@ export interface Database {
           id: string;
           title: string;
           subject: string;
+          subject_id?: string | null;
           category: string;
           tags?: string[];
           author_id?: string | null;
@@ -219,6 +248,7 @@ export interface Database {
           id?: string;
           title?: string;
           subject?: string;
+          subject_id?: string | null;
           category?: string;
           tags?: string[];
           author_id?: string | null;
@@ -245,6 +275,7 @@ export interface Database {
           title: string;
           description: string;
           subject: string;
+          subject_id: string | null;
           module: string;
           question_count: number;
           duration_minutes: number;
@@ -260,6 +291,7 @@ export interface Database {
           title: string;
           description: string;
           subject: string;
+          subject_id?: string | null;
           module: string;
           question_count?: number;
           duration_minutes?: number;
@@ -275,6 +307,7 @@ export interface Database {
           title?: string;
           description?: string;
           subject?: string;
+          subject_id?: string | null;
           module?: string;
           question_count?: number;
           duration_minutes?: number;
@@ -441,6 +474,7 @@ export interface Database {
           id: string;
           title: string;
           subject: string;
+          subject_id: string | null;
           module: string;
           problem_statement: string;
           instructions: string;
@@ -460,6 +494,7 @@ export interface Database {
           id: string;
           title: string;
           subject: string;
+          subject_id?: string | null;
           module?: string;
           problem_statement: string;
           instructions: string;
@@ -479,6 +514,7 @@ export interface Database {
           id?: string;
           title?: string;
           subject?: string;
+          subject_id?: string | null;
           module?: string;
           problem_statement?: string;
           instructions?: string;
@@ -574,6 +610,143 @@ export interface Database {
           updated_at?: string;
         };
       };
+      subjects: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          icon: string;
+          display_order: number;
+          is_active: boolean;
+          color_scheme: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          name: string;
+          slug: string;
+          description?: string | null;
+          icon?: string;
+          display_order?: number;
+          is_active?: boolean;
+          color_scheme?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          description?: string | null;
+          icon?: string;
+          display_order?: number;
+          is_active?: boolean;
+          color_scheme?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      micro_subjects: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          cover_image: string | null;
+          display_order: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          name: string;
+          slug: string;
+          description?: string | null;
+          cover_image?: string | null;
+          display_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          description?: string | null;
+          cover_image?: string | null;
+          display_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      micro_lessons: {
+        Row: {
+          id: string;
+          micro_subject_id: string;
+          title: string;
+          description: string | null;
+          youtube_shorts_url: string;
+          youtube_id: string;
+          display_order: number;
+          status: 'draft' | 'published' | 'archived';
+          author_name: string | null;
+          duration: string | null;
+          thumbnail_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          micro_subject_id: string;
+          title: string;
+          description?: string | null;
+          youtube_shorts_url: string;
+          youtube_id: string;
+          display_order?: number;
+          status?: 'draft' | 'published' | 'archived';
+          author_name?: string | null;
+          duration?: string | null;
+          thumbnail_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          micro_subject_id?: string;
+          title?: string;
+          description?: string | null;
+          youtube_shorts_url?: string;
+          youtube_id?: string;
+          display_order?: number;
+          status?: 'draft' | 'published' | 'archived';
+          author_name?: string | null;
+          duration?: string | null;
+          thumbnail_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      enrollment_sequences: {
+        Row: {
+          year: number;
+          last_sequence: number;
+          updated_at: string;
+        };
+        Insert: {
+          year: number;
+          last_sequence?: number;
+          updated_at?: string;
+        };
+        Update: {
+          year?: number;
+          last_sequence?: number;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       student_assessment_questions: {
@@ -591,6 +764,43 @@ export interface Database {
       };
     };
     Functions: {
+      generate_next_enrollment_number: {
+        Args: {
+          p_year: number;
+        };
+        Returns: {
+          enrollment_number: string;
+          seq_num: number;
+        }[];
+      };
+      upgrade_student_to_premium: {
+        Args: {
+          p_user_id: string;
+          p_year?: number;
+          p_phone?: string | null;
+          p_department?: string | null;
+        };
+        Returns: Json;
+      };
+      admin_generate_temporary_credential: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
+      get_student_inspection_summary: {
+        Args: {
+          p_student_id: string;
+        };
+        Returns: Json;
+      };
+      has_permission: {
+        Args: {
+          p_user_id: string;
+          p_permission_key: string;
+        };
+        Returns: boolean;
+      };
       create_assessment_with_questions: {
         Args: {
           p_assessment: Json;

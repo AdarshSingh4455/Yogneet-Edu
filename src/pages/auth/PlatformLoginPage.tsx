@@ -100,6 +100,12 @@ export const PlatformLoginPage: React.FC = () => {
         return;
       }
 
+      if (result.user?.mustChangePassword) {
+        toast.info('Mandatory Password Change', 'A password update is required before accessing the platform portal.');
+        navigate('/reset-password?mandatory=true', { replace: true });
+        return;
+      }
+
       toast.success(
         'Staff Session Authenticated',
         'Welcome to the Yogneet Edu internal platform portal.'
