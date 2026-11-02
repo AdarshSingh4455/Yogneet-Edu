@@ -2,8 +2,9 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PermissionKey } from '../types';
-import { ShieldAlert, ArrowLeft } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, Layers } from 'lucide-react';
 import { Button } from '../components/common/Button';
+import { useStudentAccess } from '../context/StudentAccessContext';
 
 export const UnauthorizedView: React.FC<{ missingPermission?: string }> = ({ missingPermission }) => {
   const { currentUser } = useAuth();
@@ -76,3 +77,47 @@ export const PermissionRoute: React.FC<{
 
   return <>{children}</>;
 };
+
+export const StudentModuleRoute: React.FC<{
+  moduleKey: string;
+  children: React.ReactNode;
+}> = ({ moduleKey, children }) => {
+  const { currentUser, isAdmin, isSubAdmin } = useAuth();
+  const { isModuleAccessible, isLoading } = useStudentAccess();
+
+  // Admin and sub-admins have access to inspect and preview
+  if (isAdmin || isSubAdmin) {
+    return <>{children}</>;
+  }
+
+  const isPremium = currentUser.accessCategory === 'pro' || (currentUser as any).isPremium === true;
+
+  if (!isLoading && !isModuleAccessible(moduleKey, isPremium)) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 sm:p-12 animate-in fade-in">
+        <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-5 shadow-lg shadow-amber-500/10">
+          <Layers className="w-8 h-8" />
+        </div>
+        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100">
+          Module Access Disabled
+        </h1>
+        <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mt-2 leading-relaxed">
+          Access to this module has been temporarily disabled for {isPremium ? 'Premium Students' : 'Standard Students'} by the platform administrator.
+        </p>
+        <div className="flex items-center gap-3 mt-6">
+          <Button variant="outline" size="sm" onClick={() => window.history.back()} leftIcon={<ArrowLeft className="w-4 h-4" />}>
+            Go Back
+          </Button>
+          <Button size="sm" onClick={() => (window.location.href = '/dashboard')}>
+            Return to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+};
+
+
+

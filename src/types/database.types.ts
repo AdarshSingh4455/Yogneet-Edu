@@ -747,6 +747,100 @@ export interface Database {
           updated_at?: string;
         };
       };
+      student_module_access: {
+        Row: {
+          module_key: string;
+          module_name: string;
+          module_route: string;
+          description: string | null;
+          normal_enabled: boolean;
+          premium_enabled: boolean;
+          display_order: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          module_key: string;
+          module_name: string;
+          module_route: string;
+          description?: string | null;
+          normal_enabled?: boolean;
+          premium_enabled?: boolean;
+          display_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          module_key?: string;
+          module_name?: string;
+          module_route?: string;
+          description?: string | null;
+          normal_enabled?: boolean;
+          premium_enabled?: boolean;
+          display_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+      };
+      feedback_submissions: {
+        Row: {
+          id: string;
+          user_id: string;
+          user_role: 'student' | 'subadmin' | 'admin';
+          user_name: string;
+          user_email: string;
+          access_category: 'standard' | 'pro';
+          title: string;
+          description: string;
+          category: 'Bug' | 'UI Issue' | 'Content Issue' | 'Account Issue' | 'Other';
+          attachment_url: string | null;
+          status: 'New' | 'In Progress' | 'Resolved';
+          admin_reply: string | null;
+          admin_replied_by: string | null;
+          replied_at: string | null;
+          resolved_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          user_role: 'student' | 'subadmin' | 'admin';
+          user_name: string;
+          user_email: string;
+          access_category?: 'standard' | 'pro';
+          title: string;
+          description: string;
+          category: 'Bug' | 'UI Issue' | 'Content Issue' | 'Account Issue' | 'Other';
+          attachment_url?: string | null;
+          status?: 'New' | 'In Progress' | 'Resolved';
+          admin_reply?: string | null;
+          admin_replied_by?: string | null;
+          replied_at?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          user_role?: 'student' | 'subadmin' | 'admin';
+          user_name?: string;
+          user_email?: string;
+          access_category?: 'standard' | 'pro';
+          title?: string;
+          description?: string;
+          category?: 'Bug' | 'UI Issue' | 'Content Issue' | 'Account Issue' | 'Other';
+          attachment_url?: string | null;
+          status?: 'New' | 'In Progress' | 'Resolved';
+          admin_reply?: string | null;
+          admin_replied_by?: string | null;
+          replied_at?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       student_assessment_questions: {
@@ -848,6 +942,38 @@ export interface Database {
           answered_count: number;
           unanswered_count: number;
         };
+      };
+      check_student_module_access: {
+        Args: {
+          p_module_key: string;
+          p_user_id?: string;
+        };
+        Returns: boolean;
+      };
+      admin_update_student_module_access: {
+        Args: {
+          p_module_key: string;
+          p_normal_enabled: boolean;
+          p_premium_enabled: boolean;
+        };
+        Returns: Database['public']['Tables']['student_module_access']['Row'];
+      };
+      submit_user_feedback: {
+        Args: {
+          p_title: string;
+          p_description: string;
+          p_category: string;
+          p_attachment_url?: string | null;
+        };
+        Returns: string;
+      };
+      admin_update_feedback_status: {
+        Args: {
+          p_feedback_id: string;
+          p_status: string;
+          p_admin_reply?: string | null;
+        };
+        Returns: Json;
       };
     };
   };

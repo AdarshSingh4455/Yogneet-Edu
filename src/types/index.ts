@@ -652,3 +652,45 @@ export interface PasswordLifecycleState {
   mustChangeAtFirstLogin: boolean;
   lastPasswordResetAt?: string;
 }
+
+// ==========================================
+// Feature 1: Student Module Access Management
+// ==========================================
+export interface StudentModuleAccess {
+  moduleKey: string;
+  moduleName: string;
+  moduleRoute: string;
+  description: string;
+  normalEnabled: boolean;
+  premiumEnabled: boolean;
+  displayOrder: number;
+  updatedAt: string;
+  updatedBy?: string | null;
+}
+
+// ==========================================
+// Feature 2: Private Feedback Management
+// ==========================================
+export type FeedbackCategory = 'Bug' | 'UI Issue' | 'Content Issue' | 'Account Issue' | 'Other';
+export type FeedbackStatus = 'New' | 'In Progress' | 'Resolved';
+
+export interface FeedbackSubmission {
+  id: string;
+  userId: string;
+  userRole: UserRole;
+  userName: string;
+  userEmail: string;
+  accessCategory: 'standard' | 'pro';
+  title: string;
+  description: string;
+  category: FeedbackCategory;
+  attachmentUrl?: string | null;
+  status: FeedbackStatus;
+  adminReply?: string | null;
+  adminRepliedBy?: string | null;
+  repliedAt?: string | null;
+  resolvedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
