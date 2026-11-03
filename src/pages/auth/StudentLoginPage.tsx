@@ -296,7 +296,7 @@ export const StudentLoginPage: React.FC = () => {
             <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
             <div className="text-xs space-y-1">
               <p className="font-semibold text-blue-900 dark:text-blue-200">
-                Phase 4B OAuth Integration
+                Google Single Sign-On Access
               </p>
               <p className="text-blue-700 dark:text-blue-300">
                 Google OAuth provider keys and authorized redirect URIs are configured in the platform architecture with dynamic origin resolution.

@@ -3,7 +3,6 @@ import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
 import { EnrollmentNumberBadge } from '../common/EnrollmentNumberBadge';
-import { Phase1NoticeBadge } from '../common/Phase1NoticeBadge';
 import { PremiumStudentService } from '../../services/premiumStudentService';
 import { AccountInspection } from '../../types';
 import {
@@ -88,12 +87,6 @@ export const AccountInspectionModal: React.FC<AccountInspectionModalProps> = ({
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Phase 1 Notice */}
-          <Phase1NoticeBadge
-            variant="banner"
-            label="Account inspection panel preview. In Phase 2, this aggregates authoritative PostgreSQL event logs and LMS metrics with auditable admin tracking."
-          />
-
           {/* Student Profile Header Card */}
           <div className="p-4 rounded-2xl border border-light-border dark:border-dark-border bg-slate-50/70 dark:bg-dark-card/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
@@ -149,13 +142,13 @@ export const AccountInspectionModal: React.FC<AccountInspectionModalProps> = ({
             </div>
           </div>
 
-          {/* Impersonation Disclaimer Placeholder Modal / Banner */}
+          {/* Impersonation Disclaimer Modal / Banner */}
           {showImpersonationDisclaimer && (
             <div className="p-4 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-xs space-y-2 animate-in fade-in duration-150">
               <div className="flex items-center justify-between font-bold text-amber-900 dark:text-amber-200">
                 <div className="flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                  <span>Phase 2 Security Boundary: View as Student Inspection</span>
+                  <span>Security Boundary: View as Student Inspection</span>
                 </div>
                 <button
                   type="button"
@@ -166,10 +159,10 @@ export const AccountInspectionModal: React.FC<AccountInspectionModalProps> = ({
                 </button>
               </div>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px]">
-                In accordance with Phase 1 safety constraints, active session switching, cookie manipulation, and privilege elevation are intentionally disabled in this preview build.
+                In accordance with security and isolation constraints, active session switching, cookie manipulation, and privilege escalation are disabled.
               </p>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px]">
-                Phase 2 will introduce an audited, read-only student perspective sandbox with server-verified access tokens and comprehensive compliance logging.
+                Student data inspection is presented in read-only mode backed by verified database records and compliance audit logs.
               </p>
             </div>
           )}

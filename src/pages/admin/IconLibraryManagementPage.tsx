@@ -25,7 +25,6 @@ import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { Input } from '../../components/common/Input';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
-import { Phase1NoticeBadge } from '../../components/common/Phase1NoticeBadge';
 import {
   IconLibraryService,
   IconItem,
@@ -309,7 +308,6 @@ export const IconLibraryManagementPage: React.FC = () => {
               <Boxes className="w-7 h-7 text-brand-500" />
               <span>Icon Library Management</span>
             </h1>
-            <Badge variant="brand" size="sm">Phase 4A</Badge>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Curate, preview, and organize reusable platform iconography for curriculum subjects, micro topics, and learning modules.
@@ -327,11 +325,6 @@ export const IconLibraryManagementPage: React.FC = () => {
           </Button>
         )}
       </div>
-
-      <Phase1NoticeBadge
-        variant="banner"
-        label="Icon Library Management UI. Icons configured here immediately appear in Subject & Micro Subject IconSelectors across all authoring tools."
-      />
 
       {/* Metric Cards Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -709,11 +702,6 @@ export const IconLibraryManagementPage: React.FC = () => {
         }
       >
         <form onSubmit={handleSaveAdd} className="space-y-4">
-          <Phase1NoticeBadge
-            variant="banner"
-            label="Phase 4A Client Preview: Registered icons persist in browser session storage and are immediately available to Subject & Micro Topic creators."
-          />
-
           {/* Source Type Selector */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">

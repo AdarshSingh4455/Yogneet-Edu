@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiService } from '../../services/api';
+import { AssessmentAdminService } from '../../services/assessmentAdminService';
+import { isMockFallbackAllowed } from '../../services/supabaseClient';
 import { TestSeriesItem, Subject } from '../../types';
 import { SubjectSelectionView } from '../../components/subjects/SubjectSelectionView';
 import {
@@ -20,10 +22,35 @@ import { Badge } from '../../components/common/Badge';
 
 export const TestSeriesPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [tests] = useState<TestSeriesItem[]>(() => ApiService.getTests());
+  const [tests, setTests] = useState<TestSeriesItem[]>(() => isMockFallbackAllowed() ? ApiService.getTests() : []);
+  const [isLoading, setIsLoading] = useState<boolean>(() => !isMockFallbackAllowed());
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string>('All');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All');
   const navigate = useNavigate();
+
+  const loadAssessments = () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    AssessmentAdminService.getAssessments('available')
+      .then(liveTests => {
+        setTests(liveTests || []);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error('[TestSeriesPage] Error loading assessments from database:', err);
+        if (isMockFallbackAllowed()) {
+          setTests(ApiService.getTests());
+        } else {
+          setErrorMessage('Unable to load test series catalog from the server. Please check your connection and retry.');
+        }
+        setIsLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    loadAssessments();
+  }, []);
 
   const currentSubject = searchParams.get('subject');
 
@@ -48,6 +75,32 @@ export const TestSeriesPage: React.FC = () => {
     const matchesDifficulty = selectedDifficulty === 'All' || test.difficulty === selectedDifficulty;
     return matchesSubject && matchesDifficulty;
   });
+
+  // Loading State
+  if (isLoading) {
+    return (
+      <div className="py-24 text-center space-y-4">
+        <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Loading assessments from database...</p>
+      </div>
+    );
+  }
+
+  // Error State
+  if (errorMessage && tests.length === 0) {
+    return (
+      <div className="py-20 text-center space-y-4 max-w-md mx-auto">
+        <div className="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 mx-auto flex items-center justify-center">
+          <AlertCircle className="w-7 h-7" />
+        </div>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Assessment Service Unavailable</h3>
+        <p className="text-xs text-slate-500 leading-relaxed">{errorMessage}</p>
+        <div className="pt-2">
+          <Button variant="primary" onClick={loadAssessments}>Retry Connection</Button>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentSubject) {
     return (

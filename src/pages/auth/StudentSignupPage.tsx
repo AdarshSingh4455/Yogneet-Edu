@@ -325,7 +325,7 @@ export const StudentSignupPage: React.FC = () => {
         </form>
       )}
 
-      {/* Google OAuth Phase 4B Modal */}
+      {/* Google OAuth Modal */}
       <Modal
         isOpen={showGoogleModal}
         onClose={() => setShowGoogleModal(false)}
@@ -337,10 +337,10 @@ export const StudentSignupPage: React.FC = () => {
             <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
             <div className="text-xs space-y-1">
               <p className="font-semibold text-blue-900 dark:text-blue-200">
-                Phase 4B OAuth Integration In Progress
+                Single Sign-On Notice
               </p>
               <p className="text-blue-700 dark:text-blue-300">
-                Google Single Sign-On for fast 1-click registration is scheduled for Phase 4B deployment with live Supabase authentication.
+                Google Single Sign-On registration is enabled when third-party OAuth keys are configured in your Supabase authentication console.
               </p>
             </div>
           </div>

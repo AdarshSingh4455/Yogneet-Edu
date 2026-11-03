@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { ApiService } from '../../services/api';
+import { VideoLessonsService } from '../../services/videoLessonsService';
+import { isMockFallbackAllowed } from '../../services/supabaseClient';
 import { VideoLesson, VideoResource } from '../../types';
 import { useToast } from '../../context/ToastContext';
 import {
@@ -21,6 +23,7 @@ import {
   FileCode,
   CheckSquare,
   ArrowRight,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
@@ -31,7 +34,9 @@ import { Subject } from '../../types';
 export const VideoPlayerPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const toast = useToast();
-  const [videos, setVideos] = useState<VideoLesson[]>(() => ApiService.getVideos());
+  const [videos, setVideos] = useState<VideoLesson[]>(() => isMockFallbackAllowed() ? ApiService.getVideos() : []);
+  const [isLoading, setIsLoading] = useState<boolean>(() => !isMockFallbackAllowed());
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'resources' | 'discussion' | 'upnext'>('overview');
   const [newComment, setNewComment] = useState('');
   const [comments, setComments] = useState([
@@ -48,6 +53,29 @@ export const VideoPlayerPage: React.FC = () => {
       text: 'Are we getting free-threaded GIL benchmarks in the next lecture as well?',
     },
   ]);
+
+  const loadVideos = () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    VideoLessonsService.getVideoLessons('published', true)
+      .then(liveVideos => {
+        setVideos(liveVideos || []);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error('[VideoPlayerPage] Error loading videos from database:', err);
+        if (isMockFallbackAllowed()) {
+          setVideos(ApiService.getVideos());
+        } else {
+          setErrorMessage('Unable to load video lessons from the backend server. Please check your network and retry.');
+        }
+        setIsLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    loadVideos();
+  }, []);
 
   const currentSubject = searchParams.get('subject');
 
@@ -127,6 +155,32 @@ export const VideoPlayerPage: React.FC = () => {
 
   const completedCount = filteredVideos.filter(v => v.completed).length;
   const progressPct = filteredVideos.length > 0 ? Math.round((completedCount / filteredVideos.length) * 100) : 0;
+
+  // Loading State
+  if (isLoading) {
+    return (
+      <div className="py-24 text-center space-y-4">
+        <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Loading video lessons from database...</p>
+      </div>
+    );
+  }
+
+  // Error State
+  if (errorMessage && videos.length === 0) {
+    return (
+      <div className="py-20 text-center space-y-4 max-w-md mx-auto">
+        <div className="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 mx-auto flex items-center justify-center">
+          <AlertCircle className="w-7 h-7" />
+        </div>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Backend Communication Error</h3>
+        <p className="text-xs text-slate-500 leading-relaxed">{errorMessage}</p>
+        <div className="pt-2">
+          <Button variant="primary" onClick={loadVideos}>Retry Connection</Button>
+        </div>
+      </div>
+    );
+  }
 
   // FLOW 1: If no subject selected, render Subject Selection Grid!
   if (!currentSubject) {

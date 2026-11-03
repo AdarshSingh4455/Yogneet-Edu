@@ -131,7 +131,6 @@ src/
 │   └── layout/
 │       ├── AppLayout.tsx                 # Main layout shell with sidebar & navbar
 │       ├── Navbar.tsx                    # Brand header, search, theme dropdown, notifications
-│       ├── RoleSwitcherBar.tsx           # Sticky developer persona simulator bar
 │       └── Sidebar.tsx                   # Dynamic RBAC-driven responsive sidebar
 ├── context/
 │   ├── AuthContext.tsx                   # User state, persona switcher, permission helpers

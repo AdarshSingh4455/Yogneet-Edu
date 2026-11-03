@@ -1,0 +1,215 @@
+-- ==============================================================================
+-- Migration: 20261103000022_fix_missing_log_audit_event_function.sql
+-- Description: 
+--   1. Implement missing public.log_audit_event() function with defensive
+--      error handling, robust actor resolution, and security hardening.
+--   2. Restore yogneet.internal_auth_sync check in protect_profile_privileged_fields()
+--      so verified staff invitation acceptance does not get blocked by depth check.
+-- ==============================================================================
+
+-- 1. Missing log_audit_event() definition
+CREATE OR REPLACE FUNCTION public.log_audit_event(
+  p_actor_id UUID,
+  p_action TEXT,
+  p_outcome TEXT DEFAULT 'SUCCESS',
+  p_changes JSONB DEFAULT '{}'::jsonb,
+  p_details TEXT DEFAULT NULL,
+  p_resource_type TEXT DEFAULT NULL,
+  p_resource_id TEXT DEFAULT NULL
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth, pg_temp
+AS $$
+DECLARE
+  v_log_id UUID;
+  v_name TEXT;
+  v_email TEXT;
+  v_role TEXT;
+  v_res_type TEXT;
+  v_res_id TEXT;
+  v_details TEXT;
+BEGIN
+  -- Safe actor metadata resolution (graceful fallback if actor does not exist)
+  IF p_actor_id IS NOT NULL THEN
+    SELECT name, email, role
+    INTO v_name, v_email, v_role
+    FROM public.profiles
+    WHERE id = p_actor_id;
+  END IF;
+
+  v_name := COALESCE(v_name, 'System');
+  v_email := COALESCE(v_email, 'system@yogneet.internal');
+  v_role := COALESCE(v_role, 'system');
+
+  v_res_type := COALESCE(
+    p_resource_type,
+    CASE 
+      WHEN p_action LIKE 'PROFILE%' THEN 'profiles'
+      WHEN p_action LIKE 'ICON%' THEN 'icon_library'
+      WHEN p_action LIKE 'FEEDBACK%' THEN 'feedback_submissions'
+      ELSE 'system'
+    END
+  );
+
+  v_res_id := COALESCE(
+    p_resource_id,
+    COALESCE(
+      p_changes->>'id',
+      p_changes->>'profile_id',
+      p_changes->>'icon_id',
+      p_changes->>'feedback_id',
+      p_actor_id::text,
+      'global'
+    )
+  );
+
+  v_details := COALESCE(
+    p_details,
+    format('%s performed %s with outcome %s', v_name, p_action, p_outcome)
+  );
+
+  INSERT INTO public.audit_logs (
+    timestamp,
+    actor_id,
+    actor_name,
+    actor_email,
+    actor_role,
+    action,
+    resource_type,
+    resource_id,
+    details,
+    outcome,
+    ip_address,
+    changes
+  ) VALUES (
+    timezone('utc'::text, now()),
+    p_actor_id,
+    v_name,
+    v_email,
+    v_role,
+    p_action,
+    v_res_type,
+    v_res_id,
+    v_details,
+    COALESCE(p_outcome, 'SUCCESS'),
+    '127.0.0.1',
+    COALESCE(p_changes, '{}'::jsonb)
+  )
+  RETURNING id INTO v_log_id;
+
+  RETURN v_log_id;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Audit logging must NEVER fail an outer business transaction
+    RAISE WARNING 'log_audit_event encountered error: %', SQLERRM;
+    RETURN NULL;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.log_audit_event(UUID, TEXT, TEXT, JSONB, TEXT, TEXT, TEXT) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.log_audit_event(UUID, TEXT, TEXT, JSONB, TEXT, TEXT, TEXT) TO authenticated, service_role;
+
+-- 2. Restore internal_auth_sync check in protect_profile_privileged_fields()
+CREATE OR REPLACE FUNCTION public.protect_profile_privileged_fields()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, private, auth, pg_temp
+AS $$
+DECLARE
+  v_caller_id UUID := auth.uid();
+  v_is_admin BOOLEAN := false;
+  v_can_manage_premium BOOLEAN := false;
+  v_can_manage_subadmins BOOLEAN := false;
+BEGIN
+  -- 1. Allow verified internal auth synchronization (e.g. staff invitation redemption)
+  IF current_setting('yogneet.internal_auth_sync', true) = 'on' THEN
+    RETURN NEW;
+  END IF;
+
+  -- 2. Trusted server-side operations: service_role key or postgres database session user
+  IF auth.role() = 'service_role' OR (auth.jwt() ->> 'role') = 'service_role' OR session_user = 'postgres' THEN
+    RETURN NEW;
+  END IF;
+
+  -- 3. Internal secondary trigger defense (e.g. sync_profile_test_metrics triggered by attempt insertion)
+  IF pg_trigger_depth() > 1 THEN
+    IF OLD.role <> NEW.role OR OLD.status <> NEW.status OR OLD.email <> NEW.email OR OLD.created_at <> NEW.created_at THEN
+      RAISE EXCEPTION 'Access Denied: Role and status cannot be modified via trigger.';
+    END IF;
+    IF NEW.tests_completed_count <> OLD.tests_completed_count AND NEW.tests_completed_count <> OLD.tests_completed_count + 1 THEN
+      RAISE EXCEPTION 'Access Denied: tests_completed_count can only be incremented sequentially by verified scoring events.';
+    END IF;
+    RETURN NEW;
+  END IF;
+
+  -- 4. Caller resolution
+  IF v_caller_id IS NOT NULL THEN
+    SELECT (role = 'admin' AND status = 'active') INTO v_is_admin
+    FROM public.profiles
+    WHERE id = v_caller_id;
+
+    IF v_is_admin THEN
+      RETURN NEW;
+    END IF;
+
+    v_can_manage_premium := public.has_permission(v_caller_id, 'premium_students.manage');
+    v_can_manage_subadmins := public.has_permission(v_caller_id, 'subadmins.manage');
+  END IF;
+
+  -- 5. Non-admins cannot alter role or account status
+  IF OLD.role <> NEW.role OR OLD.status <> NEW.status THEN
+    RAISE EXCEPTION 'Access Denied: Only administrators can modify user roles or account status.';
+  END IF;
+
+  -- 6. Non-admins cannot alter authoritative email directly
+  IF OLD.email <> NEW.email THEN
+    RAISE EXCEPTION 'Access Denied: Email address is managed through authentication credentials.';
+  END IF;
+
+  -- 7. Non-admins cannot modify account creation timestamp
+  IF OLD.created_at <> NEW.created_at THEN
+    RAISE EXCEPTION 'Access Denied: Account creation timestamp is immutable.';
+  END IF;
+
+  -- 8. Access category and premium student fields can ONLY be modified by Admin or Staff with premium_students.manage
+  IF (OLD.access_category IS DISTINCT FROM NEW.access_category)
+     OR (OLD.is_premium IS DISTINCT FROM NEW.is_premium)
+     OR (OLD.enrollment_number IS DISTINCT FROM NEW.enrollment_number)
+     OR (OLD.admission_year IS DISTINCT FROM NEW.admission_year)
+     OR (OLD.sequential_number IS DISTINCT FROM NEW.sequential_number)
+     OR (OLD.yogneet_email IS DISTINCT FROM NEW.yogneet_email) THEN
+    IF NOT v_can_manage_premium THEN
+      RAISE EXCEPTION 'Access Denied: Only administrators or staff with premium_students.manage can modify premium student entitlements.';
+    END IF;
+  END IF;
+
+  -- 9. Password reset flag: Strict Bypass Prevention
+  IF (OLD.must_change_password IS DISTINCT FROM NEW.must_change_password) THEN
+    IF NEW.must_change_password = false THEN
+      IF v_is_admin OR v_can_manage_premium OR v_can_manage_subadmins THEN
+        NULL;
+      ELSIF v_caller_id = OLD.id THEN
+        IF current_setting('private.trusted_password_change_in_progress', true) = 'true' THEN
+          NULL;
+        ELSE
+          RAISE EXCEPTION 'Access Denied: Mandatory password flag cannot be cleared directly. Complete the password reset workflow.';
+        END IF;
+      ELSE
+        RAISE EXCEPTION 'Access Denied: Unauthorized attempt to modify credential flags.';
+      END IF;
+    ELSIF NOT (v_is_admin OR v_can_manage_premium OR v_can_manage_subadmins) THEN
+      RAISE EXCEPTION 'Access Denied: Only authorized administrators can set mandatory password reset flags.';
+    END IF;
+  END IF;
+
+  -- 10. Non-admins cannot tamper with problem and test metrics directly
+  IF OLD.solved_problems_count <> NEW.solved_problems_count OR OLD.tests_completed_count <> NEW.tests_completed_count THEN
+    RAISE EXCEPTION 'Access Denied: Gamification counters are updated only by verified scoring events.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;

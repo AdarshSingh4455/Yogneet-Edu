@@ -4,7 +4,7 @@
  */
 
 import { VideoLesson, ContentStatus, UserProfile } from '../types';
-import { supabase, isSupabaseConfigured, formatSupabaseError } from './supabaseClient';
+import { supabase, isSupabaseConfigured, isMockFallbackAllowed, formatSupabaseError } from './supabaseClient';
 import { ApiService, AuditService } from './api';
 import { Database } from '../types/database.types';
 
@@ -106,7 +106,10 @@ export const VideoLessonsService = {
    */
   async getVideoLessons(statusFilter?: 'draft' | 'published' | 'archived', isStudent = false): Promise<VideoLesson[]> {
     if (!isSupabaseConfigured() || !supabase) {
-      return ApiService.getVideos();
+      if (isMockFallbackAllowed()) {
+        return ApiService.getVideos();
+      }
+      return [];
     }
 
     try {
@@ -124,8 +127,11 @@ export const VideoLessonsService = {
       const rows = (data as VideoRow[]) || [];
       return rows.map(rowToVideoLesson);
     } catch (err) {
-      console.error('[VideoLessonsService.getVideoLessons] Error, falling back to local:', err);
-      return ApiService.getVideos();
+      console.error('[VideoLessonsService.getVideoLessons] Error:', err);
+      if (isMockFallbackAllowed()) {
+        return ApiService.getVideos();
+      }
+      throw err;
     }
   },
 

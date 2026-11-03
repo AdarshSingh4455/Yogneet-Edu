@@ -150,6 +150,34 @@ export function getBackendMode(): BackendMode {
 }
 
 /**
+ * Evaluates whether the application is running in a production or staging deployment.
+ */
+export function isProductionEnvironment(): boolean {
+  const env = (import.meta as unknown as { env?: Record<string, string | boolean | undefined> }).env || {};
+  return Boolean(
+    env.PROD === true ||
+    env.PROD === 'true' ||
+    env.MODE === 'production' ||
+    env.VITE_ENVIRONMENT === 'production' ||
+    env.VITE_ENVIRONMENT === 'staging'
+  );
+}
+
+/**
+ * Determines whether fabricated mock data fallbacks are allowed.
+ * STRICT PRODUCTION SAFETY: In production and staging environments, fabricated mock fallbacks
+ * are completely DISABLED. Mock data is permitted strictly in local development when Supabase
+ * credentials are intentionally absent or when VITE_ALLOW_MOCK_AUTH='true' is explicitly set.
+ */
+export function isMockFallbackAllowed(): boolean {
+  if (isProductionEnvironment()) {
+    return false;
+  }
+  const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env || {};
+  return env.VITE_ALLOW_MOCK_AUTH === 'true' || (!env.VITE_SUPABASE_URL && !env.VITE_SUPABASE_ANON_KEY);
+}
+
+/**
  * Checks if Supabase client is properly instantiated and configured.
  */
 export function isSupabaseConfigured(): boolean {

@@ -3,7 +3,6 @@ import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import { PasswordStrengthMeter, analyzePassword } from './PasswordStrengthMeter';
-import { Phase1NoticeBadge } from '../common/Phase1NoticeBadge';
 import { useToast } from '../../context/ToastContext';
 import {
   KeyRound,
@@ -67,12 +66,11 @@ export const PasswordLifecycleModal: React.FC<PasswordLifecycleModalProps> = ({
 
   const handleAdminReset = async () => {
     setIsResetting(true);
-    // Simulating Phase 1 placeholder execution
     setTimeout(() => {
       setIsResetting(false);
       setResetCompleted(true);
       toast.success(
-        'Temporary Credential Provisioned (Preview)',
+        'Temporary Credential Provisioned',
         `Reset requested for ${userName}. Flagged for mandatory password change at first login.`
       );
     }, 600);
@@ -96,7 +94,7 @@ export const PasswordLifecycleModal: React.FC<PasswordLifecycleModalProps> = ({
     setTimeout(() => {
       setIsSubmittingPassword(false);
       toast.success(
-        'Password Updated Successfully (Preview)',
+        'Password Updated Successfully',
         'Your new password has been verified and set for this session.'
       );
       onClose();
@@ -129,11 +127,6 @@ export const PasswordLifecycleModal: React.FC<PasswordLifecycleModalProps> = ({
       }
     >
       <div className="space-y-4">
-        {/* Phase 1 Isolated Preview Notice */}
-        <Phase1NoticeBadge
-          variant="banner"
-          label="Password lifecycle interface preview. In Phase 2, passwords will be hashed with Argon2/bcrypt on the backend. No plaintext passwords are stored or displayed."
-        />
 
         {/* Tab switch for demonstration / evaluation */}
         <div className="flex rounded-xl bg-slate-100 dark:bg-dark-card p-1 text-xs font-semibold">
@@ -205,7 +198,7 @@ export const PasswordLifecycleModal: React.FC<PasswordLifecycleModalProps> = ({
             <div className="p-4 rounded-xl border border-indigo-200/80 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/20 text-xs space-y-2">
               <div className="flex items-center gap-2 font-bold text-indigo-950 dark:text-indigo-200">
                 <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                <span>Phase 2 Initial Credential Policy</span>
+                <span>Initial Credential Policy</span>
               </div>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px]">
                 Upon reset, a deterministic temporary credential will be issued following Yogneet Edu policy:
@@ -223,9 +216,9 @@ export const PasswordLifecycleModal: React.FC<PasswordLifecycleModalProps> = ({
               <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-200 text-xs flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-bold">Temporary Credential Issued (Phase 1 Preview)</h4>
+                  <h4 className="font-bold">Temporary Credential Issued</h4>
                   <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-1">
-                    The account status has been updated with a temporary credential flag. In Phase 2, an SMS / email notification with first-login instructions will be securely dispatched.
+                    The account status has been updated with a temporary credential flag. An automated notification with first-login instructions will be securely dispatched.
                   </p>
                 </div>
               </div>

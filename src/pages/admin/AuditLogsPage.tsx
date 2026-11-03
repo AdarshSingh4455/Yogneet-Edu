@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase, isSupabaseConfigured } from '../../services/supabaseClient';
+import { supabase, isSupabaseConfigured, isMockFallbackAllowed } from '../../services/supabaseClient';
 import { ApiService, AuditService } from '../../services/api';
 import { AuditLogEntry, AuditOutcome } from '../../types';
 import { useToast } from '../../context/ToastContext';
@@ -58,7 +58,11 @@ export const AuditLogsPage: React.FC = () => {
   const fetchLogs = async () => {
     setIsLoading(true);
     if (!isSupabaseConfigured() || !supabase) {
-      setLogs(ApiService.getAuditLogs());
+      if (isMockFallbackAllowed()) {
+        setLogs(ApiService.getAuditLogs());
+      } else {
+        setLogs([]);
+      }
       setIsLoading(false);
       return;
     }
@@ -73,7 +77,12 @@ export const AuditLogsPage: React.FC = () => {
       setLogs(((data as any[]) || []).map(rowToAuditEntry));
     } catch (err) {
       console.error('[AuditLogsPage] Error fetching live audit logs:', err);
-      setLogs(ApiService.getAuditLogs());
+      if (isMockFallbackAllowed()) {
+        setLogs(ApiService.getAuditLogs());
+      } else {
+        setLogs([]);
+        toast.error('Audit Log Error', 'Unable to retrieve live audit events from database.');
+      }
     } finally {
       setIsLoading(false);
     }

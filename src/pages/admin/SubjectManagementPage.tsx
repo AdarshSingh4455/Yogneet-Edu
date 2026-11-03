@@ -31,7 +31,6 @@ import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { Input } from '../../components/common/Input';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
-import { Phase1NoticeBadge } from '../../components/common/Phase1NoticeBadge';
 import { getSubjectIcon } from '../../components/subjects/SubjectSelectionView';
 import { IconSelector } from '../../components/common/IconSelector';
 import { renderIconPreview } from '../../services/iconLibraryService';
@@ -204,7 +203,6 @@ export const SubjectManagementPage: React.FC = () => {
             <Badge variant="brand" size="sm">
               Academic Architecture
             </Badge>
-            <Phase1NoticeBadge label="Frontend Preview • Local Storage" />
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
             <BookOpen className="w-6 h-6 text-brand-500" />
@@ -417,11 +415,6 @@ export const SubjectManagementPage: React.FC = () => {
         }
       >
         <form onSubmit={editingSubject ? handleSaveEdit : handleSaveCreate} className="space-y-4">
-          <Phase1NoticeBadge
-            variant="banner"
-            label="Subject creation interface preview. Saved records persist in browser memory and populate reusable SubjectSelectors across all content management modules."
-          />
-
           <Input
             label="Subject Name"
             value={formName}
@@ -502,7 +495,7 @@ export const SubjectManagementPage: React.FC = () => {
           onClose={() => setSubjectToDelete(null)}
           onConfirm={handleDeleteConfirm}
           title="Delete Subject Confirmation"
-          message={`Are you sure you want to delete "${subjectToDelete.name}"? In Phase 1 preview, this will remove the subject from browser storage.`}
+          message={`Are you sure you want to delete "${subjectToDelete.name}"? This will remove the subject from the active curriculum.`}
           confirmText="Yes, Delete Subject"
           variant="danger"
         />

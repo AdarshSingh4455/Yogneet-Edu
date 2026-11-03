@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase, isSupabaseConfigured } from '../../services/supabaseClient';
+import { supabase, isSupabaseConfigured, isMockFallbackAllowed } from '../../services/supabaseClient';
 import { ApiService } from '../../services/api';
 import { UserProfile } from '../../types';
 import {
@@ -45,27 +45,41 @@ export const AdminDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     setIsLoading(true);
     if (!isSupabaseConfigured() || !supabase) {
-      // Local fallback in offline mode
-      const localUsers = ApiService.getUsers();
-      const localSubAdmins = ApiService.getSubAdmins();
-      const localVideos = ApiService.getVideos();
-      const localNotes = ApiService.getNotes();
-      const localTests = ApiService.getTests();
-      const localAuditLogs = ApiService.getAuditLogs();
-      const localStudents = localUsers.filter(u => u.role === 'student');
+      if (isMockFallbackAllowed()) {
+        const localUsers = ApiService.getUsers();
+        const localSubAdmins = ApiService.getSubAdmins();
+        const localVideos = ApiService.getVideos();
+        const localNotes = ApiService.getNotes();
+        const localTests = ApiService.getTests();
+        const localAuditLogs = ApiService.getAuditLogs();
+        const localStudents = localUsers.filter(u => u.role === 'student');
 
-      setSubAdmins(localSubAdmins);
-      setRecentLogs(localAuditLogs.slice(0, 4));
-      setCounts({
-        subAdmins: localSubAdmins.length,
-        activeSubAdmins: localSubAdmins.filter(s => s.status === 'active').length,
-        suspendedSubAdmins: localSubAdmins.filter(s => s.status === 'suspended').length,
-        videos: localVideos.length,
-        notes: localNotes.length,
-        tests: localTests.length,
-        students: localStudents.length,
-        auditLogs: localAuditLogs.length,
-      });
+        setSubAdmins(localSubAdmins);
+        setRecentLogs(localAuditLogs.slice(0, 4));
+        setCounts({
+          subAdmins: localSubAdmins.length,
+          activeSubAdmins: localSubAdmins.filter(s => s.status === 'active').length,
+          suspendedSubAdmins: localSubAdmins.filter(s => s.status === 'suspended').length,
+          videos: localVideos.length,
+          notes: localNotes.length,
+          tests: localTests.length,
+          students: localStudents.length,
+          auditLogs: localAuditLogs.length,
+        });
+      } else {
+        setSubAdmins([]);
+        setRecentLogs([]);
+        setCounts({
+          subAdmins: 0,
+          activeSubAdmins: 0,
+          suspendedSubAdmins: 0,
+          videos: 0,
+          notes: 0,
+          tests: 0,
+          students: 0,
+          auditLogs: 0,
+        });
+      }
       setIsLoading(false);
       return;
     }

@@ -36,7 +36,6 @@ import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { Input } from '../../components/common/Input';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
-import { Phase1NoticeBadge } from '../../components/common/Phase1NoticeBadge';
 import { IconSelector } from '../../components/common/IconSelector';
 import { renderIconPreview } from '../../services/iconLibraryService';
 
@@ -321,7 +320,6 @@ export const MicroLessonsManagementPage: React.FC = () => {
             <Badge variant="purple" size="sm">
               Short-Form Learning
             </Badge>
-            <Phase1NoticeBadge label="Frontend Preview • Independent Topics" />
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
             <Film className="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -648,11 +646,6 @@ export const MicroLessonsManagementPage: React.FC = () => {
         }
       >
         <form onSubmit={handleSaveSubject} className="space-y-4">
-          <Phase1NoticeBadge
-            variant="banner"
-            label="Micro Subjects remain strictly independent from regular curriculum subjects and hold 9:16 vertical shorts."
-          />
-
           <Input
             label="Micro Topic Name"
             value={subjName}
@@ -748,11 +741,6 @@ export const MicroLessonsManagementPage: React.FC = () => {
         }
       >
         <form onSubmit={handleSaveLesson} className="space-y-4">
-          <Phase1NoticeBadge
-            variant="banner"
-            label="Vertical 9:16 Shorts embed integration. YouTube IDs are automatically extracted from shorts or standard URLs."
-          />
-
           <Input
             label="Video Title"
             value={lessonTitle}
