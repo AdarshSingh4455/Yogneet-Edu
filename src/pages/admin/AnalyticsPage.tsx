@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   BarChart3,
   TrendingUp,
@@ -14,10 +14,15 @@ import {
   Sparkles,
   Database,
   Calendar,
+  Layers,
+  PieChart,
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
 import { AnalyticsService, PlatformMetrics, AnalyticsTimeRange } from '../../services/analyticsService';
+import { ResponsiveLineChart } from '../../components/common/charts/ResponsiveLineChart';
+import { ResponsiveBarChart } from '../../components/common/charts/ResponsiveBarChart';
+import { ActivityDonutChart } from '../../components/common/charts/ActivityDonutChart';
 
 export const AnalyticsPage: React.FC = () => {
   const [timeRange, setTimeRange] = useState<AnalyticsTimeRange>('30d');
@@ -45,6 +50,43 @@ export const AnalyticsPage: React.FC = () => {
     };
   }, [timeRange]);
 
+  // Timeline chart points
+  const timelineData = useMemo(() => {
+    if (!metrics?.attemptsTimeline || metrics.attemptsTimeline.length === 0) return [];
+    return metrics.attemptsTimeline.map(item => ({
+      label: item.date,
+      value: item.count,
+      tooltipText: `${item.date}: ${item.count} submissions`,
+    }));
+  }, [metrics]);
+
+  const maxTimelineCount = useMemo(() => {
+    if (!timelineData.length) return 10;
+    return Math.max(...timelineData.map(d => d.value), 5);
+  }, [timelineData]);
+
+  // Score distribution donut segments
+  const scoreSegments = useMemo(() => {
+    if (!metrics) return [];
+    const dist = metrics.scoreDistribution;
+    return [
+      { label: 'Top Tier (85-100%)', value: dist.topQuartile, color: '#10b981' },
+      { label: 'Competent (70-84%)', value: dist.midQuartile, color: '#3b82f6' },
+      { label: 'Remedial (< 70%)', value: dist.remedialTier, color: '#f59e0b' },
+    ];
+  }, [metrics]);
+
+  // Subject Performance bars
+  const subjectBars = useMemo(() => {
+    if (!metrics?.subjectPerformance) return [];
+    return metrics.subjectPerformance.map(sp => ({
+      label: sp.subject,
+      value: sp.avgScore,
+      subtext: `${sp.attempts} student attempts`,
+      color: sp.avgScore >= 80 ? '#10b981' : sp.avgScore >= 65 ? '#3b82f6' : '#f59e0b',
+    }));
+  }, [metrics]);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
@@ -64,7 +106,7 @@ export const AnalyticsPage: React.FC = () => {
               </span>
             )}
           </div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
             <BarChart3 className="w-6 h-6 text-brand-500" />
             Platform Performance & Analytics
           </h1>
@@ -91,12 +133,12 @@ export const AnalyticsPage: React.FC = () => {
 
       {/* Top Metrics KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <Card padding="sm" className="space-y-1">
+        <Card padding="sm" className="space-y-1 border border-light-border dark:border-dark-border">
           <div className="flex items-center justify-between text-slate-400 text-xs font-bold uppercase">
             <span>Enrolled Learners</span>
             <Users className="w-4 h-4 text-brand-500" />
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
+          <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100">
             {isLoading ? '...' : (metrics?.totalStudents ?? 0)}
           </p>
           <span className="text-[11px] text-emerald-500 font-semibold flex items-center gap-0.5">
@@ -104,12 +146,12 @@ export const AnalyticsPage: React.FC = () => {
           </span>
         </Card>
 
-        <Card padding="sm" className="space-y-1">
+        <Card padding="sm" className="space-y-1 border border-light-border dark:border-dark-border">
           <div className="flex items-center justify-between text-slate-400 text-xs font-bold uppercase">
             <span>Assessments Taken</span>
             <CheckSquare className="w-4 h-4 text-emerald-500" />
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
+          <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100">
             {isLoading ? '...' : (metrics?.totalAssessmentsTaken ?? 0)}
           </p>
           <span className="text-[11px] text-slate-400 font-medium">
@@ -117,12 +159,12 @@ export const AnalyticsPage: React.FC = () => {
           </span>
         </Card>
 
-        <Card padding="sm" className="space-y-1">
+        <Card padding="sm" className="space-y-1 border border-light-border dark:border-dark-border">
           <div className="flex items-center justify-between text-slate-400 text-xs font-bold uppercase">
             <span>Study Notes</span>
             <FileText className="w-4 h-4 text-amber-500" />
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
+          <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100">
             {isLoading ? '...' : (metrics?.totalStudyNotes ?? 0)}
           </p>
           <span className="text-[11px] text-slate-400 font-medium">
@@ -130,12 +172,12 @@ export const AnalyticsPage: React.FC = () => {
           </span>
         </Card>
 
-        <Card padding="sm" className="space-y-1">
+        <Card padding="sm" className="space-y-1 border border-light-border dark:border-dark-border">
           <div className="flex items-center justify-between text-slate-400 text-xs font-bold uppercase">
             <span>Video Lectures</span>
             <Video className="w-4 h-4 text-purple-500" />
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
+          <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100">
             {isLoading ? '...' : (metrics?.totalVideoLessons ?? 0)}
           </p>
           <span className="text-[11px] text-slate-400 font-medium">
@@ -144,124 +186,129 @@ export const AnalyticsPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Visual Analytics Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Score Percentile Breakdown */}
-        <Card padding="md" className="space-y-4">
+      {/* Visual Analytics Grid: Timeline Line Chart + Score Distribution Donut */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Submissions Timeline (2 Columns) */}
+        <Card padding="md" className="lg:col-span-2 space-y-4 border border-light-border dark:border-dark-border">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              Assessment Score Percentile Distribution
-            </h2>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-brand-500" />
+                <span>Examination Submissions Over Time</span>
+              </h2>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Daily assessment completion volume filtered by {timeRange.toUpperCase()}.
+              </p>
+            </div>
             <span className="text-[11px] text-slate-400 font-mono">
-              N = {metrics?.scoreDistribution.totalAttempts ?? 0} Attempts
+              Window: {timeRange.toUpperCase()}
             </span>
           </div>
 
-          <div className="space-y-3 pt-1">
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-dark-sidebar border border-light-border dark:border-dark-border space-y-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-slate-900 dark:text-slate-100">Top Quartile (85% - 100%)</span>
-                <Badge variant="success" size="sm">{metrics?.scoreDistribution.topQuartile ?? 0}%</Badge>
-              </div>
-              <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                  style={{ width: `${metrics?.scoreDistribution.topQuartile ?? 0}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-slate-400">Exemplary technical mastery; top-tier benchmark ready.</p>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-dark-sidebar border border-light-border dark:border-dark-border space-y-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-slate-900 dark:text-slate-100">Mid Quartile (70% - 84%)</span>
-                <Badge variant="brand" size="sm">{metrics?.scoreDistribution.midQuartile ?? 0}%</Badge>
-              </div>
-              <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                <div
-                  className="h-full bg-brand-500 rounded-full transition-all duration-500"
-                  style={{ width: `${metrics?.scoreDistribution.midQuartile ?? 0}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-slate-400">Meets curriculum competency criteria; reviewing complex edge-cases.</p>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-dark-sidebar border border-light-border dark:border-dark-border space-y-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-slate-900 dark:text-slate-100">Remedial Tier (&lt; 70%)</span>
-                <Badge variant="warning" size="sm">{metrics?.scoreDistribution.remedialTier ?? 0}%</Badge>
-              </div>
-              <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                <div
-                  className="h-full bg-amber-500 rounded-full transition-all duration-500"
-                  style={{ width: `${metrics?.scoreDistribution.remedialTier ?? 0}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-slate-400">Recommending foundational study notes and module practice.</p>
-            </div>
+          <div className="pt-2">
+            <ResponsiveLineChart
+              data={timelineData}
+              height={230}
+              lineColor="#3b82f6"
+              yMin={0}
+              yMax={maxTimelineCount}
+              yUnit=" tests"
+              emptyMessage="No test submissions recorded in this time window."
+            />
           </div>
         </Card>
 
-        {/* Assessment Attempts Activity Timeline */}
-        <Card padding="md" className="space-y-4">
+        {/* Score Percentile Donut (1 Column) */}
+        <Card padding="md" className="space-y-4 border border-light-border dark:border-dark-border flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <PieChart className="w-4 h-4 text-emerald-500" />
+                <span>Score Quartiles</span>
+              </h2>
+              <span className="text-[11px] text-slate-400 font-mono">
+                N = {metrics?.scoreDistribution.totalAttempts ?? 0}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Pass-rate stratification of student attempts.
+            </p>
+          </div>
+
+          <div className="py-2 flex justify-center">
+            <ActivityDonutChart
+              segments={scoreSegments}
+              size={150}
+              centerTitle={String(metrics?.scoreDistribution.totalAttempts ?? 0)}
+              centerSubtitle="Submissions"
+              emptyMessage="No test submissions to calculate percentiles."
+            />
+          </div>
+
+          <div className="pt-2 border-t border-light-border dark:border-dark-border text-center">
+            <span className="text-[11px] text-slate-400">
+              Benchmark standards: Top quartile &ge; 85%, Mid &ge; 70%.
+            </span>
+          </div>
+        </Card>
+      </div>
+
+      {/* Subject Performance & Uninstrumented Telemetry Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Subject Performance Breakdown */}
+        <Card padding="md" className="space-y-4 border border-light-border dark:border-dark-border">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              Examination Submissions Over Time
+            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Layers className="w-4 h-4 text-brand-500" />
+              <span>Subject Performance Competency</span>
             </h2>
-            <span className="text-[11px] text-slate-400">Filtered: {timeRange.toUpperCase()}</span>
+            <span className="text-[11px] text-slate-400 font-mono">Avg Score (%)</span>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-dark-sidebar border border-light-border dark:border-dark-border space-y-3">
-            {metrics?.attemptsTimeline && metrics.attemptsTimeline.length > 0 ? (
-              <div className="space-y-2">
-                {metrics.attemptsTimeline.map((item, idx) => {
-                  const maxCount = Math.max(...metrics.attemptsTimeline.map(t => t.count), 1);
-                  const barWidth = Math.max(8, Math.round((item.count / maxCount) * 100));
+          <ResponsiveBarChart
+            data={subjectBars}
+            max={100}
+            unit="%"
+            emptyMessage="No subject assessment attempts recorded yet."
+          />
+        </Card>
 
-                  return (
-                    <div key={idx} className="flex items-center gap-3 text-xs">
-                      <span className="w-16 font-mono text-slate-400 text-[11px] shrink-0 truncate">
-                        {item.date}
-                      </span>
-                      <div className="flex-1 h-3 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                        <div
-                          className="h-full bg-brand-500 rounded-full transition-all duration-500"
-                          style={{ width: `${barWidth}%` }}
-                        />
-                      </div>
-                      <span className="w-8 font-mono text-right font-bold text-slate-700 dark:text-slate-300 text-[11px]">
-                        {item.count}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-xs text-slate-400 text-center py-6">No test submissions in this time window.</p>
-            )}
+        {/* Telemetry Status Transparency */}
+        <Card padding="md" className="space-y-4 border border-light-border dark:border-dark-border flex flex-col justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-purple-500" />
+              <span>Telemetry & Engagement Signals</span>
+            </h2>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Instrumentation status for passive engagement tracking across student modules.
+            </p>
           </div>
 
-          {/* Uninstrumented Telemetry Transparency */}
-          <div className="grid grid-cols-2 gap-3 pt-1">
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-dark-sidebar border border-light-border dark:border-dark-border">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Watch Hours</span>
-              <span className="text-sm font-extrabold text-slate-400 block mt-0.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-dark-bg/60 border border-light-border dark:border-dark-border">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">Watch Hours Telemetry</span>
+              <span className="text-base font-black text-slate-700 dark:text-slate-300 block mt-1">
                 {metrics?.watchHoursMetric.displayValue}
               </span>
-              <span className="text-[10px] text-slate-400 block mt-0.5">
+              <span className="text-[11px] text-slate-400 block mt-1">
                 {metrics?.watchHoursMetric.subtext}
               </span>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-dark-sidebar border border-light-border dark:border-dark-border">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-dark-bg/60 border border-light-border dark:border-dark-border">
               <span className="text-[10px] uppercase font-bold text-slate-400 block">PDF Download Telemetry</span>
-              <span className="text-sm font-extrabold text-slate-400 block mt-0.5">
+              <span className="text-base font-black text-slate-700 dark:text-slate-300 block mt-1">
                 {metrics?.noteDownloadsMetric.displayValue}
               </span>
-              <span className="text-[10px] text-slate-400 block mt-0.5">
+              <span className="text-[11px] text-slate-400 block mt-1">
                 {metrics?.noteDownloadsMetric.subtext}
               </span>
             </div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-brand-50/50 dark:bg-brand-950/20 border border-brand-500/20 text-xs text-brand-700 dark:text-cyan-300">
+            <strong>Data Integrity Assurance:</strong> Only verified submissions and live database records are plotted. Simulated data is never fabricated.
           </div>
         </Card>
       </div>

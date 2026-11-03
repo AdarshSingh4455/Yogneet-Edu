@@ -40,6 +40,7 @@ import { MicroLessonsManagementPage } from '../pages/admin/MicroLessonsManagemen
 import { PremiumStudentManagementPage } from '../pages/admin/PremiumStudentManagementPage';
 import { StudentAccessManagementPage } from '../pages/admin/StudentAccessManagementPage';
 import { FeedbackManagementPage } from '../pages/admin/FeedbackManagementPage';
+import { IconLibraryManagementPage } from '../pages/admin/IconLibraryManagementPage';
 
 // Shared Pages
 import { FeedbackPage } from '../pages/shared/FeedbackPage';
@@ -206,6 +207,14 @@ export const AppRoutes: React.FC = () => {
           element={
             <AdminRoute>
               <FeedbackManagementPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/icons"
+          element={
+            <AdminRoute>
+              <IconLibraryManagementPage />
             </AdminRoute>
           }
         />

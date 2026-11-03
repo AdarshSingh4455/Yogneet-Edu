@@ -33,6 +33,8 @@ import { Input } from '../../components/common/Input';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { Phase1NoticeBadge } from '../../components/common/Phase1NoticeBadge';
 import { getSubjectIcon } from '../../components/subjects/SubjectSelectionView';
+import { IconSelector } from '../../components/common/IconSelector';
+import { renderIconPreview } from '../../services/iconLibraryService';
 
 const AVAILABLE_ICONS = [
   { name: 'Code', icon: Code, label: 'Code' },
@@ -309,7 +311,7 @@ export const SubjectManagementPage: React.FC = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-2xl bg-brand-50 dark:bg-brand-950/50 border border-brand-500/20 text-brand-600 dark:text-cyan-300 flex items-center justify-center shrink-0">
-                      <Icon className="w-5 h-5" />
+                      {renderIconPreview(subject.icon, 'w-5 h-5')}
                     </div>
                     <div>
                       <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
@@ -441,33 +443,14 @@ export const SubjectManagementPage: React.FC = () => {
             />
           </div>
 
-          {/* Icon Selector */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-              Subject Icon
-            </label>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-              {AVAILABLE_ICONS.map(item => {
-                const ItemIcon = item.icon;
-                const isSelected = formIcon === item.name;
-                return (
-                  <button
-                    key={item.name}
-                    type="button"
-                    onClick={() => setFormIcon(item.name)}
-                    className={`p-2.5 rounded-xl border text-center flex flex-col items-center gap-1.5 transition-all ${
-                      isSelected
-                        ? 'border-brand-500 bg-brand-50 dark:bg-blue-950/60 text-brand-600 dark:text-cyan-400 font-bold shadow-xs'
-                        : 'border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-hover text-slate-600 dark:text-slate-400'
-                    }`}
-                  >
-                    <ItemIcon className="w-5 h-5" />
-                    <span className="text-[10px]">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          {/* Icon Selector using IconLibrary */}
+          <IconSelector
+            label="Subject Icon"
+            value={formIcon}
+            onChange={setFormIcon}
+            categoryFilter="Subjects"
+            placeholder="Select an icon from the library..."
+          />
 
           <div className="grid grid-cols-2 gap-3">
             <Input

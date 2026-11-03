@@ -37,6 +37,8 @@ import { Modal } from '../../components/common/Modal';
 import { Input } from '../../components/common/Input';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { Phase1NoticeBadge } from '../../components/common/Phase1NoticeBadge';
+import { IconSelector } from '../../components/common/IconSelector';
+import { renderIconPreview } from '../../services/iconLibraryService';
 
 export const MicroLessonsManagementPage: React.FC = () => {
   const { currentUser, isAdmin, hasPermission } = useAuth();
@@ -425,13 +427,20 @@ export const MicroLessonsManagementPage: React.FC = () => {
               }`}
             >
               {/* Cover preview banner */}
-              <div className="relative h-32 -mx-5 -mt-5 mb-4 overflow-hidden bg-slate-900">
-                <img
-                  src={subj.coverImage}
-                  alt={subj.name}
-                  className="w-full h-full object-cover opacity-80"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="relative h-32 -mx-5 -mt-5 mb-4 overflow-hidden bg-slate-900 flex items-center justify-center">
+                {subj.coverImage && (subj.coverImage.startsWith('http://') || subj.coverImage.startsWith('https://') || subj.coverImage.startsWith('data:image/')) ? (
+                  <img
+                    src={subj.coverImage}
+                    alt={subj.name}
+                    className="w-full h-full object-cover opacity-80"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-purple-400 gap-1.5 p-4">
+                    {renderIconPreview(subj.coverImage || 'Film', 'w-10 h-10')}
+                    <span className="text-[11px] font-mono text-purple-300 font-semibold">{subj.name}</span>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
                 <div className="absolute bottom-2.5 left-4 right-4 flex items-center justify-between text-white">
                   <span className="text-xs font-bold uppercase tracking-wider bg-purple-900/80 px-2 py-0.5 rounded-full border border-purple-400/40">
                     Order #{subj.displayOrder}
@@ -665,12 +674,21 @@ export const MicroLessonsManagementPage: React.FC = () => {
             />
           </div>
 
+          {/* Micro Topic Icon / Asset Picker using IconLibrary */}
+          <IconSelector
+            label="Micro Topic Icon / Asset"
+            value={subjCover}
+            onChange={setSubjCover}
+            categoryFilter="Micro Subjects"
+            placeholder="Select a glyph or icon from the library..."
+          />
+
           <Input
-            label="Cover Image URL"
+            label="Cover Image / Custom Asset URL"
             value={subjCover}
             onChange={e => setSubjCover(e.target.value)}
-            placeholder="https://images.unsplash.com/..."
-            helperText="Thumbnail for student micro topic selection cards"
+            placeholder="Selected icon key or image URL (https://...)"
+            helperText="Thumbnail or icon chosen from the Icon Library for student micro topic cards"
           />
 
           <div className="grid grid-cols-2 gap-3">

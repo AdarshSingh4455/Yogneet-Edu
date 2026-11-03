@@ -23,6 +23,7 @@ import {
   Film,
   Crown,
   Layers,
+  Boxes,
 } from 'lucide-react';
 import { Badge } from '../common/Badge';
 
@@ -45,6 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { label: 'Feedback Management', path: '/admin/feedback', icon: MessageSquare, badge: 'Support' },
     { label: 'Subjects', path: '/admin/subjects', icon: BookOpen },
     { label: 'Micro Lessons', path: '/admin/micro-lessons', icon: Film, badge: 'Shorts' },
+    { label: 'Icon Library', path: '/admin/icons', icon: Boxes, badge: 'Assets' },
     { label: 'Premium Students', path: '/admin/premium-students', icon: Crown, badge: 'Pro' },
     { label: 'Sub-Admins & Staff', path: '/admin/subadmins', icon: Shield },
     { label: 'RBAC & Permissions', path: '/admin/permissions', icon: Shield, badge: 'Key' },
