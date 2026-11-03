@@ -30,7 +30,6 @@ import { Modal } from '../../components/common/Modal';
 import { Input } from '../../components/common/Input';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { EnrollmentNumberBadge } from '../../components/common/EnrollmentNumberBadge';
-import { Phase1NoticeBadge } from '../../components/common/Phase1NoticeBadge';
 import { AccountInspectionModal } from '../../components/admin/AccountInspectionModal';
 import { PasswordLifecycleModal } from '../../components/auth/PasswordLifecycleModal';
 
@@ -184,7 +183,6 @@ export const PremiumStudentManagementPage: React.FC = () => {
             <Badge variant="purple" size="sm">
               Premium Tier Entitlements
             </Badge>
-            <Phase1NoticeBadge label="Frontend Preview • Variable-Length Sequential IDs" />
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
             <Crown className="w-6 h-6 text-amber-500" />
@@ -420,11 +418,6 @@ export const PremiumStudentManagementPage: React.FC = () => {
         }
       >
         <form onSubmit={handleConfirmUpgrade} className="space-y-4">
-          <Phase1NoticeBadge
-            variant="banner"
-            label="Converts existing Google-login student into a Premium account without creating a duplicate identity."
-          />
-
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
               Select Existing Student Account
@@ -486,7 +479,7 @@ export const PremiumStudentManagementPage: React.FC = () => {
               value={upgradePhone}
               onChange={e => setUpgradePhone(e.target.value)}
               placeholder="+91 98765 43210"
-              helperText="Used for Phase 2 initial credential"
+              helperText="Used for initial credential policy"
             />
           </div>
 
@@ -519,7 +512,7 @@ export const PremiumStudentManagementPage: React.FC = () => {
               <span>Privilege Authorization Policy</span>
             </div>
             <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-              Do not use email domain alone to decide privileges. The actual role and premium access will be determined by verified backend entitlements in Phase 2.
+              Do not use email domain alone to decide privileges. The actual role and premium access are determined strictly by verified database entitlements.
             </p>
           </div>
 

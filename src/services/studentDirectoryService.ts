@@ -5,7 +5,7 @@
  */
 
 import { UserProfile, StudentDirectoryEntry, StudentImportRow, StudentAccessCategory } from '../types';
-import { supabase, isSupabaseConfigured, formatSupabaseError } from './supabaseClient';
+import { supabase, isSupabaseConfigured, isMockFallbackAllowed, formatSupabaseError } from './supabaseClient';
 import { ApiService, AuditService } from './api';
 import { Database } from '../types/database.types';
 import { hasPermission as checkPermission } from '../permissions/registry';
@@ -45,9 +45,12 @@ export const StudentDirectoryService = {
    * Retrieves all students: merges active profiles with pre-provisioned directory students.
    */
   async getStudents(): Promise<UserProfile[]> {
-    const baseMockStudents = ApiService.getUsers().filter(u => u.role === 'student');
+    const baseMockStudents = isMockFallbackAllowed() ? ApiService.getUsers().filter(u => u.role === 'student') : [];
 
     if (!isSupabaseConfigured() || !supabase) {
+      if (!isMockFallbackAllowed()) {
+        return [];
+      }
       const stored = getStoredDirectory();
       const mappedStored: UserProfile[] = stored.map(s => ({
         id: s.id,
@@ -133,8 +136,11 @@ export const StudentDirectoryService = {
 
       return Array.from(emailMap.values());
     } catch (err) {
-      console.error('[StudentDirectoryService.getStudents] Error, falling back to local:', err);
-      return baseMockStudents;
+      console.error('[StudentDirectoryService.getStudents] Error:', err);
+      if (isMockFallbackAllowed()) {
+        return baseMockStudents;
+      }
+      throw err;
     }
   },
 

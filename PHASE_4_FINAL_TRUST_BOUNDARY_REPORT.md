@@ -19,7 +19,7 @@ A comprehensive, live security trust boundary audit of the `public.assessment_at
 2. **Authoritative Server Scoring via RPC:** Legitimate assessment submissions execute strictly through `public.submit_assessment_attempt(...)`. This RPC is `SECURITY DEFINER` and derives `user_id` strictly from `auth.uid()`. It evaluates question answers server-side against database answer keys, calculates marks and negative marks, validates published status and tier entitlements, and records the authoritative attempt.
 3. **Cross-Tenant Protection:** A student cannot submit an attempt on behalf of another user. The RPC possesses no `user_id` parameter, and direct table inserts for other users are blocked by RLS.
 4. **Trigger Trust Boundary & Discovered Bug Fix:** During live submission testing, we discovered that `protect_profile_privileged_fields()` previously threw `Access Denied: Gamification counters are updated only by verified scoring events` because an earlier migration omitted the `pg_trigger_depth() > 1` check. We remediated this by restoring the `pg_trigger_depth() > 1` secondary trigger defense. Direct client manipulation of gamification counters remains 100% blocked, while genuine assessment submissions update profile counters and streak activity atomically.
-5. **Full Regression Results:** All **306 tests across 66 suites passed (100% pass rate)**. TypeScript typecheck passed with **0 errors**, and production build succeeded cleanly.
+5. **Full Regression Results:** All **315 tests across 67 suites passed (100% pass rate)**. TypeScript typecheck passed with **0 errors**, and production build succeeded cleanly.
 
 ---
 
@@ -191,17 +191,17 @@ Following remediation of the secondary trigger defense and trust boundary verifi
 1. **Full Automated Test Suite (`npm test`):**
    ```
    TAP version 13
-   1..66
-   # tests 306
-   # suites 66
-   # pass 306
+   1..68
+   # tests 315
+   # suites 67
+   # pass 315
    # fail 0
    # cancelled 0
    # skipped 0
    # todo 0
-   # duration_ms 10173.8171
+   # duration_ms 10228.2834
    ```
-   **306 tests across 66 suites passed with 0 failures.**
+   **315 tests across 67 suites passed with 0 failures.**
 
 2. **TypeScript Typecheck (`npx tsc --noEmit`):**
    - Result: **0 errors** (Clean).

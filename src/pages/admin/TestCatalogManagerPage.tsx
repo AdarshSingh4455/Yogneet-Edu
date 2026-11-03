@@ -740,7 +740,7 @@ export const TestCatalogManagerPage: React.FC = () => {
               <div>
                 <Input
                   label="Assessment Title"
-                  placeholder="e.g. Phase 4 Full-Length Mock Exam: System Design & Concurrency"
+                  placeholder="e.g. Full-Length Technical Exam: System Design & Concurrency"
                   value={testTitle}
                   onChange={(e) => setTestTitle(e.target.value)}
                   required

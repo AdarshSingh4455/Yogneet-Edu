@@ -37,7 +37,7 @@ export const EnrollmentNumberBadge: React.FC<EnrollmentNumberBadgeProps> = ({
   return (
     <div
       className={`inline-flex items-center rounded-lg border border-purple-200/90 dark:border-purple-800/60 bg-gradient-to-r from-purple-50/90 to-indigo-50/70 dark:from-purple-950/40 dark:to-indigo-950/30 text-purple-900 dark:text-purple-200 font-mono tracking-wider font-semibold shadow-xs select-all group relative ${sizeClasses[size]} ${className}`}
-      title="Format: Admission Year + Sequential Identifier (Phase 2 Transactional)"
+      title="Format: Admission Year + Sequential Identifier"
     >
       <Hash className="w-3.5 h-3.5 text-purple-500 shrink-0" />
       <span className="flex items-center">

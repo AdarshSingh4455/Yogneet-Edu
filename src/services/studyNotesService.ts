@@ -5,7 +5,7 @@
  */
 
 import { StudyNote, ContentStatus, UserProfile } from '../types';
-import { supabase, isSupabaseConfigured, formatSupabaseError } from './supabaseClient';
+import { supabase, isSupabaseConfigured, isMockFallbackAllowed, formatSupabaseError } from './supabaseClient';
 import { StorageService } from './storageService';
 import { ApiService, AuditService } from './api';
 import { Database } from '../types/database.types';
@@ -67,13 +67,16 @@ export const StudyNotesService = {
    */
   async getNotes(statusFilter?: ContentStatus, isStudent = false): Promise<StudyNote[]> {
     if (!isSupabaseConfigured() || !supabase) {
-      let notes = ApiService.getNotes();
-      if (isStudent) {
-        notes = notes.filter(n => n.status === 'published');
-      } else if (statusFilter) {
-        notes = notes.filter(n => n.status === statusFilter);
+      if (isMockFallbackAllowed()) {
+        let notes = ApiService.getNotes();
+        if (isStudent) {
+          notes = notes.filter(n => n.status === 'published');
+        } else if (statusFilter) {
+          notes = notes.filter(n => n.status === statusFilter);
+        }
+        return notes;
       }
-      return notes;
+      return [];
     }
 
     try {
@@ -91,12 +94,15 @@ export const StudyNotesService = {
       const rows = (data as NoteRow[]) || [];
       return rows.map(rowToStudyNote);
     } catch (err) {
-      console.error('[StudyNotesService.getNotes] Error, falling back to local:', err);
-      let notes = ApiService.getNotes();
-      if (isStudent) {
-        notes = notes.filter(n => n.status === 'published');
+      console.error('[StudyNotesService.getNotes] Error:', err);
+      if (isMockFallbackAllowed()) {
+        let notes = ApiService.getNotes();
+        if (isStudent) {
+          notes = notes.filter(n => n.status === 'published');
+        }
+        return notes;
       }
-      return notes;
+      throw err;
     }
   },
 

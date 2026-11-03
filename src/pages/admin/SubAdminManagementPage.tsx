@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ApiService } from '../../services/api';
 import { StaffAdminService } from '../../services/staffAdminService';
+import { isMockFallbackAllowed } from '../../services/supabaseClient';
 import { UserProfile, PermissionKey } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -26,7 +27,6 @@ import { Input } from '../../components/common/Input';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { PermissionEditorModal } from '../../components/admin/PermissionEditorModal';
 import { PasswordLifecycleModal } from '../../components/auth/PasswordLifecycleModal';
-import { Phase1NoticeBadge } from '../../components/common/Phase1NoticeBadge';
 import { generateProposedYogneetEmail } from '../../services/premiumStudentService';
 import { ROLE_PRESETS } from '../../permissions/registry';
 
@@ -34,7 +34,7 @@ export const SubAdminManagementPage: React.FC = () => {
   const { currentUser, isAdmin, refreshUsers } = useAuth();
   const toast = useToast();
 
-  const [subAdmins, setSubAdmins] = useState<UserProfile[]>(() => ApiService.getSubAdmins());
+  const [subAdmins, setSubAdmins] = useState<UserProfile[]>(() => isMockFallbackAllowed() ? ApiService.getSubAdmins() : []);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'suspended'>('all');
   const [isLoadingStaff, setIsLoadingStaff] = useState(false);
@@ -156,7 +156,6 @@ export const SubAdminManagementPage: React.FC = () => {
             <Badge variant="purple" size="sm">
               Staff RBAC Governance
             </Badge>
-            <Phase1NoticeBadge label="Staff Lifecycle • Phase 2 Credential Policy" />
             <span className="text-xs text-slate-400">Sub-Admin Directory</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
@@ -311,7 +310,7 @@ export const SubAdminManagementPage: React.FC = () => {
                           variant="outline"
                           onClick={() => setPasswordTargetStaff(staff)}
                           leftIcon={<Lock className="w-3.5 h-3.5 text-indigo-500" />}
-                          title="Reset Password & Issue Temporary Credential (Phase 2 Preview)"
+                          title="Reset Password & Issue Temporary Credential"
                         >
                           Password
                         </Button>
@@ -391,13 +390,13 @@ export const SubAdminManagementPage: React.FC = () => {
             value={newPhone}
             onChange={e => setNewPhone(e.target.value)}
             placeholder="+91 98000 12345"
-            helperText="Used for Phase 2 initial credential policy (last 4 digits)"
+            helperText="Used for initial credential policy (last 4 digits)"
             required
           />
 
-          {/* Phase 2 Security policy preview banner */}
+          {/* Security policy banner */}
           <div className="p-3 rounded-xl border border-indigo-200/80 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/20 text-[11px] text-indigo-900 dark:text-indigo-300">
-            <span className="font-bold block mb-0.5">Phase 2 Security Credential Policy</span>
+            <span className="font-bold block mb-0.5">Security Credential Policy</span>
             <span>Initial credential will be generated from the last 4 digits of registered phone number. Plaintext passwords are never stored or transmitted in frontend state.</span>
           </div>
 

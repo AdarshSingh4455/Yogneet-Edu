@@ -222,13 +222,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               {activeFilter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
             </p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-[220px] mx-auto leading-relaxed">
-              Curriculum updates, examination schedules, and admin alerts will appear here in real time.
+              Curriculum updates, examination schedules, and alerts will appear here in real time.
             </p>
-            <div className="pt-2">
-              <span className="inline-flex items-center gap-1 text-[10px] font-mono text-slate-400 px-2 py-0.5 rounded bg-slate-100 dark:bg-dark-sidebar">
-                Phase 4B Event Dispatcher Ready
-              </span>
-            </div>
           </div>
         ) : (
           filteredItems.map(item => (

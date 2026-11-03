@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured, formatSupabaseError } from './supabaseClient';
+import { supabase, isSupabaseConfigured, isMockFallbackAllowed, formatSupabaseError } from './supabaseClient';
 import { ApiService } from './api';
 import { AssessmentQuestion, TestAttemptResult, QuestionStatus, QuestionOption } from '../types';
 import { Database } from '../types/database.types';
@@ -280,7 +280,10 @@ export const AssessmentService = {
 
       const rows = (data as unknown as QuestionRow[]) || [];
       if (rows.length === 0) {
-        return ApiService.getTestQuestions(testId);
+        if (isMockFallbackAllowed()) {
+          return ApiService.getTestQuestions(testId);
+        }
+        return [];
       }
 
       return rows.map(r => ({
@@ -307,13 +310,19 @@ export const AssessmentService = {
    */
   async getLatestAttempt(testId: string): Promise<TestAttemptResult | undefined> {
     if (!isSupabaseConfigured() || !supabase) {
-      return ApiService.getLatestAttempt(testId);
+      if (isMockFallbackAllowed()) {
+        return ApiService.getLatestAttempt(testId);
+      }
+      return undefined;
     }
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        return ApiService.getLatestAttempt(testId);
+        if (isMockFallbackAllowed()) {
+          return ApiService.getLatestAttempt(testId);
+        }
+        return undefined;
       }
 
       const { data, error } = await supabase
@@ -329,7 +338,10 @@ export const AssessmentService = {
       }
 
       if (!data) {
-        return ApiService.getLatestAttempt(testId);
+        if (isMockFallbackAllowed()) {
+          return ApiService.getLatestAttempt(testId);
+        }
+        return undefined;
       }
 
       const row = data as unknown as AttemptRow;
@@ -362,7 +374,10 @@ export const AssessmentService = {
       };
     } catch (err) {
       console.error('[AssessmentService.getLatestAttempt] Error fetching attempt:', err);
-      return ApiService.getLatestAttempt(testId);
+      if (isMockFallbackAllowed()) {
+        return ApiService.getLatestAttempt(testId);
+      }
+      return undefined;
     }
   },
 };

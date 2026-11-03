@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ApiService } from '../../services/api';
 import { AssessmentService } from '../../services/assessmentService';
-import { supabase, isSupabaseConfigured } from '../../services/supabaseClient';
+import { AssessmentAdminService } from '../../services/assessmentAdminService';
+import { supabase, isSupabaseConfigured, isMockFallbackAllowed } from '../../services/supabaseClient';
 import {
   AssessmentQuestion,
   TestSeriesItem,
@@ -33,11 +34,34 @@ export const AssessmentPage: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const test = ApiService.getTestById(testId || 'test_py_201');
+  const fallbackTest = isMockFallbackAllowed() ? ApiService.getTestById(testId || 'test_py_201') : undefined;
+  const [currentTest, setCurrentTest] = useState<TestSeriesItem | null>(fallbackTest || null);
+  const test = currentTest || fallbackTest;
   const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
   const [questionFetchError, setQuestionFetchError] = useState<string | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
+
+  // Load live assessment metadata if stored in Supabase
+  useEffect(() => {
+    let isMounted = true;
+    if (testId) {
+      AssessmentAdminService.getAssessments().then(allTests => {
+        if (isMounted) {
+          const match = allTests.find(t => t.id === testId);
+          if (match) {
+            setCurrentTest(match);
+            setSecondsRemaining(match.durationMinutes * 60);
+          }
+        }
+      }).catch(err => {
+        console.error('[AssessmentPage] Error loading assessment metadata:', err);
+      });
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [testId]);
 
   // Detect session mode
   useEffect(() => {
@@ -289,11 +313,11 @@ export const AssessmentPage: React.FC = () => {
           </Badge>
           <div className="hidden sm:block">
             <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate max-w-md">
-              {test.title}
+              {test?.title || 'Technical Assessment'}
             </h1>
             <span className="text-[10px] text-slate-400">
               Positive: +{currentQuestion.marks} • Negative: -{currentQuestion.negativeMarks}
-              {isDemoMode && ' • Local Mock Mode (Not submitted to hosted DB)'}
+              {isDemoMode && ' • Offline Preview Mode'}
             </span>
           </div>
         </div>

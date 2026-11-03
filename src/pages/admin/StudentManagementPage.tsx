@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { StudentDirectoryService } from '../../services/studentDirectoryService';
-import { ApiService } from '../../services/api';
 import { UserProfile, StudentAccessCategory, StudentImportRow } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -312,11 +311,11 @@ export const StudentManagementPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Phase 4B Disclaimer Banner */}
+      {/* Credential Provisioning Notice */}
       <div className="p-3.5 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2.5">
         <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
         <div>
-          <span className="font-bold">Credential Provisioning Notice:</span> Pre-provisioned directory students will have automated invitation links and authentication credentials generated upon implementation of Phase 4B authentication.
+          <span className="font-bold">Credential Provisioning Notice:</span> Pre-provisioned directory students receive automated entitlement reconciliation and access upon registration with their verified email.
         </div>
       </div>
 

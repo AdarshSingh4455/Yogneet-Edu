@@ -13,7 +13,7 @@ import {
   AssessmentImportPayload,
   AssessmentImportQuestion,
 } from '../types';
-import { supabase, isSupabaseConfigured, formatSupabaseError } from './supabaseClient';
+import { supabase, isSupabaseConfigured, isMockFallbackAllowed, formatSupabaseError } from './supabaseClient';
 import { ApiService, AuditService } from './api';
 import { Database } from '../types/database.types';
 
@@ -78,11 +78,14 @@ export const AssessmentAdminService = {
    */
   async getAssessments(statusFilter?: string): Promise<TestSeriesItem[]> {
     if (!isSupabaseConfigured() || !supabase) {
-      const tests = ApiService.getTests();
-      if (statusFilter) {
-        return tests.filter(t => t.status === statusFilter);
+      if (isMockFallbackAllowed()) {
+        const tests = ApiService.getTests();
+        if (statusFilter) {
+          return tests.filter(t => t.status === statusFilter);
+        }
+        return tests;
       }
-      return tests;
+      return [];
     }
 
     try {
@@ -97,8 +100,11 @@ export const AssessmentAdminService = {
       const rows = (data as AssessmentRow[]) || [];
       return rows.map(r => rowToTestItem(r));
     } catch (err) {
-      console.error('[AssessmentAdminService.getAssessments] Error, falling back to local:', err);
-      return ApiService.getTests();
+      console.error('[AssessmentAdminService.getAssessments] Error:', err);
+      if (isMockFallbackAllowed()) {
+        return ApiService.getTests();
+      }
+      throw err;
     }
   },
 

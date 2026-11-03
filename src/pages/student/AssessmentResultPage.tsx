@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ApiService } from '../../services/api';
+import { AssessmentService } from '../../services/assessmentService';
+import { isMockFallbackAllowed } from '../../services/supabaseClient';
 import { AssessmentQuestion, TestAttemptResult } from '../../types';
 import {
   Trophy,
@@ -24,11 +26,42 @@ export const AssessmentResultPage: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
 
-  const test = ApiService.getTestById(testId || 'test_py_201');
-  const questions: AssessmentQuestion[] = ApiService.getTestQuestions(testId || 'test_py_201');
-  const latestAttempt: TestAttemptResult | undefined = ApiService.getLatestAttempt(testId || 'test_py_201');
-
+  const [latestAttempt, setLatestAttempt] = useState<TestAttemptResult | undefined>(() => isMockFallbackAllowed() ? ApiService.getLatestAttempt(testId || 'test_py_201') : undefined);
+  const [questions, setQuestions] = useState<AssessmentQuestion[]>(() => isMockFallbackAllowed() ? ApiService.getTestQuestions(testId || 'test_py_201') : []);
+  const [isLoading, setIsLoading] = useState(!latestAttempt);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [filterMode, setFilterMode] = useState<'all' | 'correct' | 'incorrect' | 'unanswered'>('all');
+
+  useEffect(() => {
+    let isMounted = true;
+    const tid = testId || 'test_py_201';
+    Promise.all([
+      AssessmentService.getLatestAttempt(tid),
+      AssessmentService.getQuestionsForReview(tid),
+    ])
+      .then(([attempt, qs]) => {
+        if (isMounted) {
+          if (attempt) setLatestAttempt(attempt);
+          if (qs && qs.length > 0) setQuestions(qs);
+          setIsLoading(false);
+        }
+      })
+      .catch(err => {
+        console.error('[AssessmentResultPage] Error loading live results:', err);
+        if (isMounted) setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [testId]);
+
+  if (isLoading) {
+    return (
+      <div className="p-12 text-center text-slate-400 text-sm">
+        Loading verified assessment results...
+      </div>
+    );
+  }
 
   if (!latestAttempt) {
     return (

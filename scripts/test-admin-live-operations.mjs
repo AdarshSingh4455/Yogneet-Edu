@@ -124,11 +124,10 @@ export async function runAdminOperationsLiveTests() {
     console.log('  ✓ RoleSwitcherBar not rendered in AppLayout.tsx');
 
     const roleSwitcherPath = path.resolve(process.cwd(), 'src/components/layout/RoleSwitcherBar.tsx');
-    const roleSwitcherCode = fs.readFileSync(roleSwitcherPath, 'utf-8');
-    if (!roleSwitcherCode.includes('return null;')) {
-      throw new Error('RoleSwitcherBar does not return null stub');
+    if (fs.existsSync(roleSwitcherPath)) {
+      throw new Error('RoleSwitcherBar.tsx still exists in codebase; simulator file must be completely deleted');
     }
-    console.log('  ✓ RoleSwitcherBar stub safely returns null');
+    console.log('  ✓ RoleSwitcherBar.tsx completely removed from codebase (no developer simulator stubs)');
 
     const platformLoginPath = path.resolve(process.cwd(), 'src/pages/auth/PlatformLoginPage.tsx');
     const platformLoginCode = fs.readFileSync(platformLoginPath, 'utf-8');

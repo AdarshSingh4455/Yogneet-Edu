@@ -5,7 +5,7 @@
  */
 
 import { UserProfile, PermissionKey } from '../types';
-import { supabase, isSupabaseConfigured, formatSupabaseError } from './supabaseClient';
+import { supabase, isSupabaseConfigured, isMockFallbackAllowed, formatSupabaseError } from './supabaseClient';
 import { ApiService, AuditService } from './api';
 
 export interface ProvisionStaffInput {
@@ -31,7 +31,10 @@ export const StaffAdminService = {
    */
   async getStaffMembers(): Promise<UserProfile[]> {
     if (!isSupabaseConfigured() || !supabase) {
-      return ApiService.getSubAdmins();
+      if (isMockFallbackAllowed()) {
+        return ApiService.getSubAdmins();
+      }
+      return [];
     }
 
     try {
@@ -70,7 +73,10 @@ export const StaffAdminService = {
       return staffList;
     } catch (err) {
       console.error('[StaffAdminService.getStaffMembers] Error:', err);
-      return ApiService.getSubAdmins();
+      if (isMockFallbackAllowed()) {
+        return ApiService.getSubAdmins();
+      }
+      throw err;
     }
   },
 

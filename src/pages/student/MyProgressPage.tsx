@@ -112,7 +112,6 @@ export const MyProgressPage: React.FC = () => {
               <TrendingUp className="w-6 h-6 text-brand-500" />
               <span>My Learning Progress & Analytics</span>
             </h1>
-            <Badge variant="brand" size="sm">Phase 4A</Badge>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Track your course completion rate, assessment score trends, and technical mastery milestones.

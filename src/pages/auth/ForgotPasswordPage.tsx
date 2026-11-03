@@ -79,7 +79,7 @@ export const ForgotPasswordPage: React.FC = () => {
           <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-left flex items-start gap-2.5">
             <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
             <p className="text-[11px] text-blue-700 dark:text-blue-300">
-              In Phase 4B with live SMTP email dispatch enabled, you will receive a secure tokenized magic link. For test & preview purposes, you can open the reset page directly below.
+              Please check your registered email inbox for verification instructions. You can also proceed directly below to update your password credentials.
             </p>
           </div>
 
