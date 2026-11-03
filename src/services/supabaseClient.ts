@@ -1,59 +1,104 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '../types/database.types';
 
-export type BackendMode = 'supabase' | 'local-mock';
+export type BackendMode = 'supabase' | 'local-mock' | 'fail-closed';
 
 export interface SupabaseConfig {
   url: string;
   anonKey: string;
   isConfigured: boolean;
   mode: BackendMode;
+  isFatalConfigError: boolean;
+  configError?: string;
 }
 
 /**
- * Sanitizes and validates the runtime Supabase environment settings.
+ * Pure evaluator for runtime Supabase environment settings.
+ * Enforces strict fail-closed security for production builds while allowing
+ * local development and explicit demo operation.
  */
-function resolveSupabaseConfig(): SupabaseConfig {
-  const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env || {};
+export function resolveSupabaseConfigForEnv(env: Record<string, string | undefined> = {}): SupabaseConfig {
   const rawUrl = env.VITE_SUPABASE_URL?.trim();
   const rawKey = env.VITE_SUPABASE_ANON_KEY?.trim();
+  const isProductionBuild = Boolean(
+    env.PROD === 'true' ||
+    env.MODE === 'production' ||
+    env.VITE_ENVIRONMENT === 'production' ||
+    env.VITE_ENVIRONMENT === 'staging'
+  );
+  const allowMockAuth = env.VITE_ALLOW_MOCK_AUTH === 'true';
 
-  // If neither is defined, deliberately default to local-mock mode for offline/demo operation
+  // Strict Fail-Closed Rule: In production/staging, missing credentials must NEVER silently fallback to mock personas
+  if (isProductionBuild && !allowMockAuth) {
+    if (!rawUrl || !rawKey) {
+      return {
+        url: '',
+        anonKey: '',
+        isConfigured: false,
+        mode: 'fail-closed',
+        isFatalConfigError: true,
+        configError: 'Production configuration error: Supabase backend credentials are required. System operating in fail-closed mode.',
+      };
+    }
+
+    try {
+      const parsed = new URL(rawUrl);
+      if (!parsed.protocol.startsWith('http')) {
+        throw new Error('Supabase URL must use http or https protocol.');
+      }
+    } catch {
+      return {
+        url: rawUrl,
+        anonKey: rawKey,
+        isConfigured: false,
+        mode: 'fail-closed',
+        isFatalConfigError: true,
+        configError: 'Production configuration error: Invalid VITE_SUPABASE_URL format. System operating in fail-closed mode.',
+      };
+    }
+
+    return {
+      url: rawUrl,
+      anonKey: rawKey,
+      isConfigured: true,
+      mode: 'supabase',
+      isFatalConfigError: false,
+    };
+  }
+
+  // Development / Offline / Explicit Mock Mode
   if (!rawUrl && !rawKey) {
     return {
       url: '',
       anonKey: '',
       isConfigured: false,
       mode: 'local-mock',
+      isFatalConfigError: false,
     };
   }
 
-  // Check for partial or malformed configurations
   if (rawUrl && !rawKey) {
-    console.warn(
-      '[Yogneet Supabase] VITE_SUPABASE_URL is set, but VITE_SUPABASE_ANON_KEY is missing. Operating in fallback mock mode.'
-    );
+    console.warn('[Yogneet Supabase] VITE_SUPABASE_URL is set, but VITE_SUPABASE_ANON_KEY is missing. Operating in fallback mock mode.');
     return {
       url: rawUrl,
       anonKey: '',
       isConfigured: false,
       mode: 'local-mock',
+      isFatalConfigError: false,
     };
   }
 
   if (!rawUrl && rawKey) {
-    console.warn(
-      '[Yogneet Supabase] VITE_SUPABASE_ANON_KEY is set, but VITE_SUPABASE_URL is missing. Operating in fallback mock mode.'
-    );
+    console.warn('[Yogneet Supabase] VITE_SUPABASE_ANON_KEY is set, but VITE_SUPABASE_URL is missing. Operating in fallback mock mode.');
     return {
       url: '',
       anonKey: rawKey,
       isConfigured: false,
       mode: 'local-mock',
+      isFatalConfigError: false,
     };
   }
 
-  // Basic URL structure check
   try {
     const parsed = new URL(rawUrl!);
     if (!parsed.protocol.startsWith('http')) {
@@ -66,6 +111,7 @@ function resolveSupabaseConfig(): SupabaseConfig {
       anonKey: rawKey!,
       isConfigured: false,
       mode: 'local-mock',
+      isFatalConfigError: false,
     };
   }
 
@@ -74,10 +120,12 @@ function resolveSupabaseConfig(): SupabaseConfig {
     anonKey: rawKey!,
     isConfigured: true,
     mode: 'supabase',
+    isFatalConfigError: false,
   };
 }
 
-export const supabaseConfig: SupabaseConfig = resolveSupabaseConfig();
+const runtimeEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env || {};
+export const supabaseConfig: SupabaseConfig = resolveSupabaseConfigForEnv(runtimeEnv);
 
 /**
  * Centralized Supabase Client Singleton.
@@ -95,7 +143,7 @@ export const supabase: SupabaseClient<Database> | null = supabaseConfig.isConfig
   : null;
 
 /**
- * Returns the current active backend mode ('supabase' or 'local-mock').
+ * Returns the current active backend mode ('supabase', 'local-mock', or 'fail-closed').
  */
 export function getBackendMode(): BackendMode {
   return supabaseConfig.mode;
@@ -110,11 +158,12 @@ export function isSupabaseConfigured(): boolean {
 
 /**
  * Safe accessor for the Supabase client.
- * Throws a descriptive error if called while in local-mock mode.
+ * Throws a descriptive error if called while in local-mock mode or fail-closed mode.
  */
 export function requireSupabase(): SupabaseClient<Database> {
   if (!supabase) {
     throw new Error(
+      supabaseConfig.configError ||
       'Supabase client is not configured. Verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
     );
   }

@@ -92,6 +92,9 @@ export const CommunityForumPage: React.FC = () => {
               Community Hub
             </Badge>
             <span className="text-xs text-slate-400">Peer Learning & Mentorship</span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+              Interactive Preview
+            </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center shrink-0 text-purple-500 dark:text-purple-400">
@@ -112,6 +115,15 @@ export const CommunityForumPage: React.FC = () => {
         >
           New Discussion
         </Button>
+      </div>
+
+      {/* Prototype Preview Notice */}
+      <div className="flex items-start sm:items-center gap-3 p-3.5 rounded-xl border border-purple-500/30 bg-purple-500/10 text-purple-700 dark:text-purple-300 text-xs">
+        <Sparkles className="w-4 h-4 shrink-0 mt-0.5 sm:mt-0 text-purple-500" />
+        <div className="flex-1">
+          <span className="font-semibold">Community Preview Notice:</span>{' '}
+          The Community Forum is operating in local interactive preview. Discussions, replies, and upvotes are maintained within your browser session. Cloud database persistence and live peer sync will be enabled in an upcoming release.
+        </div>
       </div>
 
       {/* Main Layout: Threads on Left (2/3), Sidebar on Right (1/3) */}

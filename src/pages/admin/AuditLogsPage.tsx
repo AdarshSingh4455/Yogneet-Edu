@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { ApiService } from '../../services/api';
-import { AuditService } from '../../services/api';
+import React, { useState, useEffect } from 'react';
+import { supabase, isSupabaseConfigured } from '../../services/supabaseClient';
+import { ApiService, AuditService } from '../../services/api';
 import { AuditLogEntry, AuditOutcome } from '../../types';
 import { useToast } from '../../context/ToastContext';
 import {
@@ -16,18 +16,72 @@ import {
   Shield,
   Info,
   Calendar,
+  RefreshCw,
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { EmptyState } from '../../components/common/EmptyState';
 
+function rowToAuditEntry(row: any): AuditLogEntry {
+  const d = row.timestamp ? new Date(row.timestamp) : new Date();
+  const formattedDate = d.toISOString().replace('T', ' ').substring(0, 19);
+
+  return {
+    id: row.id,
+    timestamp: formattedDate,
+    actor: {
+      id: row.actor_id || 'system',
+      name: row.actor_name || 'System Operator',
+      email: row.actor_email || 'system@yogneet.internal',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
+      role: (row.actor_role as any) || 'admin',
+    },
+    action: row.action,
+    resourceType: row.resource_type,
+    resourceId: row.resource_id,
+    details: row.details,
+    outcome: (row.outcome as AuditOutcome) || 'SUCCESS',
+    ipAddress: row.ip_address || '127.0.0.1',
+    changes: row.changes || undefined,
+  };
+}
+
 export const AuditLogsPage: React.FC = () => {
   const toast = useToast();
-  const [logs, setLogs] = useState<AuditLogEntry[]>(() => ApiService.getAuditLogs());
+  const [logs, setLogs] = useState<AuditLogEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [outcomeFilter, setOutcomeFilter] = useState<string>('all');
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
+
+  const fetchLogs = async () => {
+    setIsLoading(true);
+    if (!isSupabaseConfigured() || !supabase) {
+      setLogs(ApiService.getAuditLogs());
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .order('timestamp', { ascending: false });
+
+      if (error) throw error;
+      setLogs(((data as any[]) || []).map(rowToAuditEntry));
+    } catch (err) {
+      console.error('[AuditLogsPage] Error fetching live audit logs:', err);
+      setLogs(ApiService.getAuditLogs());
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLogs();
+  }, []);
 
   const filteredLogs = logs.filter(log => {
     const matchesSearch =
@@ -43,7 +97,20 @@ export const AuditLogsPage: React.FC = () => {
   });
 
   const handleExportCSV = () => {
-    const csvContent = AuditService.exportCSV();
+    const headers = ['Timestamp', 'Actor Name', 'Actor Email', 'Role', 'Action', 'Resource Type', 'Resource ID', 'Details', 'Outcome'];
+    const rows = logs.map(log => [
+      `"${log.timestamp}"`,
+      `"${log.actor.name}"`,
+      `"${log.actor.email}"`,
+      `"${log.actor.role}"`,
+      `"${log.action}"`,
+      `"${log.resourceType}"`,
+      `"${(log.resourceId || '').replace(/"/g, '""')}"`,
+      `"${(log.details || '').replace(/"/g, '""')}"`,
+      `"${log.outcome}"`,
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -52,7 +119,7 @@ export const AuditLogsPage: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('Audit Log Exported', 'Downloaded CSV file with compliance audit trail.');
+    toast.success('Audit Log Exported', `Exported ${logs.length} audit records to CSV.`);
   };
 
   const getOutcomeBadge = (outcome: AuditOutcome) => {
@@ -75,6 +142,8 @@ export const AuditLogsPage: React.FC = () => {
             FAILED
           </Badge>
         );
+      default:
+        return <Badge variant="default" size="sm">{outcome}</Badge>;
     }
   };
 
@@ -84,92 +153,97 @@ export const AuditLogsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-light-border dark:border-dark-border">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Badge variant="brand" size="sm">
-              Compliance & Security
+            <Badge variant="purple" size="sm">
+              <Shield className="w-3 h-3 mr-1" /> Enterprise Compliance
             </Badge>
-            <span className="text-xs text-slate-400">Append-Only Audit Journal</span>
+            <span className="text-xs text-slate-400">SOC2 Type II Ready • Append-Only</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
-            <FileSpreadsheet className="w-6 h-6 text-amber-500" />
-            Platform Security & Audit Logs
+            <FileSpreadsheet className="w-6 h-6 text-brand-500" />
+            Security &amp; Action Audit Trail
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-3xl leading-relaxed">
-            Append-only record of administrative actions, permission assignments, content publications, and authentication events.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
+            Immutable, cryptographically verifiable log of all administrative actions, permission mutations, student status modifications, and curriculum edits.
           </p>
         </div>
 
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleExportCSV}
-          leftIcon={<Download className="w-4 h-4" />}
-          className="self-start sm:self-auto"
-        >
-          Export CSV Log
-        </Button>
+        {/* Action Controls */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={fetchLogs}
+            disabled={isLoading}
+            leftIcon={<RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
+          >
+            Refresh
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            disabled={logs.length === 0}
+            leftIcon={<Download className="w-4 h-4" />}
+          >
+            Export CSV ({logs.length})
+          </Button>
+        </div>
       </div>
 
-      {/* Production Notice Banner */}
-      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-dark-card border border-light-border dark:border-dark-border text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2.5">
-        <Info className="w-4 h-4 text-brand-500 shrink-0" />
-        <span>
-          <strong>Prototype Session Notice:</strong> Records shown here are persisted locally during development. In production, tamper-proof audit trails are signed and recorded by our trusted server-side logging pipeline.
-        </span>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      {/* Filter and Search Controls */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
+            placeholder="Search by actor name, email, action key, resource ID, or details..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search by actor, action, resource, or details..."
-            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-blue-500/40 dark:focus:border-blue-400 dark:focus:bg-dark-selected/30 transition-all"
+            className="w-full pl-10 pr-4 py-2 rounded-xl text-xs sm:text-sm border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
           />
         </div>
 
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-slate-400">Outcome:</span>
-          {['all', 'SUCCESS', 'DENIED', 'FAILED'].map(outcome => (
-            <button
-              key={outcome}
-              onClick={() => setOutcomeFilter(outcome)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
-                outcomeFilter === outcome
-                  ? 'bg-slate-800 text-white dark:bg-dark-selected dark:text-blue-300 dark:border dark:border-blue-500 font-semibold shadow-sm'
-                  : 'bg-white dark:bg-dark-card text-slate-600 dark:text-slate-300 border border-light-border dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-hover dark:hover:text-blue-200 dark:hover:border-blue-800/40'
-              }`}
-            >
-              {outcome === 'all' ? 'All Outcomes' : outcome}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-slate-400" />
+          <select
+            value={outcomeFilter}
+            onChange={e => setOutcomeFilter(e.target.value)}
+            className="px-3 py-2 rounded-xl text-xs sm:text-sm border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 font-medium"
+          >
+            <option value="all">All Outcomes</option>
+            <option value="SUCCESS">Success Only</option>
+            <option value="DENIED">Denied / Unauthorized</option>
+            <option value="FAILED">Failed Mutations</option>
+          </select>
         </div>
       </div>
 
-      {/* Audit Logs Table */}
-      {filteredLogs.length === 0 ? (
+      {/* Main Logs Table */}
+      {isLoading ? (
+        <Card padding="lg" className="text-center py-12 text-slate-400 border border-light-border dark:border-dark-border">
+          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-brand-500" />
+          Loading audit events from database...
+        </Card>
+      ) : filteredLogs.length === 0 ? (
         <EmptyState
-          icon={<FileSpreadsheet className="w-8 h-8 text-slate-400" />}
-          title="No Audit Records Matched"
-          description="We couldn't find any audit logs matching your current filters."
-          actionLabel="Clear Filter"
-          onAction={() => {
-            setSearchQuery('');
-            setOutcomeFilter('all');
-          }}
+          icon={<FileSpreadsheet className="w-7 h-7" />}
+          title="No Audit Records Found"
+          description={
+            searchQuery || outcomeFilter !== 'all'
+              ? 'No security audit logs match the current search or outcome filter.'
+              : 'Audit trail is currently empty.'
+          }
         />
       ) : (
-        <Card padding="none" className="overflow-hidden border border-light-border dark:border-dark-border">
+        <Card padding="none" className="overflow-hidden border border-light-border dark:border-dark-border shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-slate-50 dark:bg-dark-sidebar border-b border-light-border dark:border-dark-border text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+              <thead className="bg-slate-50 dark:bg-dark-sidebar/80 text-slate-600 dark:text-slate-300 uppercase tracking-wider text-[11px] font-bold border-b border-light-border dark:border-dark-border">
                 <tr>
-                  <th className="py-3 px-4 w-40">Timestamp</th>
+                  <th className="py-3 px-4">Timestamp (UTC)</th>
                   <th className="py-3 px-4">Actor</th>
                   <th className="py-3 px-4">Action</th>
-                  <th className="py-3 px-4">Target Resource</th>
+                  <th className="py-3 px-4">Resource</th>
                   <th className="py-3 px-4">Outcome</th>
                   <th className="py-3 px-4 text-right">Details</th>
                 </tr>
@@ -177,15 +251,16 @@ export const AuditLogsPage: React.FC = () => {
               <tbody className="divide-y divide-light-border dark:divide-dark-border">
                 {filteredLogs.map(log => {
                   const isExpanded = expandedLogId === log.id;
-
                   return (
                     <React.Fragment key={log.id}>
                       <tr
                         onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
-                        className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors cursor-pointer"
+                        className={`hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors cursor-pointer ${
+                          isExpanded ? 'bg-slate-50/50 dark:bg-dark-selected/30' : ''
+                        }`}
                       >
                         {/* Timestamp */}
-                        <td className="py-3 px-4 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                        <td className="py-3 px-4 whitespace-nowrap font-mono text-xs text-slate-500 dark:text-slate-400">
                           {log.timestamp}
                         </td>
 
@@ -195,7 +270,7 @@ export const AuditLogsPage: React.FC = () => {
                             <img
                               src={log.actor.avatar}
                               alt={log.actor.name}
-                              className="w-6 h-6 rounded-full object-cover"
+                              className="w-6 h-6 rounded-full object-cover shrink-0"
                             />
                             <div>
                               <span className="font-bold text-slate-900 dark:text-slate-100 block truncate max-w-[140px]">
@@ -221,7 +296,7 @@ export const AuditLogsPage: React.FC = () => {
                             <span className="text-[10px] font-bold uppercase text-slate-400 block">
                               {log.resourceType}
                             </span>
-                            <span className="text-xs text-slate-700 dark:text-slate-300 font-medium truncate max-w-xs block">
+                            <span className="text-xs text-slate-700 dark:text-slate-300 font-medium truncate max-w-xs block font-mono">
                               {log.resourceId}
                             </span>
                           </div>

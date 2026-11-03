@@ -11,6 +11,8 @@ export interface ProfileUpdatePayload {
   bio?: string;
   department?: string;
   avatar?: string;
+  institution?: string;
+  program?: string;
 }
 
 /**
@@ -30,8 +32,12 @@ export function rowToUserProfile(row: ProfileRow, permissions: PermissionKey[] =
     enrolledCourses: row.enrolled_courses,
     solvedProblemsCount: row.solved_problems_count,
     testsCompletedCount: row.tests_completed_count,
+    accessCategory: ((row as any).access_category as any) || 'standard',
+    institution: ((row as any).institution as string) || undefined,
+    program: ((row as any).program as string) || undefined,
     createdAt: row.created_at,
     lastActive: row.last_active,
+    mustChangePassword: ((row as any).must_change_password as boolean) ?? false,
   };
 }
 
@@ -96,6 +102,8 @@ export const ProfileService = {
         bio: updates.bio !== undefined ? updates.bio : current.bio,
         department: updates.department !== undefined ? updates.department : current.department,
         avatar: updates.avatar !== undefined ? updates.avatar : current.avatar,
+        institution: updates.institution !== undefined ? updates.institution : current.institution,
+        program: updates.program !== undefined ? updates.program : current.program,
       };
 
       ApiService.updateUserProfile(updated);
@@ -110,6 +118,8 @@ export const ProfileService = {
       if (updates.bio !== undefined) updateData.bio = updates.bio;
       if (updates.department !== undefined) updateData.department = updates.department;
       if (updates.avatar !== undefined) updateData.avatar_url = updates.avatar;
+      if (updates.institution !== undefined) (updateData as any).institution = updates.institution;
+      if (updates.program !== undefined) (updateData as any).program = updates.program;
 
       const { data, error } = await supabase
         .from('profiles')
@@ -133,6 +143,43 @@ export const ProfileService = {
       return rowToUserProfile(data as unknown as ProfileRow, permissions);
     } catch (err) {
       console.error('[ProfileService.updateProfile] Failed to update profile:', err);
+      throw err;
+    }
+  },
+
+  /**
+   * Uploads user avatar image to Supabase Storage (yogneet-public bucket)
+   * under path: {userId}/avatar-{timestamp}.{ext} to respect storage folder isolation.
+   */
+  async uploadAvatar(userId: string, file: File): Promise<string> {
+    if (!isSupabaseConfigured() || !supabase) {
+      return URL.createObjectURL(file);
+    }
+
+    try {
+      const fileExt = file.name.split('.').pop() || 'png';
+      const cleanExt = fileExt.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const filePath = `${userId}/avatar-${Date.now()}.${cleanExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('yogneet-public')
+        .upload(filePath, file, {
+          upsert: true,
+          cacheControl: '3600',
+          contentType: file.type || 'image/png',
+        });
+
+      if (uploadError) {
+        throw new Error(formatSupabaseError(uploadError));
+      }
+
+      const { data } = supabase.storage
+        .from('yogneet-public')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (err) {
+      console.error('[ProfileService.uploadAvatar] Failed to upload avatar:', err);
       throw err;
     }
   },

@@ -3,7 +3,9 @@ import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
+import { StudentAccessProvider } from './context/StudentAccessContext';
 import { AppRoutes } from './routes/AppRoutes';
+import { WelcomeToast } from './components/common/WelcomeToast';
 
 export const App: React.FC = () => {
   return (
@@ -11,7 +13,10 @@ export const App: React.FC = () => {
       <ThemeProvider>
         <ToastProvider>
           <AuthProvider>
-            <AppRoutes />
+            <StudentAccessProvider>
+              <AppRoutes />
+              <WelcomeToast />
+            </StudentAccessProvider>
           </AuthProvider>
         </ToastProvider>
       </ThemeProvider>

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase, isSupabaseConfigured } from '../../services/supabaseClient';
 import { ApiService } from '../../services/api';
-import { AuditService } from '../../services/api';
+import { UserProfile } from '../../types';
 import {
   Shield,
   Users,
@@ -15,19 +16,125 @@ import {
   Plus,
   AlertCircle,
   Key,
+  Layers,
+  MessageSquare,
+  BookOpen,
+  Film,
+  Crown,
+  RefreshCw,
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 
 export const AdminDashboard: React.FC = () => {
-  const users = ApiService.getUsers();
-  const subAdmins = ApiService.getSubAdmins();
-  const videos = ApiService.getVideos();
-  const notes = ApiService.getNotes();
-  const tests = ApiService.getTests();
-  const auditLogs = ApiService.getAuditLogs();
-  const students = users.filter(u => u.role === 'student');
+  const [subAdmins, setSubAdmins] = useState<UserProfile[]>([]);
+  const [recentLogs, setRecentLogs] = useState<any[]>([]);
+  const [counts, setCounts] = useState({
+    subAdmins: 0,
+    activeSubAdmins: 0,
+    suspendedSubAdmins: 0,
+    videos: 0,
+    notes: 0,
+    tests: 0,
+    students: 0,
+    auditLogs: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchDashboardData = async () => {
+    setIsLoading(true);
+    if (!isSupabaseConfigured() || !supabase) {
+      // Local fallback in offline mode
+      const localUsers = ApiService.getUsers();
+      const localSubAdmins = ApiService.getSubAdmins();
+      const localVideos = ApiService.getVideos();
+      const localNotes = ApiService.getNotes();
+      const localTests = ApiService.getTests();
+      const localAuditLogs = ApiService.getAuditLogs();
+      const localStudents = localUsers.filter(u => u.role === 'student');
+
+      setSubAdmins(localSubAdmins);
+      setRecentLogs(localAuditLogs.slice(0, 4));
+      setCounts({
+        subAdmins: localSubAdmins.length,
+        activeSubAdmins: localSubAdmins.filter(s => s.status === 'active').length,
+        suspendedSubAdmins: localSubAdmins.filter(s => s.status === 'suspended').length,
+        videos: localVideos.length,
+        notes: localNotes.length,
+        tests: localTests.length,
+        students: localStudents.length,
+        auditLogs: localAuditLogs.length,
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // 1. Fetch sub-admins with assigned permissions
+      const { data: staffRows } = await supabase
+        .from('profiles')
+        .select(`
+          id, name, email, avatar_url, role, status, department, bio, created_at, last_active,
+          permissions:user_permissions(permission_key)
+        `)
+        .eq('role', 'subadmin')
+        .order('created_at', { ascending: false });
+
+      const mappedStaff: UserProfile[] = ((staffRows as any[]) || []).map(p => ({
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        avatar: p.avatar_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
+        role: 'subadmin',
+        status: p.status || 'active',
+        department: p.department || 'Curriculum Staff',
+        bio: p.bio || '',
+        permissions: (p.permissions || []).map((perm: any) => perm.permission_key),
+        createdAt: p.created_at,
+        lastActive: p.last_active,
+      }));
+      setSubAdmins(mappedStaff);
+
+      // 2. Fetch live table counts concurrently
+      const [
+        studentsRes,
+        videosRes,
+        notesRes,
+        testsRes,
+        auditLogsRes,
+        recentLogsRes,
+      ] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
+        supabase.from('video_lessons').select('id', { count: 'exact', head: true }),
+        supabase.from('study_notes').select('id', { count: 'exact', head: true }),
+        supabase.from('assessments').select('id', { count: 'exact', head: true }),
+        supabase.from('audit_logs').select('id', { count: 'exact', head: true }),
+        supabase.from('audit_logs').select('*').order('timestamp', { ascending: false }).limit(4),
+      ]);
+
+      setCounts({
+        subAdmins: mappedStaff.length,
+        activeSubAdmins: mappedStaff.filter(s => s.status === 'active').length,
+        suspendedSubAdmins: mappedStaff.filter(s => s.status === 'suspended').length,
+        students: studentsRes.count || 0,
+        videos: videosRes.count || 0,
+        notes: notesRes.count || 0,
+        tests: testsRes.count || 0,
+        auditLogs: auditLogsRes.count || 0,
+      });
+
+      setRecentLogs((recentLogsRes.data as any[]) || []);
+    } catch (err) {
+      console.error('[AdminDashboard] Failed to fetch live platform metrics:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
@@ -44,17 +151,22 @@ export const AdminDashboard: React.FC = () => {
               YOGNEET <span className="text-yogneet-cyan">EDU</span> Administration Portal
             </h1>
             <p className="text-sm sm:text-base text-slate-300 mt-2 leading-relaxed">
-              Oversee platform staff, configure fine-grained RBAC permissions, audit operational compliance, and manage technical education curricula.
+              Oversee platform staff, configure student tier access rules, respond to user feedback, and manage the technical curricula.
             </p>
             <div className="flex flex-wrap items-center gap-3 mt-5">
-              <Link to="/admin/permissions">
-                <Button size="md" className="bg-yogneet-cyan hover:bg-yogneet-cyanHover text-yogneet-navy font-bold border-none shadow-md shadow-yogneet-cyan/25" leftIcon={<Key className="w-4 h-4 fill-yogneet-navy" />}>
-                  RBAC Permissions
+              <Link to="/admin/student-access">
+                <Button size="md" className="bg-yogneet-cyan hover:bg-yogneet-cyanHover text-yogneet-navy font-bold border-none shadow-md shadow-yogneet-cyan/25" leftIcon={<Layers className="w-4 h-4 fill-yogneet-navy" />}>
+                  Student Tab Access
                 </Button>
               </Link>
-              <Link to="/admin/audit-logs">
-                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<FileSpreadsheet className="w-4 h-4 text-yogneet-orange" />}>
-                  Audit Logs
+              <Link to="/admin/feedback">
+                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<MessageSquare className="w-4 h-4 text-yogneet-cyan" />}>
+                  Feedback Management
+                </Button>
+              </Link>
+              <Link to="/admin/permissions">
+                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<Key className="w-4 h-4 text-amber-400" />}>
+                  RBAC Permissions
                 </Button>
               </Link>
               <Link to="/admin/subadmins">
@@ -87,10 +199,10 @@ export const AdminDashboard: React.FC = () => {
             <Shield className="w-4 h-4 text-purple-500" />
           </div>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-            {subAdmins.length}
+            {isLoading ? '...' : counts.subAdmins}
           </p>
           <span className="text-[10px] text-slate-500 dark:text-slate-400 block truncate">
-            {subAdmins.filter(s => s.status === 'active').length} Active • {subAdmins.filter(s => s.status === 'suspended').length} Suspended
+            {counts.activeSubAdmins} Active • {counts.suspendedSubAdmins} Suspended
           </span>
         </Card>
 
@@ -100,10 +212,10 @@ export const AdminDashboard: React.FC = () => {
             <Video className="w-4 h-4 text-yogneet-cyan" />
           </div>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-            {videos.length}
+            {isLoading ? '...' : counts.videos}
           </p>
           <span className="text-[10px] text-yogneet-cyan font-semibold block truncate">
-            Tech Geek Adarsh
+            {counts.videos > 0 ? 'Published Curricula' : 'No Lectures Published'}
           </span>
         </Card>
 
@@ -113,10 +225,10 @@ export const AdminDashboard: React.FC = () => {
             <FileText className="w-4 h-4 text-emerald-500" />
           </div>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-            {notes.length}
+            {isLoading ? '...' : counts.notes}
           </p>
           <span className="text-[10px] text-emerald-500 font-semibold block truncate">
-            100% Published
+            {counts.notes > 0 ? 'Verified Guides' : 'No Notes Yet'}
           </span>
         </Card>
 
@@ -126,10 +238,10 @@ export const AdminDashboard: React.FC = () => {
             <CheckSquare className="w-4 h-4 text-yogneet-orange" />
           </div>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-            {tests.length}
+            {isLoading ? '...' : counts.tests}
           </p>
           <span className="text-[10px] text-yogneet-orange font-semibold block truncate">
-            Active Test Catalog
+            {counts.tests > 0 ? 'Active Test Catalog' : 'No Tests Created'}
           </span>
         </Card>
 
@@ -139,10 +251,10 @@ export const AdminDashboard: React.FC = () => {
             <Users className="w-4 h-4 text-blue-500" />
           </div>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-            {students.length}
+            {isLoading ? '...' : counts.students}
           </p>
           <span className="text-[10px] text-blue-500 font-semibold block truncate">
-            Active Learners
+            Registered Accounts
           </span>
         </Card>
 
@@ -152,10 +264,10 @@ export const AdminDashboard: React.FC = () => {
             <FileSpreadsheet className="w-4 h-4 text-amber-500" />
           </div>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-            {auditLogs.length}
+            {isLoading ? '...' : counts.auditLogs}
           </p>
           <span className="text-[10px] text-amber-500 font-semibold block truncate">
-            Append-Only Verified
+            Immutable Audit Events
           </span>
         </Card>
       </div>
@@ -167,7 +279,7 @@ export const AdminDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                Staff & Sub-Admin Accounts
+                Staff &amp; Sub-Admin Accounts
               </h2>
               <p className="text-xs text-slate-500">Fine-grained role-based access controllers</p>
             </div>
@@ -188,76 +300,101 @@ export const AdminDashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-light-border dark:divide-dark-border">
-                {subAdmins.map(staff => (
-                  <tr key={staff.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors">
-                    <td className="py-3.5 px-4 flex items-center gap-3">
-                      <img
-                        src={staff.avatar}
-                        alt={staff.name}
-                        className="w-8 h-8 rounded-full object-cover ring-2 ring-yogneet-cyan/30"
-                      />
-                      <div>
-                        <span className="font-bold text-slate-900 dark:text-slate-100 block">
-                          {staff.name}
-                        </span>
-                        <span className="text-[11px] text-slate-400">{staff.email}</span>
-                      </div>
-                    </td>
-
-                    <td className="py-3.5 px-4 text-xs text-slate-600 dark:text-slate-300">
-                      {staff.department?.split(' ')[0] || 'Staff'}
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <Badge
-                        variant={staff.status === 'active' ? 'success' : 'danger'}
-                        size="sm"
-                        dot
-                      >
-                        {staff.status}
-                      </Badge>
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <span className="text-xs font-mono font-semibold text-purple-600 dark:text-purple-400">
-                        {staff.permissions.length} actions
-                      </span>
-                    </td>
-
-                    <td className="py-3.5 px-4 text-right">
-                      <Link to={`/admin/permissions?user=${staff.id}`}>
-                        <Button size="sm" variant="outline">
-                          Edit RBAC
-                        </Button>
-                      </Link>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-slate-400">
+                      <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-1 text-brand-500" />
+                      Loading staff records...
                     </td>
                   </tr>
-                ))}
+                ) : subAdmins.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-slate-400">
+                      No sub-admin accounts created yet.
+                    </td>
+                  </tr>
+                ) : (
+                  subAdmins.map(staff => (
+                    <tr key={staff.id} className="hover:bg-slate-50/80 dark:hover:bg-dark-hover/70 transition-colors">
+                      <td className="py-3.5 px-4 flex items-center gap-3">
+                        <img
+                          src={staff.avatar}
+                          alt={staff.name}
+                          className="w-8 h-8 rounded-full object-cover ring-2 ring-yogneet-cyan/30"
+                        />
+                        <div>
+                          <span className="font-bold text-slate-900 dark:text-slate-100 block">
+                            {staff.name}
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-mono">{staff.email}</span>
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-xs text-slate-600 dark:text-slate-300">
+                        {staff.department?.split(' ')[0] || 'Staff'}
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <Badge
+                          variant={staff.status === 'active' ? 'success' : 'danger'}
+                          size="sm"
+                          dot
+                        >
+                          {staff.status}
+                        </Badge>
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <span className="text-xs font-mono font-semibold text-purple-600 dark:text-purple-400">
+                          {staff.permissions.length} actions
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-right">
+                        <Link to={`/admin/permissions?user=${staff.id}`}>
+                          <Button size="sm" variant="outline">
+                            Edit RBAC
+                          </Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </Card>
         </div>
 
-        {/* Right Col: Quick Administrative Shortcuts */}
+        {/* Right Col: Quick Administrative Shortcuts & Recent Audits */}
         <div className="space-y-6">
-          <Card padding="md" className="space-y-4">
+          <Card padding="md" className="space-y-4 border border-light-border dark:border-dark-border">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
               Quick Administrative Actions
             </h3>
             <div className="space-y-2">
-              <Link to="/admin/subadmins" className="block">
-                <Button size="sm" variant="outline" className="w-full justify-start" leftIcon={<Shield className="w-4 h-4 text-purple-500" />}>
-                  Invite New Sub-Admin
+              <Link to="/admin/student-access" className="block">
+                <Button size="sm" variant="outline" className="w-full justify-start" leftIcon={<Layers className="w-4 h-4 text-brand-500" />}>
+                  Student Tab Access Control
                 </Button>
               </Link>
-              <Link to="/subadmin/content" className="block">
-                <Button size="sm" variant="outline" className="w-full justify-start gap-2" leftIcon={<FileText className="w-4 h-4 text-emerald-500 inline-block" />}>
-                  Content Workspace (Notes & Videos)
+              <Link to="/admin/feedback" className="block">
+                <Button size="sm" variant="outline" className="w-full justify-start" leftIcon={<MessageSquare className="w-4 h-4 text-cyan-500" />}>
+                  Feedback &amp; Issue Triage
                 </Button>
               </Link>
-              <Link to="/tests" className="block">
-                <Button size="sm" variant="outline" className="w-full justify-start" leftIcon={<CheckSquare className="w-4 h-4 text-emerald-500" />}>
-                  Manage Test Series & Exams
+              <Link to="/admin/subjects" className="block">
+                <Button size="sm" variant="outline" className="w-full justify-start" leftIcon={<BookOpen className="w-4 h-4 text-indigo-500" />}>
+                  Subject Curriculum Management
+                </Button>
+              </Link>
+              <Link to="/admin/micro-lessons" className="block">
+                <Button size="sm" variant="outline" className="w-full justify-start" leftIcon={<Film className="w-4 h-4 text-pink-500" />}>
+                  Micro Lessons Shorts
+                </Button>
+              </Link>
+              <Link to="/admin/premium-students" className="block">
+                <Button size="sm" variant="outline" className="w-full justify-start" leftIcon={<Crown className="w-4 h-4 text-amber-500" />}>
+                  Premium Students (2026 Batch)
                 </Button>
               </Link>
               <Link to="/admin/audit-logs" className="block">
@@ -269,35 +406,39 @@ export const AdminDashboard: React.FC = () => {
           </Card>
 
           {/* Recent Audit Activities preview */}
-          <Card padding="md" className="space-y-3">
+          <Card padding="md" className="space-y-3 border border-light-border dark:border-dark-border">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 Recent Security Audits
               </h4>
               <Link to="/admin/audit-logs" className="text-[11px] text-brand-500 hover:underline">
-                View all
+                View all ({counts.auditLogs})
               </Link>
             </div>
 
             <div className="space-y-2 text-xs">
-              {auditLogs.slice(0, 3).map(log => (
-                <div key={log.id} className="p-2.5 rounded-xl bg-slate-50 dark:bg-dark-sidebar border border-light-border dark:border-dark-border space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-800 dark:text-slate-200">
-                      {log.action}
+              {recentLogs.length === 0 ? (
+                <p className="text-slate-400 text-xs py-2">No audit events recorded yet.</p>
+              ) : (
+                recentLogs.map((log: any) => (
+                  <div key={log.id} className="p-2.5 rounded-xl bg-slate-50 dark:bg-dark-sidebar border border-light-border dark:border-dark-border space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-800 dark:text-slate-200">
+                        {log.action}
+                      </span>
+                      <Badge variant={log.outcome === 'SUCCESS' ? 'success' : 'danger'} size="sm">
+                        {log.outcome}
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+                      {log.details}
+                    </p>
+                    <span className="text-[10px] text-slate-400 block pt-0.5">
+                      By {log.actor_name || log.actor?.name || 'System'} • {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
-                    <Badge variant={log.outcome === 'SUCCESS' ? 'success' : 'danger'} size="sm">
-                      {log.outcome}
-                    </Badge>
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
-                    {log.details}
-                  </p>
-                  <span className="text-[10px] text-slate-400 block pt-0.5">
-                    By {log.actor.name.split(' ')[0]} • {log.timestamp.split(' ')[1]}
-                  </span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </Card>
         </div>

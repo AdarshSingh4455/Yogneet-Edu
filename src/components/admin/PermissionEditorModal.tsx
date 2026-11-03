@@ -160,9 +160,9 @@ export const PermissionEditorModal: React.FC<PermissionEditorModalProps> = ({
     }
   };
 
-  const executeSave = () => {
+  const executeSave = async () => {
     try {
-      updateUserPermissions(targetUser.id, selectedPermissions);
+      await updateUserPermissions(targetUser.id, selectedPermissions);
       toast.success(
         'Permissions Saved',
         `Successfully updated RBAC privileges for ${targetUser.name} (${selectedPermissions.length} permissions assigned).`

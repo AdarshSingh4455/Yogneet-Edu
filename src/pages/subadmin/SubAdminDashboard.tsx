@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   Clock,
   ExternalLink,
+  BarChart3,
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -204,6 +205,30 @@ export const SubAdminDashboard: React.FC = () => {
               <Link to="/community">
                 <Button size="sm" variant="outline" className="w-full justify-between" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
                   Moderate Forum
+                </Button>
+              </Link>
+            </Card>
+          )}
+
+          {/* Platform Analytics for Staff with analytics.view permission */}
+          {hasPermission('analytics.view') && (
+            <Card padding="md" className="space-y-4 flex flex-col justify-between border border-light-border dark:border-dark-border hover:border-brand-500/40 transition-all shadow-sm">
+              <div className="space-y-3">
+                <div className="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-brand-500/25 flex items-center justify-center text-brand-500">
+                  <BarChart3 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                    Platform Analytics
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1">
+                    Monitor learner enrollment trends, assessment score progression curves, and curriculum activity metrics.
+                  </p>
+                </div>
+              </div>
+              <Link to="/admin/analytics">
+                <Button size="sm" variant="outline" className="w-full justify-between" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
+                  Open Analytics
                 </Button>
               </Link>
             </Card>

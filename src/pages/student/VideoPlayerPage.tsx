@@ -17,10 +17,16 @@ import {
   Sparkles,
   Info,
   Youtube,
+  BookOpen,
+  FileCode,
+  CheckSquare,
+  ArrowRight,
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Card } from '../../components/common/Card';
+import { SubjectSelectionView } from '../../components/subjects/SubjectSelectionView';
+import { Subject } from '../../types';
 
 export const VideoPlayerPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -43,16 +49,44 @@ export const VideoPlayerPage: React.FC = () => {
     },
   ]);
 
-  const lessonIdFromUrl = searchParams.get('lesson');
-  const activeLesson = videos.find(v => v.id === lessonIdFromUrl) || videos[0];
-  const activeIndex = videos.findIndex(v => v.id === activeLesson.id);
+  const currentSubject = searchParams.get('subject');
 
-  const prevLesson = activeIndex > 0 ? videos[activeIndex - 1] : null;
-  const nextLesson = activeIndex < videos.length - 1 ? videos[activeIndex + 1] : null;
+  const filteredVideos = currentSubject
+    ? videos.filter(v => {
+        const c = v.courseTitle.toLowerCase();
+        const s = currentSubject.toLowerCase();
+        if (c.includes(s) || s.includes(c)) return true;
+        if (s.includes('python') && c.includes('python')) return true;
+        if ((s.includes('dbms') || s.includes('database')) && (c.includes('dbms') || c.includes('sql') || c.includes('database'))) return true;
+        if ((s.includes('web') || s.includes('full-stack')) && (c.includes('web') || c.includes('node') || c.includes('react'))) return true;
+        if ((s.includes('dsa') || s.includes('data structures') || s.includes('algorithm')) && (c.includes('dsa') || c.includes('tree') || c.includes('graph'))) return true;
+        return false;
+      })
+    : videos;
+
+  const lessonIdFromUrl = searchParams.get('lesson');
+  const activeLesson = filteredVideos.find(v => v.id === lessonIdFromUrl) || filteredVideos[0] || videos[0];
+  const activeIndex = filteredVideos.findIndex(v => v.id === activeLesson?.id);
+
+  const prevLesson = activeIndex > 0 ? filteredVideos[activeIndex - 1] : null;
+  const nextLesson = activeIndex < filteredVideos.length - 1 ? filteredVideos[activeIndex + 1] : null;
 
   const handleSelectLesson = (lesson: VideoLesson) => {
-    setSearchParams({ lesson: lesson.id });
+    setSearchParams(prev => {
+      const p = new URLSearchParams(prev);
+      p.set('lesson', lesson.id);
+      return p;
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSelectSubject = (subj: Subject) => {
+    setSearchParams({ subject: subj.name });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBackToSubjects = () => {
+    setSearchParams({});
   };
 
   const handleToggleCompletion = () => {
@@ -91,11 +125,83 @@ export const VideoPlayerPage: React.FC = () => {
     toast.success('Comment Posted', 'Your question has been shared with the class.');
   };
 
-  const completedCount = videos.filter(v => v.completed).length;
-  const progressPct = Math.round((completedCount / videos.length) * 100);
+  const completedCount = filteredVideos.filter(v => v.completed).length;
+  const progressPct = filteredVideos.length > 0 ? Math.round((completedCount / filteredVideos.length) * 100) : 0;
+
+  // FLOW 1: If no subject selected, render Subject Selection Grid!
+  if (!currentSubject) {
+    return (
+      <SubjectSelectionView
+        moduleTitle="1. Video Lessons & Architecture Masterclasses"
+        moduleSubtitle="Select a curriculum subject to explore structured video lectures, architecture walkthroughs, and code demonstrations."
+        moduleType="videos"
+        onSelectSubject={handleSelectSubject}
+      />
+    );
+  }
+
+  // FLOW 2: If subject selected but has 0 videos
+  if (filteredVideos.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between pb-3 border-b border-light-border dark:border-dark-border">
+          <button
+            type="button"
+            onClick={handleBackToSubjects}
+            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-cyan-400"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Back to Subject Selection</span>
+          </button>
+          <Badge variant="brand" size="sm">
+            {currentSubject}
+          </Badge>
+        </div>
+
+        <div className="py-20 text-center space-y-4 max-w-md mx-auto">
+          <div className="w-14 h-14 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-cyan-400 mx-auto flex items-center justify-center">
+            <Youtube className="w-7 h-7 text-red-500" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+            No Video Lessons Published for {currentSubject}
+          </h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Curriculum content for this subject is currently under production. Browse other active subjects or check out the study notes.
+          </p>
+          <div className="pt-2">
+            <Button variant="primary" onClick={handleBackToSubjects}>
+              Choose Another Subject
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Subject Navigation Breadcrumb */}
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-light-border dark:border-dark-border">
+        <button
+          type="button"
+          onClick={handleBackToSubjects}
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-cyan-400 transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span>Back to All Subjects</span>
+        </button>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-400 hidden sm:inline">Active Subject:</span>
+          <Badge variant="brand" size="sm">
+            {currentSubject}
+          </Badge>
+          <Button variant="ghost" size="sm" onClick={handleBackToSubjects}>
+            Change Subject
+          </Button>
+        </div>
+      </div>
+
       {/* Course Context Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-light-border dark:border-dark-border">
         <div>
@@ -241,6 +347,50 @@ export const VideoPlayerPage: React.FC = () => {
                   </ul>
                 </div>
 
+                {/* 4-Stage Next Steps Callout */}
+                <div className="p-4 rounded-2xl border border-light-border dark:border-dark-border bg-slate-50 dark:bg-dark-bg/60 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-brand-600 dark:text-cyan-400">
+                      Next Steps in Your Learning Journey
+                    </span>
+                    <span className="text-[10px] text-slate-400">Learn &rarr; Revise &rarr; Practice &rarr; Evaluate</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <Link
+                      to="/notes"
+                      className="p-3 rounded-xl bg-white dark:bg-dark-card border border-light-border dark:border-dark-border hover:border-emerald-400 transition-colors flex items-center gap-2.5"
+                    >
+                      <BookOpen className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase font-bold text-slate-400">Step 2</p>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Read Notes</p>
+                      </div>
+                    </Link>
+
+                    <Link
+                      to="/practical"
+                      className="p-3 rounded-xl bg-white dark:bg-dark-card border border-light-border dark:border-dark-border hover:border-purple-400 transition-colors flex items-center gap-2.5"
+                    >
+                      <FileCode className="w-4 h-4 text-purple-500 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase font-bold text-slate-400">Step 3</p>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Practice Coding</p>
+                      </div>
+                    </Link>
+
+                    <Link
+                      to="/tests"
+                      className="p-3 rounded-xl bg-white dark:bg-dark-card border border-light-border dark:border-dark-border hover:border-amber-400 transition-colors flex items-center gap-2.5"
+                    >
+                      <CheckSquare className="w-4 h-4 text-amber-500 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase font-bold text-slate-400">Step 4</p>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Take Test Series</p>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-dark-card border border-light-border dark:border-dark-border text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
                   <Info className="w-4 h-4 text-brand-500 shrink-0" />
                   <span>
@@ -384,7 +534,7 @@ export const VideoPlayerPage: React.FC = () => {
                 />
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
-                {completedCount} of {videos.length} lessons completed
+                {completedCount} of {filteredVideos.length} lessons completed
               </p>
             </div>
 
@@ -393,7 +543,7 @@ export const VideoPlayerPage: React.FC = () => {
               <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
                 Lessons in this module
               </p>
-              {videos.map((lesson, idx) => {
+              {filteredVideos.map((lesson, idx) => {
                 const isSelected = lesson.id === activeLesson.id;
                 return (
                   <button

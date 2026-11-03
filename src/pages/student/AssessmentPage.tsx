@@ -293,7 +293,7 @@ export const AssessmentPage: React.FC = () => {
             </h1>
             <span className="text-[10px] text-slate-400">
               Positive: +{currentQuestion.marks} • Negative: -{currentQuestion.negativeMarks}
-              {isDemoMode && ' • Local Prototype Persona (Not submitted to hosted DB)'}
+              {isDemoMode && ' • Local Mock Mode (Not submitted to hosted DB)'}
             </span>
           </div>
         </div>
