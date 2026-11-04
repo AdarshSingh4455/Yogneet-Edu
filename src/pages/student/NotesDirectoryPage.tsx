@@ -29,6 +29,7 @@ import {
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
+import { BannerAd } from '../../components/ads/BannerAd';
 import { Modal } from '../../components/common/Modal';
 import { EmptyState } from '../../components/common/EmptyState';
 import { MarkdownRenderer } from '../../components/common/MarkdownRenderer';

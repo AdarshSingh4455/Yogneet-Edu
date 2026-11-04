@@ -25,6 +25,13 @@ import {
   FileSpreadsheet,
   BarChart3,
   Settings,
+  Megaphone,
+  Trophy,
+  Code2,
+  Bell,
+  Crown,
+  BookOpen,
+  Film,
 } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
@@ -80,14 +87,21 @@ export const PermissionEditorModal: React.FC<PermissionEditorModalProps> = ({
 
   // Group definitions by module
   const modules: PermissionModule[] = [
+    'analytics',
+    'advertisements',
+    'leaderboard',
+    'coding',
+    'community',
+    'students',
+    'tests',
     'videos',
     'notes',
-    'tests',
-    'students',
-    'community',
-    'subadmins',
+    'subjects',
+    'microlessons',
+    'premium_students',
+    'notifications',
     'audit_logs',
-    'analytics',
+    'subadmins',
     'general',
   ];
 
@@ -109,6 +123,20 @@ export const PermissionEditorModal: React.FC<PermissionEditorModalProps> = ({
         return <FileSpreadsheet className="w-4 h-4 text-blue-500" />;
       case 'analytics':
         return <BarChart3 className="w-4 h-4 text-indigo-500" />;
+      case 'advertisements':
+        return <Megaphone className="w-4 h-4 text-pink-500" />;
+      case 'leaderboard':
+        return <Trophy className="w-4 h-4 text-yellow-500" />;
+      case 'coding':
+        return <Code2 className="w-4 h-4 text-emerald-400" />;
+      case 'notifications':
+        return <Bell className="w-4 h-4 text-orange-500" />;
+      case 'subjects':
+        return <BookOpen className="w-4 h-4 text-teal-500" />;
+      case 'microlessons':
+        return <Film className="w-4 h-4 text-red-500" />;
+      case 'premium_students':
+        return <Crown className="w-4 h-4 text-amber-400" />;
       default:
         return <Settings className="w-4 h-4 text-slate-400" />;
     }

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiService } from '../../services/api';
+import { CommunityService } from '../../services/communityService';
 import { DiscussionThread } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -28,6 +29,21 @@ export const CommunityForumPage: React.FC = () => {
   const { currentUser } = useAuth();
   const toast = useToast();
   const [threads, setThreads] = useState<DiscussionThread[]>(() => ApiService.getCommunityThreads());
+
+  const reloadThreads = async () => {
+    try {
+      const data = await CommunityService.getThreads(false);
+      if (data && data.length > 0) {
+        setThreads(data);
+      }
+    } catch (err) {
+      console.warn('Failed to load live community threads:', err);
+    }
+  };
+
+  useEffect(() => {
+    reloadThreads();
+  }, []);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [isNewThreadOpen, setIsNewThreadOpen] = useState(false);
@@ -56,7 +72,7 @@ export const CommunityForumPage: React.FC = () => {
     setThreads(ApiService.getCommunityThreads());
   };
 
-  const handleCreateThread = (e: React.FormEvent) => {
+  const handleCreateThread = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newContent.trim()) {
       toast.warning('Form Incomplete', 'Please provide a title and question content.');
@@ -68,18 +84,21 @@ export const CommunityForumPage: React.FC = () => {
       .map(t => t.trim())
       .filter(Boolean);
 
-    const created = ApiService.addThread(currentUser, {
-      title: newTitle.trim(),
-      category: newCategory,
-      tags: tagsArray,
-      content: newContent.trim(),
-    });
-
-    setThreads(ApiService.getCommunityThreads());
-    setIsNewThreadOpen(false);
-    setNewTitle('');
-    setNewContent('');
-    toast.success('Discussion Created!', `"${created.title}" is now visible to the student community.`);
+    try {
+      const created = await CommunityService.createThread(currentUser, {
+        title: newTitle.trim(),
+        category: newCategory,
+        tags: tagsArray,
+        content: newContent.trim(),
+      });
+      await reloadThreads();
+      setIsNewThreadOpen(false);
+      setNewTitle('');
+      setNewContent('');
+      toast.success('Discussion Created!', `"${created.title}" is now visible to the student community.`);
+    } catch (err: any) {
+      toast.error('Failed to create discussion', err.message);
+    }
   };
 
   return (

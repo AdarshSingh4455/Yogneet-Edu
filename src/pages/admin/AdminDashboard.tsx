@@ -22,9 +22,13 @@ import {
   Film,
   Crown,
   RefreshCw,
+  Trophy,
+  Megaphone,
+  Code2,
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
+import { ActiveLearnersControlCard } from '../../components/admin/ActiveLearnersControlCard';
 import { Badge } from '../../components/common/Badge';
 
 export const AdminDashboard: React.FC = () => {
@@ -173,6 +177,26 @@ export const AdminDashboard: React.FC = () => {
                   Student Tab Access
                 </Button>
               </Link>
+              <Link to="/admin/leaderboard">
+                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<Trophy className="w-4 h-4 text-amber-400" />}>
+                  Top 200 Leaderboard
+                </Button>
+              </Link>
+              <Link to="/admin/advertisements">
+                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<Megaphone className="w-4 h-4 text-emerald-400" />}>
+                  Ad Campaigns
+                </Button>
+              </Link>
+              <Link to="/admin/coding">
+                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<Code2 className="w-4 h-4 text-orange-400" />}>
+                  Coding Questions
+                </Button>
+              </Link>
+              <Link to="/admin/community-moderation">
+                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<MessageSquare className="w-4 h-4 text-purple-400" />}>
+                  Forum Moderation
+                </Button>
+              </Link>
               <Link to="/admin/feedback">
                 <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<MessageSquare className="w-4 h-4 text-yogneet-cyan" />}>
                   Feedback Management
@@ -285,6 +309,9 @@ export const AdminDashboard: React.FC = () => {
           </span>
         </Card>
       </div>
+
+      {/* Feature 1: Active Learners Control Center */}
+      <ActiveLearnersControlCard onUpdated={fetchDashboardData} />
 
       {/* Main Grid: Sub-Admin Quick Table on Left, Content Operations on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

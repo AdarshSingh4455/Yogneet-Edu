@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ApiService } from '../../services/api';
+import { CodingService } from '../../services/codingService';
 import { CodingProblem, DifficultyLevel } from '../../types';
 import { useToast } from '../../context/ToastContext';
 import {
@@ -25,10 +26,24 @@ export const CodingProblemPage: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const problem = ApiService.getCodingProblemById(slug || 'two-sum') || ApiService.getCodingProblems()[0];
+  const initialProblem = ApiService.getCodingProblemById(slug || 'two-sum') || ApiService.getCodingProblems()[0];
+  const [problem, setProblem] = useState<CodingProblem>(initialProblem);
 
   const [language, setLanguage] = useState<'python' | 'javascript' | 'cpp' | 'java'>('python');
-  const [code, setCode] = useState<string>(() => problem.starterCode[language]);
+  const [code, setCode] = useState<string>(() => initialProblem.starterCode[language] || '# Write code\n');
+
+  useEffect(() => {
+    if (slug) {
+      CodingService.getProblemBySlug(slug).then(p => {
+        if (p) {
+          setProblem(p);
+          if (p.starterCode && p.starterCode[language]) {
+            setCode(p.starterCode[language]);
+          }
+        }
+      });
+    }
+  }, [slug]);
   const [activeTab, setActiveTab] = useState<'description' | 'hints' | 'solution'>('description');
   const [consoleOutput, setConsoleOutput] = useState<{
     status: 'idle' | 'running' | 'success' | 'error';
@@ -62,20 +77,38 @@ export const CodingProblemPage: React.FC = () => {
     }, 600);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setConsoleOutput({ status: 'running' });
-    setTimeout(() => {
+    try {
+      const res = await CodingService.submitSolution(problem.id, language, code);
+      if (res.status === 'accepted') {
+        setConsoleOutput({
+          status: 'success',
+          runtime: `${res.runtimeMs || 45} ms`,
+          memory: `${res.memoryMb || 16.5} MB`,
+          testCasesPassed: res.testCasesPassed,
+          totalTestCases: res.totalTestCases,
+          details: `Submission Accepted! ${res.testCasesPassed}/${res.totalTestCases} test cases passed.`,
+        });
+        ApiService.updateProblemStatus(problem.id, 'solved');
+        toast.success('Solution Accepted! 🎉', `Problem "${problem.title}" marked as Solved.`);
+      } else {
+        setConsoleOutput({
+          status: 'error',
+          runtime: `${res.runtimeMs || 0} ms`,
+          testCasesPassed: res.testCasesPassed,
+          totalTestCases: res.totalTestCases,
+          details: res.errorMessage || 'Solution failed hidden test case validation.',
+        });
+        toast.warning('Test Cases Failed', `Passed ${res.testCasesPassed}/${res.totalTestCases} test cases.`);
+      }
+    } catch (err: any) {
       setConsoleOutput({
-        status: 'success',
-        runtime: '52 ms (Beats 89.4%)',
-        memory: '17.4 MB (Beats 78.1%)',
-        testCasesPassed: 57,
-        totalTestCases: 57,
-        details: 'Submission Accepted! 57/57 hidden test cases passed.',
+        status: 'error',
+        details: err.message || 'Execution error during test case evaluation.',
       });
-      ApiService.updateProblemStatus(problem.id, 'solved');
-      toast.success('Solution Accepted! 🎉', `Problem "${problem.title}" marked as Solved.`);
-    }, 1000);
+      toast.error('Evaluation Error', err.message);
+    }
   };
 
   const handleCopyCode = () => {

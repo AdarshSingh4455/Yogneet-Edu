@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
+import { PostLoginAdModal } from '../ads/PostLoginAdModal';
 import { useAuth } from '../../context/AuthContext';
 
 export const AppLayout: React.FC = () => {
@@ -43,6 +44,9 @@ export const AppLayout: React.FC = () => {
           <Outlet />
         </main>
       </div>
+
+      {/* Post-login announcement/ad modal with frequency capping */}
+      <PostLoginAdModal />
     </div>
   );
 };

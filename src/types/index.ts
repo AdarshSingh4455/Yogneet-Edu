@@ -60,11 +60,20 @@ export type PermissionKey =
   | 'premium_students.manage'
   | 'students.view'
   | 'students.suspend'
+  | 'community.view'
   | 'community.moderate'
   | 'subadmins.manage'
   | 'permissions.assign'
   | 'audit_logs.view'
   | 'analytics.view'
+  | 'advertisements.view'
+  | 'advertisements.manage'
+  | 'leaderboard.view'
+  | 'leaderboard.manage'
+  | 'coding.view'
+  | 'coding.manage'
+  | 'notifications.view'
+  | 'notifications.manage'
   | 'content.export';
 
 export type PermissionModule =
@@ -79,6 +88,10 @@ export type PermissionModule =
   | 'subadmins'
   | 'audit_logs'
   | 'analytics'
+  | 'advertisements'
+  | 'leaderboard'
+  | 'coding'
+  | 'notifications'
   | 'general';
 
 export interface PermissionDefinition {
@@ -251,6 +264,10 @@ export interface CodingProblem {
     java: string;
   };
   sampleSolution?: string;
+  hints?: string[];
+  solutionExplanation?: string;
+  publicationStatus?: 'draft' | 'published' | 'archived';
+  submissionsCount?: number;
 }
 
 // ==========================================
@@ -271,6 +288,10 @@ export interface DiscussionReply {
   upvotes: number;
   userUpvoted: boolean;
   isAcceptedSolution?: boolean;
+  isSoftDeleted?: boolean;
+  moderationReason?: string;
+  moderatedBy?: string;
+  moderatedAt?: string;
 }
 
 export interface DiscussionThread {
@@ -293,6 +314,13 @@ export interface DiscussionThread {
   isSolved: boolean;
   views: number;
   replies: DiscussionReply[];
+  isPinned?: boolean;
+  isLocked?: boolean;
+  isHidden?: boolean;
+  isSoftDeleted?: boolean;
+  moderationReason?: string;
+  moderatedBy?: string;
+  moderatedAt?: string;
 }
 
 // ==========================================
@@ -694,3 +722,138 @@ export interface FeedbackSubmission {
   updatedAt: string;
 }
 
+
+
+// ==========================================
+// Feature 1: Active Learners Counter
+// ==========================================
+export interface ActiveLearnersMetrics {
+  actualActiveLearners: number;
+  configuredBaseCounter: number;
+  displayedActiveLearners: number;
+  lastUpdated?: string;
+}
+
+// ==========================================
+// Feature 2: Top 200 Student Leaderboard
+// ==========================================
+export interface LeaderboardEntry {
+  rank: number;
+  studentId: string;
+  studentName: string;
+  avatarUrl: string;
+  compositeScore: number;
+  testsCompleted: number;
+  accuracyPercentage: number;
+  streakDays: number;
+  department?: string;
+  isPremium?: boolean;
+  isCurrentUser?: boolean;
+}
+
+export interface LeaderboardConfig {
+  isEnabled: boolean;
+  eligibleCategories: string[];
+  minAssessmentsRequired: number;
+  updatedAt?: string;
+}
+
+export interface StudentLeaderboardStatus {
+  inTop200: boolean;
+  rank: number | null;
+  compositeScore: number;
+  testsCompleted: number;
+  accuracyPercentage: number;
+}
+
+// ==========================================
+// Feature 3: Advertisements & Monetization
+// ==========================================
+export type AdPlacement = 'dashboard' | 'banner' | 'popup_post_login' | 'sidebar_sponsored';
+export type AdStatus = 'draft' | 'active' | 'paused' | 'archived';
+
+export interface Advertisement {
+  id: string;
+  title: string;
+  description?: string;
+  imageUrl: string;
+  destinationUrl: string;
+  placement: AdPlacement;
+  targetPages: string[];
+  startDate: string;
+  endDate?: string;
+  displayDurationSeconds: number;
+  status: AdStatus;
+  maxImpressionsPerUserPerDay: number;
+  minSecondsBetweenDisplays: number;
+  priority: number;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+}
+
+export interface AdAnalyticsSummary {
+  totalImpressions: number;
+  uniqueViewers: number;
+  totalClicks: number;
+  ctr: number;
+  activeCampaigns: number;
+  pausedCampaigns: number;
+  expiredCampaigns: number;
+  campaigns: Array<{
+    id: string;
+    title: string;
+    placement: string;
+    status: string;
+    startDate: string;
+    endDate?: string;
+    impressions: number;
+    clicks: number;
+    ctr: number;
+  }>;
+  pageWise: Array<{
+    page: string;
+    impressions: number;
+    clicks: number;
+  }>;
+}
+
+// ==========================================
+// Feature 5: Coding Practice Test Cases & Submissions
+// ==========================================
+export interface CodingTestCase {
+  id?: string;
+  problemId?: string;
+  input: string;
+  expectedOutput: string;
+  isHidden: boolean;
+  weight?: number;
+  orderIndex?: number;
+  explanation?: string;
+}
+
+export interface CodingSubmissionResult {
+  submissionId: string;
+  status: 'accepted' | 'wrong_answer' | 'time_limit_exceeded' | 'runtime_error' | 'compile_error';
+  testCasesPassed: number;
+  totalTestCases: number;
+  runtimeMs: number;
+  memoryMb: number;
+  isFirstSolve?: boolean;
+  errorMessage?: string;
+}
+
+// ==========================================
+// Feature 6: Community Moderation
+// ==========================================
+export interface ModerationLogEntry {
+  id: string;
+  moderatorId: string;
+  moderatorName?: string;
+  action: string;
+  targetType: 'thread' | 'reply' | 'user';
+  targetId: string;
+  reason: string;
+  details?: any;
+  createdAt: string;
+}

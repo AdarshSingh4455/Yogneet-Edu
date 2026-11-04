@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ApiService } from '../../services/api';
+import { CommunityService } from '../../services/communityService';
 import { DiscussionThread } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -25,6 +26,14 @@ export const CommunityThreadPage: React.FC = () => {
   const [thread, setThread] = useState<DiscussionThread | undefined>(() =>
     ApiService.getThreadById(threadId || 'th_1')
   );
+
+  useEffect(() => {
+    if (threadId) {
+      CommunityService.getThreadById(threadId).then(t => {
+        if (t) setThread(t);
+      });
+    }
+  }, [threadId]);
   const [replyText, setNewReplyText] = useState('');
 
   if (!thread) {
@@ -43,14 +52,19 @@ export const CommunityThreadPage: React.FC = () => {
     setThread(ApiService.getThreadById(thread.id));
   };
 
-  const handlePostReply = (e: React.FormEvent) => {
+  const handlePostReply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyText.trim()) return;
 
-    ApiService.addReply(currentUser, thread.id, replyText.trim());
-    setThread(ApiService.getThreadById(thread.id));
-    setNewReplyText('');
-    toast.success('Reply Posted', 'Your answer has been shared with the community.');
+    try {
+      await CommunityService.addReply(currentUser, thread.id, replyText.trim());
+      const refreshed = await CommunityService.getThreadById(thread.id);
+      if (refreshed) setThread(refreshed);
+      setNewReplyText('');
+      toast.success('Reply Posted', 'Your answer has been shared with the community.');
+    } catch (err: any) {
+      toast.error('Failed to post reply', err.message);
+    }
   };
 
   return (

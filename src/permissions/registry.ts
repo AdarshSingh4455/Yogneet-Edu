@@ -232,6 +232,71 @@ export const PERMISSION_DEFINITIONS: PermissionDefinition[] = [
     description: 'Download CSV reports, test summaries, and platform content backups.',
     module: 'general',
   },
+  // Community View
+  {
+    key: 'community.view',
+    label: 'View Community Threads',
+    description: 'Read and browse public forum threads, replies, and discussion topics.',
+    module: 'community',
+  },
+
+  // Advertisements
+  {
+    key: 'advertisements.view',
+    label: 'View Advertisements & Analytics',
+    description: 'Inspect active campaigns, banner placements, impressions, and click metrics.',
+    module: 'advertisements',
+  },
+  {
+    key: 'advertisements.manage',
+    label: 'Manage Campaigns & Ads',
+    description: 'Create, schedule, pause, and edit advertisement campaigns and creatives.',
+    module: 'advertisements',
+    isDangerous: true,
+  },
+
+  // Leaderboard
+  {
+    key: 'leaderboard.view',
+    label: 'View Leaderboard Analytics',
+    description: 'Inspect top 200 student rankings, score distributions, and calculation criteria.',
+    module: 'leaderboard',
+  },
+  {
+    key: 'leaderboard.manage',
+    label: 'Manage Leaderboard & Exclusions',
+    description: 'Enable/disable leaderboard, configure categories, and exclude fraudulent attempts.',
+    module: 'leaderboard',
+    isDangerous: true,
+  },
+
+  // Coding
+  {
+    key: 'coding.view',
+    label: 'View Coding Practice Arena',
+    description: 'Inspect algorithmic questions, submissions, and acceptance rates.',
+    module: 'coding',
+  },
+  {
+    key: 'coding.manage',
+    label: 'Manage Coding Questions & Tests',
+    description: 'Create questions, manage hidden test cases, and execute bulk JSON imports.',
+    module: 'coding',
+  },
+
+  // Notifications
+  {
+    key: 'notifications.view',
+    label: 'View System Notifications',
+    description: 'Browse sent student notices, broadcast alerts, and delivery receipts.',
+    module: 'notifications',
+  },
+  {
+    key: 'notifications.manage',
+    label: 'Dispatch Broadcast Notifications',
+    description: 'Compose and dispatch platform-wide announcements and warning notices.',
+    module: 'notifications',
+  },
 ];
 
 export const MODULE_METADATA: Record<PermissionModule, { label: string; description: string; icon: string }> = {
@@ -290,6 +355,26 @@ export const MODULE_METADATA: Record<PermissionModule, { label: string; descript
     description: 'Access to aggregated platform performance and learner metrics.',
     icon: 'BarChart3',
   },
+  advertisements: {
+    label: 'Advertisements & Monetization',
+    description: 'Campaign scheduling, placements, frequency capping, and click analytics.',
+    icon: 'Megaphone',
+  },
+  leaderboard: {
+    label: 'Top 200 Leaderboard',
+    description: 'Competitive student ranking, scoring criteria, and fraud exclusions.',
+    icon: 'Trophy',
+  },
+  coding: {
+    label: 'Coding Arena & Questions',
+    description: 'Algorithmic problem management, hidden test cases, and JSON imports.',
+    icon: 'Code2',
+  },
+  notifications: {
+    label: 'Notification Dispatcher',
+    description: 'Platform announcements, alerts, and student warning delivery.',
+    icon: 'Bell',
+  },
   general: {
     label: 'General System Operations',
     description: 'Broad platform-wide actions such as bulk exports and notifications.',
@@ -326,12 +411,27 @@ export const ROLE_PRESETS: Record<string, { name: string; description: string; p
   community_moderator: {
     name: 'Community Moderator',
     description: 'Maintains community discussions and monitors student activity.',
-    permissions: ['community.moderate', 'students.view'],
+    permissions: ['community.view', 'community.moderate', 'students.view'],
+  },
+  ads_manager: {
+    name: 'Ads & Monetization Lead',
+    description: 'Manages marketing campaigns, banner creatives, and frequency capping analytics.',
+    permissions: ['advertisements.view', 'advertisements.manage', 'analytics.view'],
+  },
+  coding_lead: {
+    name: 'Coding Arena Instructor',
+    description: 'Authors algorithmic challenges, sets hidden test cases, and audits submissions.',
+    permissions: ['coding.view', 'coding.manage', 'students.view'],
+  },
+  leaderboard_manager: {
+    name: 'Tournament & Leaderboard Lead',
+    description: 'Monitors student rankings, audits suspicious score spikes, and enforces exclusions.',
+    permissions: ['leaderboard.view', 'leaderboard.manage', 'tests.view_results'],
   },
   auditor: {
     name: 'Compliance Auditor',
     description: 'Read-only access across learning materials, analytics, and audit logs.',
-    permissions: ['videos.view', 'notes.view', 'tests.view', 'students.view', 'audit_logs.view', 'analytics.view'],
+    permissions: ['videos.view', 'notes.view', 'tests.view', 'students.view', 'audit_logs.view', 'analytics.view', 'advertisements.view', 'leaderboard.view', 'coding.view'],
   },
 };
 

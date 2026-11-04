@@ -24,6 +24,8 @@ import {
   Crown,
   Layers,
   Boxes,
+  Trophy,
+  Megaphone,
 } from 'lucide-react';
 import { Badge } from '../common/Badge';
 
@@ -57,6 +59,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { label: 'Coding Arena', path: '/coding', icon: Code2 },
     { label: 'Community Forum', path: '/community', icon: MessageSquare },
     { label: 'Platform Analytics', path: '/admin/analytics', icon: BarChart3 },
+    { label: 'Top 200 Leaderboard', path: '/admin/leaderboard', icon: Trophy, badge: 'Rank' },
+    { label: 'Advertisements', path: '/admin/advertisements', icon: Megaphone, badge: 'Ads' },
+    { label: 'Coding Arena Admin', path: '/admin/coding', icon: Code2, badge: 'DSA' },
+    { label: 'Forum Moderation', path: '/admin/community-moderation', icon: Shield, badge: 'Mod' },
   ];
 
   // Navigation items for Sub-Admin generated dynamically from assigned permissions
@@ -78,7 +84,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       ? [{ label: 'Test Catalog Manager', path: '/admin/tests', icon: CheckSquare }]
       : []),
     ...(hasPermission('community.moderate')
-      ? [{ label: 'Community Moderation', path: '/community', icon: MessageSquare, badge: 'Mod' }]
+      ? [{ label: 'Community Moderation', path: '/admin/community-moderation', icon: Shield, badge: 'Mod' }]
+      : []),
+    ...(hasPermission('leaderboard.view') || hasPermission('leaderboard.manage')
+      ? [{ label: 'Top 200 Leaderboard', path: '/admin/leaderboard', icon: Trophy, badge: 'Rank' }]
+      : []),
+    ...(hasPermission('advertisements.view') || hasPermission('advertisements.manage')
+      ? [{ label: 'Advertisements', path: '/admin/advertisements', icon: Megaphone }]
+      : []),
+    ...(hasPermission('coding.view') || hasPermission('coding.manage')
+      ? [{ label: 'Coding Arena Admin', path: '/admin/coding', icon: Code2 }]
       : []),
     ...(hasPermission('students.view')
       ? [{ label: 'Enrolled Students', path: '/admin/students', icon: Users }]
@@ -101,6 +116,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { label: '2. Study Notes & PDFs', path: '/notes', icon: FileText, moduleKey: 'notes' },
     { label: '3. Practical Projects', path: '/practical', icon: Code2, badge: 'New', moduleKey: 'practical' },
     { label: '4. Test Series & Mocks', path: '/tests', icon: CheckSquare, moduleKey: 'tests' },
+    { label: 'Top 200 Leaderboard', path: '/leaderboard', icon: Trophy, badge: 'Rank', moduleKey: 'tests' },
     { label: 'Micro Lessons', path: '/micro-lessons', icon: Film, badge: 'Shorts', moduleKey: 'micro_lessons' },
     { label: 'Coding Practice Arena', path: '/coding', icon: Code2, badge: 'Hot', moduleKey: 'coding' },
     { label: 'Community Forum', path: '/community', icon: MessageSquare, moduleKey: 'community' },

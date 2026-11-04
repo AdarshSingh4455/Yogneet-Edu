@@ -27,6 +27,7 @@ import { CommunityForumPage } from '../pages/student/CommunityForumPage';
 import { CommunityThreadPage } from '../pages/student/CommunityThreadPage';
 import { MyProgressPage } from '../pages/student/MyProgressPage';
 import { StudentProfilePage } from '../pages/student/StudentProfilePage';
+import { LeaderboardPage } from '../pages/student/LeaderboardPage';
 
 // Admin Pages
 import { AdminDashboard } from '../pages/admin/AdminDashboard';
@@ -41,6 +42,10 @@ import { PremiumStudentManagementPage } from '../pages/admin/PremiumStudentManag
 import { StudentAccessManagementPage } from '../pages/admin/StudentAccessManagementPage';
 import { FeedbackManagementPage } from '../pages/admin/FeedbackManagementPage';
 import { IconLibraryManagementPage } from '../pages/admin/IconLibraryManagementPage';
+import { LeaderboardManagementPage } from '../pages/admin/LeaderboardManagementPage';
+import { AdvertisementManagementPage } from '../pages/admin/AdvertisementManagementPage';
+import { CodingManagementPage } from '../pages/admin/CodingManagementPage';
+import { CommunityModerationPage } from '../pages/admin/CommunityModerationPage';
 
 // Shared Pages
 import { FeedbackPage } from '../pages/shared/FeedbackPage';
@@ -92,6 +97,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/micro-lessons" element={<StudentModuleRoute moduleKey="micro_lessons"><MicroLessonsPage /></StudentModuleRoute>} />
         <Route path="/shorts" element={<Navigate to="/micro-lessons" replace />} />
         <Route path="/assessment/:testId/result" element={<AssessmentResultPage />} />
+        <Route path="/leaderboard" element={<StudentModuleRoute moduleKey="tests"><LeaderboardPage /></StudentModuleRoute>} />
         <Route path="/coding" element={<StudentModuleRoute moduleKey="coding"><CodingArenaPage /></StudentModuleRoute>} />
         <Route path="/coding/:slug" element={<StudentModuleRoute moduleKey="coding"><CodingProblemPage /></StudentModuleRoute>} />
         <Route path="/community" element={<StudentModuleRoute moduleKey="community"><CommunityForumPage /></StudentModuleRoute>} />
@@ -162,6 +168,42 @@ export const AppRoutes: React.FC = () => {
             </PermissionRoute>
           }
         />
+        <Route
+          path="/admin/leaderboard"
+          element={
+            <PermissionRoute permissions={['leaderboard.view', 'leaderboard.manage']}>
+              <LeaderboardManagementPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="/admin/advertisements"
+          element={
+            <PermissionRoute permissions={['advertisements.view', 'advertisements.manage']}>
+              <AdvertisementManagementPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="/admin/coding"
+          element={
+            <PermissionRoute permissions={['coding.view', 'coding.manage']}>
+              <CodingManagementPage />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="/admin/community-moderation"
+          element={
+            <PermissionRoute permission="community.moderate">
+              <CommunityModerationPage />
+            </PermissionRoute>
+          }
+        />
+        <Route path="/subadmin/leaderboard" element={<Navigate to="/admin/leaderboard" replace />} />
+        <Route path="/subadmin/advertisements" element={<Navigate to="/admin/advertisements" replace />} />
+        <Route path="/subadmin/coding" element={<Navigate to="/admin/coding" replace />} />
+        <Route path="/subadmin/community-moderation" element={<Navigate to="/admin/community-moderation" replace />} />
         <Route
           path="/admin/students"
           element={

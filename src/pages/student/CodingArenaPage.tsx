@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ApiService } from '../../services/api';
+import { CodingService } from '../../services/codingService';
 import { CodingProblem, DifficultyLevel, CodingProblemStatus } from '../../types';
 import {
   Code2,
@@ -19,7 +20,15 @@ import { Badge } from '../../components/common/Badge';
 import { EmptyState } from '../../components/common/EmptyState';
 
 export const CodingArenaPage: React.FC = () => {
-  const [problems] = useState<CodingProblem[]>(() => ApiService.getCodingProblems());
+  const [problems, setProblems] = useState<CodingProblem[]>(() => ApiService.getCodingProblems());
+
+  useEffect(() => {
+    CodingService.getProblems(false).then(data => {
+      if (data && data.length > 0) {
+        setProblems(data);
+      }
+    });
+  }, []);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');

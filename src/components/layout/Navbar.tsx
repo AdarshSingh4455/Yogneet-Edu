@@ -22,6 +22,7 @@ import { useClickOutside } from '../../utils/useClickOutside';
 import { NotificationCenter } from './NotificationCenter';
 import { DayStreakIndicator } from './DayStreakIndicator';
 import { NotificationService } from '../../services/notificationService';
+import { useActiveLearners } from '../../context/ActiveLearnersContext';
 
 interface NavbarProps {
   onToggleSidebar: () => void;
@@ -31,6 +32,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }) => {
   const { currentUser, isAdmin, isSubAdmin, signOut, isAuthenticated } = useAuth();
   const { mode, resolvedTheme, setMode } = useTheme();
+  const { activeLearnersCount } = useActiveLearners();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -126,6 +128,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2.5">
+          {/* Active Learners Counter: Visible to ALL platform users (Normal, Premium, Staff, Admin) */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 shadow-sm shrink-0" title="Active Learners">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[11px] sm:text-xs font-bold tracking-tight">
+              {activeLearnersCount} <span className="font-medium text-slate-500 dark:text-slate-400 hidden xs:inline">Active Learners</span>
+            </span>
+          </div>
+
           {/* Day Streak (Authenticated only) */}
           {isAuthenticated && (
             <DayStreakIndicator className="shrink-0" />
