@@ -35,7 +35,8 @@ describe('UI Consolidation & UX Refinement Regression Suite', () => {
       
       // Must NOT contain separate "Forum Moderation" or "Community Forum" sidebar labels
       assert.ok(!sidebarContent.includes("label: 'Forum Moderation'"), 'Sidebar must not contain separate Forum Moderation');
-      assert.ok(!sidebarContent.includes("label: 'Community Forum'"), 'Sidebar must not contain old Community Forum label');
+      // Role-Based Forum Navigation: students and non-moderators see 'Community Forum'
+      assert.ok(sidebarContent.includes("'Community Forum'"), 'Sidebar must support Community Forum label for students');
       
       // Exactly one Forum Management in adminNav
       const adminNavMatch = sidebarContent.match(/adminNav = \[([\s\S]*?)\];/);

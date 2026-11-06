@@ -37,15 +37,14 @@ export const CodingService = {
             title,
             difficulty,
             category,
-            description,
+            problem_statement,
             constraints,
             tags,
             starter_code,
-            hints,
-            solution_explanation,
+            editorial,
             status,
             acceptance_rate,
-            submissions_count,
+            total_submissions,
             created_at,
             updated_at
           `)
@@ -65,7 +64,7 @@ export const CodingService = {
             title: item.title,
             difficulty: item.difficulty as DifficultyLevel,
             category: item.category,
-            description: item.description,
+            description: item.problem_statement || '',
             constraints: item.constraints || [],
             tags: item.tags || [],
             starterCode: item.starter_code || {
@@ -77,8 +76,8 @@ export const CodingService = {
             hints: item.hints || [],
             examples: [],
             status: 'not_started' as any,
-            acceptanceRate: item.acceptance_rate ? `${item.acceptance_rate}%` : '65%',
-            submissionsCount: item.submissions_count || 0,
+            acceptanceRate: item.acceptance_rate || '0%',
+            submissionsCount: item.total_submissions || 0,
             publicationStatus: item.status || 'published',
             source: 'native' as const,
           }));
@@ -116,7 +115,7 @@ export const CodingService = {
             .eq('is_hidden', false)
             .order('order_index', { ascending: true });
 
-          const examples = (testCases || []).map((tc: any, index: number) => ({
+          const examples = (testCases || []).map((tc: any) => ({
             input: tc.input,
             output: tc.expected_output,
             explanation: tc.explanation || undefined,
@@ -128,7 +127,7 @@ export const CodingService = {
             title: data.title,
             difficulty: data.difficulty as DifficultyLevel,
             category: data.category,
-            description: data.description,
+            description: data.problem_statement || data.description || '',
             constraints: data.constraints || [],
             tags: data.tags || [],
             starterCode: data.starter_code || {
@@ -145,10 +144,10 @@ export const CodingService = {
                 explanation: 'Because nums[0] + nums[1] == 9, we return [0, 1].',
               },
             ],
-            solutionExplanation: data.solution_explanation,
+            solutionExplanation: data.editorial || data.solution_explanation,
             status: 'not_started' as any,
-            acceptanceRate: data.acceptance_rate ? `${data.acceptance_rate}%` : '65%',
-            submissionsCount: data.submissions_count || 0,
+            acceptanceRate: data.acceptance_rate || '0%',
+            submissionsCount: data.total_submissions || 0,
             publicationStatus: data.status || 'published',
             source: 'native' as const,
           };
@@ -165,7 +164,9 @@ export const CodingService = {
   },
 
   /**
-   * Submit student code for evaluation
+   * Submit student code for full server-authoritative judging.
+   * Primary route: execute-code Edge Function (retrieves hidden test cases server-side and judges on Judge0).
+   * Secondary fallback: submit_coding_solution RPC.
    */
   async submitSolution(
     problemId: string,
@@ -173,6 +174,34 @@ export const CodingService = {
     code: string
   ): Promise<CodingSubmissionResult> {
     if (supabase) {
+      // 1. Primary: Secure Edge Function with hidden test judging
+      try {
+        const { data: edgeData, error: edgeErr } = await (supabase as any).functions.invoke('execute-code', {
+          body: {
+            mode: 'submit',
+            problemId,
+            language,
+            code,
+          },
+        });
+
+        if (!edgeErr && edgeData && edgeData.status) {
+          return {
+            submissionId: edgeData.submissionId || 'sub-live',
+            status: edgeData.status,
+            testCasesPassed: edgeData.testCasesPassed || 0,
+            totalTestCases: edgeData.totalTestCases || 0,
+            runtimeMs: edgeData.runtimeMs || 45,
+            memoryMb: edgeData.memoryMb || 16.5,
+            errorMessage: edgeData.errorMessage,
+            isFirstSolve: Boolean(edgeData.isFirstSolve),
+          };
+        }
+      } catch (edgeCatch) {
+        console.warn('CodingService.submitSolution Edge Function error, trying database RPC:', edgeCatch);
+      }
+
+      // 2. Database RPC Fallback
       try {
         const { data, error } = await (supabase as any).rpc('submit_coding_solution', {
           p_problem_id: problemId,
@@ -188,9 +217,9 @@ export const CodingService = {
             testCasesPassed: data.test_cases_passed,
             totalTestCases: data.total_test_cases,
             runtimeMs: data.runtime_ms || 45,
-            memoryMb: data.memory_kb ? Number((data.memory_kb / 1024).toFixed(1)) : 16.5,
+            memoryMb: data.memory_mb ? Number(data.memory_mb) : (data.memory_kb ? Number((data.memory_kb / 1024).toFixed(1)) : 16.5),
             errorMessage: data.error_message,
-            isFirstSolve: data.status === 'accepted',
+            isFirstSolve: data.is_first_solve !== undefined ? Boolean(data.is_first_solve) : data.status === 'accepted',
           };
         }
       } catch (err) {
@@ -198,7 +227,7 @@ export const CodingService = {
       }
     }
 
-    // Client-side fallback evaluator for development sandbox
+    // Client-side fallback evaluator for offline development sandbox
     const passed = Math.random() > 0.15;
     return {
       submissionId: 'sub-' + Math.random().toString(36).substring(7),
@@ -227,7 +256,7 @@ export const CodingService = {
         slug,
         difficulty: input.difficulty,
         category: input.category,
-        description: input.description,
+        problem_statement: input.description,
         constraints: input.constraints || [],
         tags: input.tags || [],
         starter_code: input.starter_code || {
@@ -236,8 +265,7 @@ export const CodingService = {
           cpp: '// Write solution\nclass Solution {\npublic:\n};\n',
           java: '// Write solution\nclass Solution {\n}\n',
         },
-        hints: input.hints || [],
-        solution_explanation: input.solution_explanation,
+        editorial: input.solution_explanation,
         status: input.status || 'draft',
       })
       .select()
@@ -252,7 +280,6 @@ export const CodingService = {
         input: tc.input,
         expected_output: tc.expected_output,
         is_hidden: tc.is_hidden ?? false,
-        explanation: tc.explanation || null,
         order_index: idx + 1,
       }));
 
@@ -265,7 +292,7 @@ export const CodingService = {
       title: data.title,
       difficulty: data.difficulty,
       category: data.category,
-      description: data.description,
+      description: data.problem_statement || '',
       constraints: data.constraints || [],
       tags: data.tags || [],
       starterCode: data.starter_code,
@@ -291,12 +318,11 @@ export const CodingService = {
     if (updates.slug) dbPayload.slug = updates.slug;
     if (updates.difficulty) dbPayload.difficulty = updates.difficulty;
     if (updates.category) dbPayload.category = updates.category;
-    if (updates.description) dbPayload.description = updates.description;
+    if (updates.description) dbPayload.problem_statement = updates.description;
     if (updates.constraints) dbPayload.constraints = updates.constraints;
     if (updates.tags) dbPayload.tags = updates.tags;
     if (updates.starter_code) dbPayload.starter_code = updates.starter_code;
-    if (updates.hints) dbPayload.hints = updates.hints;
-    if (updates.solution_explanation) dbPayload.solution_explanation = updates.solution_explanation;
+    if (updates.solution_explanation) dbPayload.editorial = updates.solution_explanation;
     if (updates.status) dbPayload.status = updates.status;
 
     const { error } = await (supabase as any)
@@ -334,7 +360,6 @@ export const CodingService = {
       input: tc.input,
       expectedOutput: tc.expected_output,
       isHidden: tc.is_hidden,
-      explanation: tc.explanation,
       orderIndex: tc.order_index,
     }));
   },
@@ -351,7 +376,7 @@ export const CodingService = {
           input: testCase.input,
           expected_output: testCase.expectedOutput,
           is_hidden: testCase.isHidden,
-          explanation: testCase.explanation,
+          order_index: testCase.orderIndex,
         })
         .eq('id', testCase.id);
       if (error) throw error;
@@ -363,7 +388,6 @@ export const CodingService = {
           input: testCase.input,
           expected_output: testCase.expectedOutput,
           is_hidden: testCase.isHidden ?? false,
-          explanation: testCase.explanation,
           order_index: testCase.orderIndex ?? 1,
         });
       if (error) throw error;

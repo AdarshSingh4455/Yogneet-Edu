@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ApiService } from '../../services/api';
 import { CodingService } from '../../services/codingService';
+import { CodeExecutionService, SupportedLanguage } from '../../services/codeExecutionService';
 import { CodingProblem, DifficultyLevel } from '../../types';
 import { useToast } from '../../context/ToastContext';
 import {
@@ -62,19 +63,44 @@ export const CodingProblemPage: React.FC = () => {
     setConsoleOutput({ status: 'idle' });
   };
 
-  const handleRunCode = () => {
+  const handleRunCode = async () => {
     setConsoleOutput({ status: 'running' });
-    setTimeout(() => {
+    try {
+      const summary = await CodeExecutionService.runSampleTestCases(
+        code,
+        language as SupportedLanguage,
+        problem.examples
+      );
+
+      if (summary.status === 'success') {
+        setConsoleOutput({
+          status: 'success',
+          runtime: `${summary.totalRuntimeMs} ms`,
+          memory: `${summary.maxMemoryMb} MB`,
+          testCasesPassed: summary.casesPassed,
+          totalTestCases: summary.totalCases,
+          details: summary.details,
+        });
+        toast.success('Sample Tests Passed', `Passed all ${summary.totalCases} sample test cases.`);
+      } else {
+        const firstFailed = summary.results.find(r => !r.passed);
+        setConsoleOutput({
+          status: 'error',
+          runtime: `${summary.totalRuntimeMs} ms`,
+          memory: `${summary.maxMemoryMb} MB`,
+          testCasesPassed: summary.casesPassed,
+          totalTestCases: summary.totalCases,
+          details: firstFailed?.errorMessage || summary.details,
+        });
+        toast.warning('Sample Tests Failed', `Passed ${summary.casesPassed}/${summary.totalCases} sample test cases.`);
+      }
+    } catch (err: any) {
       setConsoleOutput({
-        status: 'success',
-        runtime: '48 ms',
-        memory: '17.2 MB',
-        testCasesPassed: problem.examples.length,
-        totalTestCases: problem.examples.length,
-        details: 'All sample test cases passed successfully.',
+        status: 'error',
+        details: err.message || 'Execution error during sample test evaluation.',
       });
-      toast.success('Sample Tests Passed', 'Your code passed all default test cases.');
-    }, 600);
+      toast.error('Execution Error', err.message);
+    }
   };
 
   const handleSubmit = async () => {

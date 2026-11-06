@@ -177,18 +177,11 @@ export const AppRoutes: React.FC = () => {
             </PermissionRoute>
           }
         />
-        <Route
-          path="/admin/coding"
-          element={
-            <PermissionRoute permissions={['coding.view', 'coding.manage']}>
-              <CodingManagementPage />
-            </PermissionRoute>
-          }
-        />
+        <Route path="/admin/coding" element={<Navigate to="/coding" replace />} />
         <Route path="/admin/community-moderation" element={<Navigate to="/community" replace />} />
         <Route path="/subadmin/leaderboard" element={<Navigate to="/admin/leaderboard" replace />} />
         <Route path="/subadmin/advertisements" element={<Navigate to="/admin/advertisements" replace />} />
-        <Route path="/subadmin/coding" element={<Navigate to="/admin/coding" replace />} />
+        <Route path="/subadmin/coding" element={<Navigate to="/coding" replace />} />
         <Route path="/subadmin/community-moderation" element={<Navigate to="/community" replace />} />
         <Route
           path="/admin/students"
