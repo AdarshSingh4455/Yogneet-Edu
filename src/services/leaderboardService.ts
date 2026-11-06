@@ -16,6 +16,7 @@ let mockLeaderboardConfig: LeaderboardConfig = {
   isEnabled: true,
   eligibleCategories: ['all'],
   minAssessmentsRequired: 1,
+  winnerGift: '',
   updatedAt: new Date().toISOString(),
 };
 
@@ -116,7 +117,7 @@ export const LeaderboardService = {
   },
 
   /**
-   * Retrieves leaderboard configuration.
+   * Retrieves leaderboard configuration from Supabase.
    */
   async getConfig(): Promise<LeaderboardConfig> {
     if (!isSupabaseConfigured() || !supabase) {
@@ -126,70 +127,86 @@ export const LeaderboardService = {
     try {
       const { data, error } = await supabase
         .from('leaderboard_config' as any)
-        .select('is_enabled, eligible_categories, min_assessments_required, updated_at')
+        .select('*')
         .eq('id', 1)
         .single();
 
       if (error || !data) {
+        if (error) {
+          console.warn('[LeaderboardService] Failed to fetch leaderboard config from Supabase:', error.message);
+        }
         return { ...mockLeaderboardConfig };
       }
 
       const row = data as any;
+      const winnerGiftVal = row.winner_gift ? String(row.winner_gift).trim() : '';
+
       return {
         isEnabled: Boolean(row.is_enabled),
         eligibleCategories: row.eligible_categories || ['all'],
         minAssessmentsRequired: Number(row.min_assessments_required) || 1,
+        winnerGift: winnerGiftVal,
         updatedAt: row.updated_at,
       };
-    } catch {
+    } catch (err: any) {
+      console.error('[LeaderboardService] Error fetching leaderboard config:', err);
       return { ...mockLeaderboardConfig };
     }
   },
 
   /**
-   * Admin / Leaderboard Manager: Updates leaderboard settings.
+   * Admin / Leaderboard Manager: Updates leaderboard settings directly in Supabase.
+   * Throws an error if Supabase persistence fails.
    */
   async updateConfig(updates: Partial<LeaderboardConfig>, adminId: string): Promise<LeaderboardConfig> {
     if (!isSupabaseConfigured() || !supabase) {
       mockLeaderboardConfig = {
         ...mockLeaderboardConfig,
         ...updates,
+        winnerGift: updates.winnerGift !== undefined ? updates.winnerGift.trim() : mockLeaderboardConfig.winnerGift,
         updatedAt: new Date().toISOString(),
       };
       return { ...mockLeaderboardConfig };
     }
 
-    try {
-      const payload: any = {
-        updated_at: new Date().toISOString(),
-        updated_by: adminId,
-      };
+    const payload: any = {
+      updated_at: new Date().toISOString(),
+      updated_by: adminId,
+    };
 
-      if (updates.isEnabled !== undefined) payload.is_enabled = updates.isEnabled;
-      if (updates.eligibleCategories !== undefined) payload.eligible_categories = updates.eligibleCategories;
-      if (updates.minAssessmentsRequired !== undefined) payload.min_assessments_required = updates.minAssessmentsRequired;
-
-      const { data, error } = await (supabase as any)
-        .from('leaderboard_config')
-        .update(payload)
-        .eq('id', 1)
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(formatSupabaseError(error));
-      }
-
-      return {
-        isEnabled: Boolean(data.is_enabled),
-        eligibleCategories: data.eligible_categories || ['all'],
-        minAssessmentsRequired: Number(data.min_assessments_required) || 1,
-        updatedAt: data.updated_at,
-      };
-    } catch (err: any) {
-      console.error('[LeaderboardService] Failed to update config:', err);
-      throw err;
+    if (updates.isEnabled !== undefined) payload.is_enabled = updates.isEnabled;
+    if (updates.eligibleCategories !== undefined) payload.eligible_categories = updates.eligibleCategories;
+    if (updates.minAssessmentsRequired !== undefined) payload.min_assessments_required = updates.minAssessmentsRequired;
+    if (updates.winnerGift !== undefined) {
+      const trimmed = updates.winnerGift.trim();
+      payload.winner_gift = trimmed === '' ? null : trimmed;
     }
+
+    const { data, error } = await (supabase as any)
+      .from('leaderboard_config')
+      .update(payload)
+      .eq('id', 1)
+      .select()
+      .single();
+
+    if (error) {
+      const formatted = formatSupabaseError(error);
+      console.error('[LeaderboardService] Failed to update config in Supabase:', formatted);
+      throw new Error(formatted);
+    }
+
+    if (!data) {
+      throw new Error('No configuration record returned from Supabase update.');
+    }
+
+    const resRow = data as any;
+    return {
+      isEnabled: Boolean(resRow.is_enabled),
+      eligibleCategories: resRow.eligible_categories || ['all'],
+      minAssessmentsRequired: Number(resRow.min_assessments_required) || 1,
+      winnerGift: resRow.winner_gift ? String(resRow.winner_gift).trim() : '',
+      updatedAt: resRow.updated_at,
+    };
   },
 
   /**

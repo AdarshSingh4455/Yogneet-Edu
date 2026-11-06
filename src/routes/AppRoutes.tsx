@@ -144,14 +144,7 @@ export const AppRoutes: React.FC = () => {
             </AdminRoute>
           }
         />
-        <Route
-          path="/admin/permissions"
-          element={
-            <AdminRoute>
-              <SubAdminManagementPage />
-            </AdminRoute>
-          }
-        />
+        <Route path="/admin/permissions" element={<Navigate to="/admin/subadmins" replace />} />
         <Route
           path="/admin/audit-logs"
           element={
@@ -192,18 +185,11 @@ export const AppRoutes: React.FC = () => {
             </PermissionRoute>
           }
         />
-        <Route
-          path="/admin/community-moderation"
-          element={
-            <PermissionRoute permission="community.moderate">
-              <CommunityModerationPage />
-            </PermissionRoute>
-          }
-        />
+        <Route path="/admin/community-moderation" element={<Navigate to="/community" replace />} />
         <Route path="/subadmin/leaderboard" element={<Navigate to="/admin/leaderboard" replace />} />
         <Route path="/subadmin/advertisements" element={<Navigate to="/admin/advertisements" replace />} />
         <Route path="/subadmin/coding" element={<Navigate to="/admin/coding" replace />} />
-        <Route path="/subadmin/community-moderation" element={<Navigate to="/admin/community-moderation" replace />} />
+        <Route path="/subadmin/community-moderation" element={<Navigate to="/community" replace />} />
         <Route
           path="/admin/students"
           element={

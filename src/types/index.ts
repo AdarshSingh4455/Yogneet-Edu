@@ -755,6 +755,7 @@ export interface LeaderboardConfig {
   isEnabled: boolean;
   eligibleCategories: string[];
   minAssessmentsRequired: number;
+  winnerGift?: string;
   updatedAt?: string;
 }
 

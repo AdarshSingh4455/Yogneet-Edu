@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LeaderboardService } from '../../services/leaderboardService';
-import { LeaderboardEntry, StudentLeaderboardStatus } from '../../types';
+import { LeaderboardEntry, StudentLeaderboardStatus, LeaderboardConfig } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -17,6 +17,7 @@ import {
   TrendingUp,
   Layers,
   Sparkles,
+  Gift,
 } from 'lucide-react';
 
 export const LeaderboardPage: React.FC = () => {
@@ -25,16 +26,19 @@ export const LeaderboardPage: React.FC = () => {
   const [personalStatus, setPersonalStatus] = useState<StudentLeaderboardStatus | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [config, setConfig] = useState<LeaderboardConfig | null>(null);
 
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [list, status] = await Promise.all([
+      const [list, status, conf] = await Promise.all([
         LeaderboardService.getTop200Leaderboard(),
         isAuthenticated ? LeaderboardService.getStudentStatus(currentUser.id) : null,
+        LeaderboardService.getConfig(),
       ]);
       setLeaderboard(list);
       setPersonalStatus(status);
+      setConfig(conf);
     } catch {
       // keep defaults
     } finally {
@@ -93,6 +97,40 @@ export const LeaderboardPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Winner Reward Announcement (displayed only if configured) */}
+      {config?.winnerGift && config.winnerGift.trim().length > 0 && (
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-amber-600/5 p-4 sm:p-5 border border-amber-500/35 shadow-md">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/35 flex items-center justify-center shrink-0 text-amber-500 shadow-sm">
+                <Gift className="w-6 h-6 animate-pulse" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                    Cycle Reward Announcement
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">#1 Top Rank Honor</span>
+                </div>
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-slate-100 mt-0.5">
+                  {config.winnerGift.trim()}
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  The learner holding rank #1 at the conclusion of this competitive ranking cycle will receive this official award.
+                </p>
+              </div>
+            </div>
+            <div className="shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-amber-500/20 pt-2 sm:pt-0">
+              <span className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                <Trophy className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                Rank #1 Incentive
+              </span>
+              <span className="text-[10px] text-slate-400">Merit-based qualification</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Current User Status Banner */}
       {isAuthenticated && personalStatus && (

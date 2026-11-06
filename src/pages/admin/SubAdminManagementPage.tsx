@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import React, { useState, useEffect, useCallback } from 'react';
 import { ApiService } from '../../services/api';
 import { StaffAdminService } from '../../services/staffAdminService';
@@ -45,6 +46,17 @@ export const SubAdminManagementPage: React.FC = () => {
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
   const [passwordTargetStaff, setPasswordTargetStaff] = useState<UserProfile | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const targetUserId = searchParams.get('user');
+
+  useEffect(() => {
+    if (targetUserId && subAdmins.length > 0) {
+      const target = subAdmins.find(s => s.id === targetUserId);
+      if (target) {
+        setSelectedForPermissions(target);
+      }
+    }
+  }, [targetUserId, subAdmins]);
 
   // New Sub-Admin Form State
   const [newName, setNewName] = useState('');
@@ -156,11 +168,11 @@ export const SubAdminManagementPage: React.FC = () => {
             <Badge variant="purple" size="sm">
               Staff RBAC Governance
             </Badge>
-            <span className="text-xs text-slate-400">Sub-Admin Directory</span>
+            <span className="text-xs text-slate-400">Staff Directory & RBAC Governance</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
             <Shield className="w-6 h-6 text-purple-500" />
-            Sub-Admin Management & Delegation
+            Staff & Permissions
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-3xl leading-relaxed">
             Manage educational staff accounts, enforce the principle of least privilege, grant action-specific capabilities, and audit operational access.

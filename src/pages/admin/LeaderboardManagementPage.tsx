@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   Sliders,
   Sparkles,
+  Gift,
 } from 'lucide-react';
 
 export const LeaderboardManagementPage: React.FC = () => {
@@ -27,6 +28,7 @@ export const LeaderboardManagementPage: React.FC = () => {
     isEnabled: true,
     eligibleCategories: ['all'],
     minAssessmentsRequired: 1,
+    winnerGift: '',
   });
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -200,6 +202,40 @@ export const LeaderboardManagementPage: React.FC = () => {
               />
               <p className="text-[11px] text-slate-400 mt-1">
                 Use 'all' to include all verified assessments in score calculation.
+              </p>
+            </div>
+
+            <div className="sm:col-span-2 pt-3 border-t border-light-border dark:border-dark-border">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Gift className="w-3.5 h-3.5 text-amber-500" />
+                  Winner Gift (Optional)
+                </span>
+                <span className="text-[11px] font-normal text-slate-400">
+                  {((config.winnerGift || '').length)}/120 characters
+                </span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  maxLength={120}
+                  value={config.winnerGift || ''}
+                  onChange={e => setConfig(prev => ({ ...prev, winnerGift: e.target.value }))}
+                  className="w-full px-3 py-2 pr-16 text-sm rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                  placeholder="e.g., ₹1,000 Amazon Gift Card or Free Premium Membership for 3 Months"
+                />
+                {(config.winnerGift || '').length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setConfig(prev => ({ ...prev, winnerGift: '' }))}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-2 py-0.5 rounded transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Admin reward announcement for what the #1 student on the leaderboard will receive. Leave blank if no prize is currently awarded.
               </p>
             </div>
           </div>

@@ -88,7 +88,7 @@ export const CommunityService = {
   /**
    * Fetch a single thread by ID with full replies
    */
-  async getThreadById(id: string): Promise<DiscussionThread | null> {
+  async getThreadById(id: string, includeModerated = false): Promise<DiscussionThread | null> {
     if (supabase) {
       try {
         const { data: threadData, error } = await (supabase as any)
@@ -103,15 +103,20 @@ export const CommunityService = {
         if (error) throw error;
         if (threadData) {
           // Fetch replies
-          const { data: repliesData } = await (supabase as any)
+          let repliesQuery = (supabase as any)
             .from('discussion_replies')
             .select(`
               *,
               profiles:author_id (id, name, avatar, role)
             `)
             .eq('thread_id', id)
-            .eq('is_soft_deleted', false)
             .order('created_at', { ascending: true });
+
+          if (!includeModerated) {
+            repliesQuery = repliesQuery.eq('is_soft_deleted', false);
+          }
+
+          const { data: repliesData } = await repliesQuery;
 
           const replies: DiscussionReply[] = (repliesData || []).map((r: any) => ({
             id: r.id,
@@ -289,6 +294,49 @@ export const CommunityService = {
   /**
    * Moderate a user (warn, suspend, unsuspend)
    */
+  /**
+   * Moderate a reply (soft_delete or restore)
+   * Records action and reason in moderation_logs.
+   */
+  async moderateReply(
+    replyId: string,
+    action: 'soft_delete' | 'restore',
+    reason: string,
+    threadId?: string
+  ): Promise<void> {
+    if (supabase) {
+      const isSoftDeleted = action === 'soft_delete';
+      const user = (await supabase.auth.getUser()).data?.user;
+      const { error } = await (supabase as any)
+        .from('discussion_replies')
+        .update({
+          is_soft_deleted: isSoftDeleted,
+          deletion_reason: isSoftDeleted ? reason : null,
+          deleted_at: isSoftDeleted ? new Date().toISOString() : null,
+          deleted_by: isSoftDeleted ? user?.id : null,
+        })
+        .eq('id', replyId);
+
+      if (error) throw error;
+
+      await (supabase as any)
+        .from('moderation_logs')
+        .insert({
+          moderator_id: user?.id,
+          action: `REPLY_${action.toUpperCase()}`,
+          target_type: 'reply',
+          target_id: replyId,
+          reason,
+          details: { thread_id: threadId, reply_id: replyId, action },
+        })
+        .select()
+        .catch(() => {});
+      return;
+    }
+
+    console.info(`[CommunityModeration] ${action} executed for reply ${replyId}: ${reason}`);
+  },
+
   async moderateUser(
     userId: string,
     action: 'warn' | 'suspend' | 'unsuspend',

@@ -15,16 +15,12 @@ import {
   ArrowRight,
   Plus,
   AlertCircle,
-  Key,
   Layers,
   MessageSquare,
   BookOpen,
   Film,
   Crown,
   RefreshCw,
-  Trophy,
-  Megaphone,
-  Code2,
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -166,53 +162,11 @@ export const AdminDashboard: React.FC = () => {
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
-              YOGNEET <span className="text-yogneet-cyan">EDU</span> Administration Portal
+              YOGNEET <span className="text-yogneet-cyan">EDU</span>
             </h1>
             <p className="text-sm sm:text-base text-slate-300 mt-2 leading-relaxed">
-              Oversee platform staff, configure student tier access rules, respond to user feedback, and manage the technical curricula.
+              Oversee staff members, configure student tier access rules, respond to user feedback, and manage technical curricula.
             </p>
-            <div className="flex flex-wrap items-center gap-3 mt-5">
-              <Link to="/admin/student-access">
-                <Button size="md" className="bg-yogneet-cyan hover:bg-yogneet-cyanHover text-yogneet-navy font-bold border-none shadow-md shadow-yogneet-cyan/25" leftIcon={<Layers className="w-4 h-4 fill-yogneet-navy" />}>
-                  Student Tab Access
-                </Button>
-              </Link>
-              <Link to="/admin/leaderboard">
-                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<Trophy className="w-4 h-4 text-amber-400" />}>
-                  Top 200 Leaderboard
-                </Button>
-              </Link>
-              <Link to="/admin/advertisements">
-                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<Megaphone className="w-4 h-4 text-emerald-400" />}>
-                  Ad Campaigns
-                </Button>
-              </Link>
-              <Link to="/admin/coding">
-                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<Code2 className="w-4 h-4 text-orange-400" />}>
-                  Coding Questions
-                </Button>
-              </Link>
-              <Link to="/admin/community-moderation">
-                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<MessageSquare className="w-4 h-4 text-purple-400" />}>
-                  Forum Moderation
-                </Button>
-              </Link>
-              <Link to="/admin/feedback">
-                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<MessageSquare className="w-4 h-4 text-yogneet-cyan" />}>
-                  Feedback Management
-                </Button>
-              </Link>
-              <Link to="/admin/permissions">
-                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<Key className="w-4 h-4 text-amber-400" />}>
-                  RBAC Permissions
-                </Button>
-              </Link>
-              <Link to="/admin/subadmins">
-                <Button variant="secondary" size="md" className="border-slate-700 bg-white/10 hover:bg-white/20 text-white" leftIcon={<Shield className="w-4 h-4 text-purple-400" />}>
-                  Manage Staff
-                </Button>
-              </Link>
-            </div>
           </div>
 
           {/* Dedicated Hero Phoenix Emblem */}
@@ -392,7 +346,7 @@ export const AdminDashboard: React.FC = () => {
                       </td>
 
                       <td className="py-3.5 px-4 text-right">
-                        <Link to={`/admin/permissions?user=${staff.id}`}>
+                        <Link to={`/admin/subadmins?user=${staff.id}`}>
                           <Button size="sm" variant="outline">
                             Edit RBAC
                           </Button>

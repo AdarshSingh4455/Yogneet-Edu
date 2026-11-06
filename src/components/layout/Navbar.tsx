@@ -6,7 +6,6 @@ import {
   Menu,
   Sun,
   Moon,
-  Laptop,
   Bell,
   Search,
   LogOut,
@@ -31,18 +30,17 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }) => {
   const { currentUser, isAdmin, isSubAdmin, signOut, isAuthenticated } = useAuth();
-  const { mode, resolvedTheme, setMode } = useTheme();
+  const { resolvedTheme, toggleTheme } = useTheme();
   const { activeLearnersCount } = useActiveLearners();
   const navigate = useNavigate();
   const location = useLocation();
 
   // Active popover state: 'theme' | 'notifications' | 'user' | null
-  const [activeMenu, setActiveMenu] = useState<'theme' | 'notifications' | 'user' | null>(null);
+  const [activeMenu, setActiveMenu] = useState<'notifications' | 'user' | null>(null);
   const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
 
   // Popover container refs for outside-click detection
-  const themeMenuRef = useRef<HTMLDivElement>(null);
-  const notifMenuRef = useRef<HTMLDivElement>(null);
+    const notifMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   // Fetch unread notification count on load & authentication
@@ -63,12 +61,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
 
   // Outside click listener closes whichever menu is active
   useClickOutside(
-    [themeMenuRef, notifMenuRef, userMenuRef],
+    [notifMenuRef, userMenuRef],
     () => setActiveMenu(null),
     activeMenu !== null
   );
 
-  const toggleMenu = (menu: 'theme' | 'notifications' | 'user') => {
+  const toggleMenu = (menu: 'notifications' | 'user') => {
     setActiveMenu(current => (current === menu ? null : menu));
   };
 
@@ -144,75 +142,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
             <DayStreakIndicator className="shrink-0" />
           )}
 
-          {/* Theme Selector Dropdown */}
-          <div className="relative" ref={themeMenuRef}>
-            <button
-              onClick={() => toggleMenu('theme')}
-              className="p-2 rounded-xl text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-card border border-transparent hover:border-light-border dark:hover:border-dark-border transition-colors"
-              title="Change appearance theme"
-              aria-label="Theme selector"
-              aria-expanded={activeMenu === 'theme'}
-            >
-              {resolvedTheme === 'dark' ? (
-                <Moon className="w-4 h-4 text-brand-400" />
-              ) : (
-                <Sun className="w-4 h-4 text-amber-500" />
-              )}
-            </button>
-
-            {activeMenu === 'theme' && (
-              <div className="absolute right-0 mt-2 w-44 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
-                <p className="text-[10px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">
-                  Appearance Mode
-                </p>
-                <button
-                  onClick={() => {
-                    setMode('light');
-                    setActiveMenu(null);
-                  }}
-                  className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded-lg transition-colors ${
-                    mode === 'light'
-                      ? 'bg-brand-50 dark:bg-dark-selected text-brand-600 dark:text-blue-300 font-semibold border border-transparent dark:border-blue-700/60'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200'
-                  }`}
-                >
-                  <Sun className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Light Mode</span>
-                  {mode === 'light' && <CheckCircle2 className="w-3.5 h-3.5 ml-auto text-brand-500 dark:text-blue-400" />}
-                </button>
-                <button
-                  onClick={() => {
-                    setMode('dark');
-                    setActiveMenu(null);
-                  }}
-                  className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded-lg transition-colors ${
-                    mode === 'dark'
-                      ? 'bg-brand-50 dark:bg-dark-selected text-brand-600 dark:text-blue-300 font-semibold border border-transparent dark:border-blue-700/60'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200'
-                  }`}
-                >
-                  <Moon className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Dark Mode</span>
-                  {mode === 'dark' && <CheckCircle2 className="w-3.5 h-3.5 ml-auto text-brand-500 dark:text-blue-400" />}
-                </button>
-                <button
-                  onClick={() => {
-                    setMode('system');
-                    setActiveMenu(null);
-                  }}
-                  className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded-lg transition-colors ${
-                    mode === 'system'
-                      ? 'bg-brand-50 dark:bg-dark-selected text-brand-600 dark:text-blue-300 font-semibold border border-transparent dark:border-blue-700/60'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200'
-                  }`}
-                >
-                  <Laptop className="w-3.5 h-3.5 text-slate-400" />
-                  <span>System Default</span>
-                  {mode === 'system' && <CheckCircle2 className="w-3.5 h-3.5 ml-auto text-brand-500 dark:text-blue-400" />}
-                </button>
-              </div>
+          {/* Direct 1-Click Day / Night Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-xl text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-card border border-transparent hover:border-light-border dark:hover:border-dark-border transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            title={resolvedTheme === 'dark' ? 'Switch to Day Mode' : 'Switch to Night Mode'}
+            aria-label={resolvedTheme === 'dark' ? 'Switch to Day Mode' : 'Switch to Night Mode'}
+          >
+            {resolvedTheme === 'dark' ? (
+              <Sun className="w-4 h-4 text-amber-400" />
+            ) : (
+              <Moon className="w-4 h-4 text-slate-700" />
             )}
-          </div>
+          </button>
 
           {/* Notifications button (authenticated only) */}
           {isAuthenticated && (
@@ -315,12 +257,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
 
                     {isAdmin && (
                       <Link
-                        to="/admin/permissions"
+                        to="/admin/subadmins"
                         onClick={() => setActiveMenu(null)}
                         className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-hover dark:hover:text-blue-200 transition-colors"
                       >
                         <Shield className="w-3.5 h-3.5 text-brand-400" />
-                        <span>RBAC & Permissions Editor</span>
+                        <span>Staff & Permissions</span>
                       </Link>
                     )}
 

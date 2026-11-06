@@ -50,19 +50,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { label: 'Micro Lessons', path: '/admin/micro-lessons', icon: Film, badge: 'Shorts' },
     { label: 'Icon Library', path: '/admin/icons', icon: Boxes, badge: 'Assets' },
     { label: 'Premium Students', path: '/admin/premium-students', icon: Crown, badge: 'Pro' },
-    { label: 'Sub-Admins & Staff', path: '/admin/subadmins', icon: Shield },
-    { label: 'RBAC & Permissions', path: '/admin/permissions', icon: Shield, badge: 'Key' },
+    { label: 'Staff & Permissions', path: '/admin/subadmins', icon: Shield, badge: 'RBAC' },
     { label: 'Audit Trail Logs', path: '/admin/audit-logs', icon: FileSpreadsheet },
     { label: 'Students Directory', path: '/admin/students', icon: Users },
     { label: 'Content Workspace', path: '/subadmin/content', icon: FileText },
     { label: 'Test Catalog Manager', path: '/admin/tests', icon: CheckSquare },
     { label: 'Coding Arena', path: '/coding', icon: Code2 },
-    { label: 'Community Forum', path: '/community', icon: MessageSquare },
+    { label: 'Forum Management', path: '/community', icon: MessageSquare },
     { label: 'Platform Analytics', path: '/admin/analytics', icon: BarChart3 },
     { label: 'Top 200 Leaderboard', path: '/admin/leaderboard', icon: Trophy, badge: 'Rank' },
     { label: 'Advertisements', path: '/admin/advertisements', icon: Megaphone, badge: 'Ads' },
     { label: 'Coding Arena Admin', path: '/admin/coding', icon: Code2, badge: 'DSA' },
-    { label: 'Forum Moderation', path: '/admin/community-moderation', icon: Shield, badge: 'Mod' },
   ];
 
   // Navigation items for Sub-Admin generated dynamically from assigned permissions
@@ -83,8 +81,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     ...(hasPermission('tests.view') || hasPermission('tests.create') || hasPermission('tests.edit')
       ? [{ label: 'Test Catalog Manager', path: '/admin/tests', icon: CheckSquare }]
       : []),
-    ...(hasPermission('community.moderate')
-      ? [{ label: 'Community Moderation', path: '/admin/community-moderation', icon: Shield, badge: 'Mod' }]
+    ...(hasPermission('community.moderate') || hasPermission('community.view')
+      ? [{ label: 'Forum Management', path: '/community', icon: MessageSquare }]
       : []),
     ...(hasPermission('leaderboard.view') || hasPermission('leaderboard.manage')
       ? [{ label: 'Top 200 Leaderboard', path: '/admin/leaderboard', icon: Trophy, badge: 'Rank' }]
@@ -119,7 +117,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { label: 'Top 200 Leaderboard', path: '/leaderboard', icon: Trophy, badge: 'Rank', moduleKey: 'tests' },
     { label: 'Micro Lessons', path: '/micro-lessons', icon: Film, badge: 'Shorts', moduleKey: 'micro_lessons' },
     { label: 'Coding Practice Arena', path: '/coding', icon: Code2, badge: 'Hot', moduleKey: 'coding' },
-    { label: 'Community Forum', path: '/community', icon: MessageSquare, moduleKey: 'community' },
+    { label: 'Forum Management', path: '/community', icon: MessageSquare, moduleKey: 'community' },
     { label: 'My Learning Progress', path: '/progress', icon: TrendingUp, moduleKey: 'progress' },
     { label: 'Feedback & Support', path: '/feedback', icon: HelpCircle, moduleKey: 'feedback' },
     { label: 'Profile & Settings', path: '/profile', icon: User },

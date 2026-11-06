@@ -24,6 +24,8 @@ vite.config.js
 supabase/.temp/
 
 # Editor directories and files
+scratch/
+backups/
 .vscode/*
 !.vscode/extensions.json
 .idea
