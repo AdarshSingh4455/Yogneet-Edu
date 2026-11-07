@@ -30,22 +30,29 @@ const LANGUAGE_MAP: Record<string, number> = {
 };
 
 function applyHarness(code: string, language: string): string {
-  if (!code) return '';
+    if (!code) return '';
 
-  if (language === 'python') {
-    if (code.includes('if __name__ ==') || code.includes('sys.stdin.read(')) {
-      return code;
-    }
-    return `${code}
+    if (language === 'python') {
+      if (code.includes('if __name__ ==') || code.includes('sys.stdin.read(')) {
+        return code;
+      }
+      return `${code}
 
 # --- YOGNEET AUTO-HARNESS ---
-import sys, json, re
+import sys, json
 
 def _yogneet_parse_val(v):
     v = v.strip()
+    if not v:
+        return None
+    if '=' in v:
+        parts = v.split('=', 1)
+        param_name = parts[0].strip()
+        if param_name.isidentifier():
+            v = parts[1].strip()
     if v.lower() == 'true': return True
     if v.lower() == 'false': return False
-    if v.lower() == 'null': return None
+    if v.lower() in ('null', 'none'): return None
     try:
         return json.loads(v)
     except Exception:
@@ -57,40 +64,113 @@ def _yogneet_parse_val(v):
         except Exception:
             return v
 
+def _yogneet_split_tokens(raw):
+    tokens = []
+    current = []
+    in_quote = False
+    quote_char = ''
+    bracket_depth = 0
+    brace_depth = 0
+    paren_depth = 0
+    i = 0
+    while i < len(raw):
+        ch = raw[i]
+        if in_quote:
+            current.append(ch)
+            if ch == '\\\\' and i + 1 < len(raw):
+                current.append(raw[i + 1])
+                i += 1
+            elif ch == quote_char:
+                in_quote = False
+        else:
+            if ch in ('"', "'"):
+                in_quote = True
+                quote_char = ch
+                current.append(ch)
+            elif ch == '[':
+                bracket_depth += 1
+                current.append(ch)
+            elif ch == ']':
+                if bracket_depth > 0: bracket_depth -= 1
+                current.append(ch)
+            elif ch == '{':
+                brace_depth += 1
+                current.append(ch)
+            elif ch == '}':
+                if brace_depth > 0: brace_depth -= 1
+                current.append(ch)
+            elif ch == '(':
+                paren_depth += 1
+                current.append(ch)
+            elif ch == ')':
+                if paren_depth > 0: paren_depth -= 1
+                current.append(ch)
+            elif (ch == ',' or ch == '\\n' or ch == '\\r') and bracket_depth == 0 and brace_depth == 0 and paren_depth == 0:
+                token = ''.join(current).strip()
+                if token:
+                    tokens.append(token)
+                current = []
+            else:
+                current.append(ch)
+        i += 1
+    token = ''.join(current).strip()
+    if token:
+        tokens.append(token)
+    return tokens
+
 def _yogneet_runner():
     raw = sys.stdin.read().strip()
     if not raw:
         return
-    matches = re.findall(r"""(?:[a-zA-Z_]\w*\s*=\s*)?(\[[^\]]*\]|"[^"]*"|'[^']*'|-?\d+(?:\.\d+)?|true|false|null|\{[^\}]*\})""", raw, re.IGNORECASE)
-    args = [_yogneet_parse_val(m) for m in matches] if matches else [_yogneet_parse_val(line) for line in raw.splitlines() if line.strip()]
+    tokens = _yogneet_split_tokens(raw)
+    args = [_yogneet_parse_val(t) for t in tokens if t]
     sol = Solution() if 'Solution' in globals() else None
-    for candidate in ['twoSum', 'isValid', 'reverseString', 'isPalindrome', 'solve', 'solution']:
-        fn = getattr(sol, candidate, None) if sol else globals().get(candidate)
-        if callable(fn):
-            try:
-                res = fn(*args)
-                if isinstance(res, bool):
-                    print(str(res).lower())
-                elif isinstance(res, (list, dict)):
-                    print(json.dumps(res, separators=(', ', ': ')))
-                else:
-                    print(res)
-                return
-            except Exception as e:
-                import traceback
-                traceback.print_exc(file=sys.stderr)
-                sys.exit(1)
+    fn = None
+    if sol:
+        for candidate in ['twoSum', 'isValid', 'reverseString', 'isPalindrome', 'solve', 'solution']:
+            if hasattr(sol, candidate) and callable(getattr(sol, candidate)):
+                fn = getattr(sol, candidate)
+                break
+        if not fn:
+            for attr in dir(sol):
+                if not attr.startswith('_') and callable(getattr(sol, attr)):
+                    fn = getattr(sol, attr)
+                    break
+    if not fn:
+        for candidate in ['twoSum', 'isValid', 'reverseString', 'isPalindrome', 'solve', 'solution']:
+            if candidate in globals() and callable(globals()[candidate]):
+                fn = globals()[candidate]
+                break
+    if not fn:
+        for k, v in list(globals().items()):
+            if not k.startswith('_') and callable(v) and k not in ('Solution', '_yogneet_runner', '_yogneet_parse_val', '_yogneet_split_tokens'):
+                fn = v
+                break
+    if callable(fn):
+        try:
+            res = fn(*args)
+            if isinstance(res, bool):
+                print(str(res).lower())
+            elif isinstance(res, (list, dict)):
+                print(json.dumps(res, separators=(', ', ': ')))
+            else:
+                print(res)
+            return
+        except Exception as e:
+            import traceback
+            traceback.print_exc(file=sys.stderr)
+            sys.exit(1)
 
 if __name__ == '__main__':
     _yogneet_runner()
 `;
-  }
-
-  if (language === 'javascript') {
-    if (code.includes('fs.readFileSync') || code.includes('process.stdin') || code.includes('readline')) {
-      return code;
     }
-    return `${code}
+
+    if (language === 'javascript') {
+      if (code.includes('fs.readFileSync') || code.includes('process.stdin') || code.includes('readline')) {
+        return code;
+      }
+      return `${code}
 
 // --- YOGNEET AUTO-HARNESS ---
 (() => {
@@ -100,6 +180,14 @@ if __name__ == '__main__':
 
   function parseVal(v) {
     v = v.trim();
+    if (!v) return null;
+    if (v.includes('=')) {
+      const idx = v.indexOf('=');
+      const param = v.slice(0, idx).trim();
+      if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(param)) {
+        v = v.slice(idx + 1).trim();
+      }
+    }
     if (v.toLowerCase() === 'true') return true;
     if (v.toLowerCase() === 'false') return false;
     if (v.toLowerCase() === 'null') return null;
@@ -112,26 +200,86 @@ if __name__ == '__main__':
     }
   }
 
-  const regex = /(?:[a-zA-Z_]\\w*\\s*=\\s*)?(\\[[^\\]]*\\]|"[^"]*"|'[^']*'|-?\\d+(?:\\.\\d+)?|true|false|null|\\{[^\\}]*\\})/gi;
-  const matches = [];
-  let m;
-  while ((m = regex.exec(raw)) !== null) {
-    matches.push(parseVal(m[1]));
+  function splitTokens(raw) {
+    const tokens = [];
+    let current = '';
+    let inQuote = false;
+    let quoteChar = '';
+    let bracketDepth = 0;
+    let braceDepth = 0;
+    let parenDepth = 0;
+    for (let i = 0; i < raw.length; i++) {
+      const ch = raw[i];
+      if (inQuote) {
+        current += ch;
+        if (ch === '\\\\' && i + 1 < raw.length) {
+          current += raw[++i];
+        } else if (ch === quoteChar) {
+          inQuote = false;
+        }
+      } else {
+        if (ch === '"' || ch === "'") {
+          inQuote = true;
+          quoteChar = ch;
+          current += ch;
+        } else if (ch === '[') {
+          bracketDepth++;
+          current += ch;
+        } else if (ch === ']') {
+          if (bracketDepth > 0) bracketDepth--;
+          current += ch;
+        } else if (ch === '{') {
+          braceDepth++;
+          current += ch;
+        } else if (ch === '}') {
+          if (braceDepth > 0) braceDepth--;
+          current += ch;
+        } else if (ch === '(') {
+          parenDepth++;
+          current += ch;
+        } else if (ch === ')') {
+          if (parenDepth > 0) parenDepth--;
+          current += ch;
+        } else if ((ch === ',' || ch === '\\n' || ch === '\\r') && bracketDepth === 0 && braceDepth === 0 && parenDepth === 0) {
+          const t = current.trim();
+          if (t) tokens.push(t);
+          current = '';
+        } else {
+          current += ch;
+        }
+      }
+    }
+    const t = current.trim();
+    if (t) tokens.push(t);
+    return tokens;
   }
-  const args = matches.length ? matches : raw.split('\\n').filter(Boolean).map(parseVal);
 
-  const candidates = [
-    typeof twoSum === 'function' ? twoSum : null,
-    typeof isValid === 'function' ? isValid : null,
-    typeof reverseString === 'function' ? reverseString : null,
-    typeof isPalindrome === 'function' ? isPalindrome : null,
-    typeof solve === 'function' ? solve : null,
-    typeof solution === 'function' ? solution : null,
-  ].filter(Boolean);
+  const tokens = splitTokens(raw);
+  const args = tokens.map(parseVal);
 
-  if (candidates.length > 0) {
+  let fn = null;
+  if (typeof Solution === 'function') {
     try {
-      const res = candidates[0](...args);
+      const sol = new Solution();
+      for (const name of ['twoSum', 'isValid', 'reverseString', 'isPalindrome', 'solve', 'solution']) {
+        if (typeof sol[name] === 'function') { fn = sol[name].bind(sol); break; }
+      }
+      if (!fn) {
+        const proto = Object.getPrototypeOf(sol);
+        const methods = Object.getOwnPropertyNames(proto).filter(p => p !== 'constructor' && typeof sol[p] === 'function');
+        if (methods.length > 0) fn = sol[methods[0]].bind(sol);
+      }
+    } catch(e) {}
+  }
+  if (!fn) {
+    for (const name of ['twoSum', 'isValid', 'reverseString', 'isPalindrome', 'solve', 'solution']) {
+      if (typeof globalThis[name] === 'function') { fn = globalThis[name]; break; }
+    }
+  }
+
+  if (fn) {
+    try {
+      const res = fn(...args);
       if (typeof res === 'boolean') {
         console.log(res ? 'true' : 'false');
       } else if (typeof res === 'object' && res !== null) {
@@ -146,13 +294,13 @@ if __name__ == '__main__':
   }
 })();
 `;
-  }
-
-  if (language === 'cpp') {
-    if (code.includes('int main(') || code.includes('int main (')) {
-      return code;
     }
-    return `${code}
+
+    if (language === 'cpp') {
+      if (code.includes('int main(') || code.includes('int main (')) {
+        return code;
+      }
+      return `${code}
 
 // --- YOGNEET AUTO-HARNESS ---
 #include <iostream>
@@ -163,7 +311,7 @@ if __name__ == '__main__':
 
 static std::vector<int> _yogneet_parse_int_array(const std::string& s) {
     std::vector<int> res;
-    std::regex re("-?\\\\d+");
+    std::regex re("-?\\d+");
     auto begin = std::sregex_iterator(s.begin(), s.end(), re);
     auto end = std::sregex_iterator();
     for (std::sregex_iterator i = begin; i != end; ++i) {
@@ -174,38 +322,64 @@ static std::vector<int> _yogneet_parse_int_array(const std::string& s) {
 
 int main() {
     std::string line;
-    if (std::getline(std::cin, line)) {
-        Solution sol;
-        std::smatch m;
-        std::regex target_re("target\\\\s*=\\\\s*(-?\\\\d+)");
-        if (std::regex_search(line, m, target_re)) {
-            int target = std::stoi(m[1].str());
-            std::vector<int> nums = _yogneet_parse_int_array(line.substr(0, m.position()));
-            auto ans = sol.twoSum(nums, target);
-            if (ans.size() >= 2) {
-                std::cout << "[" << ans[0] << ", " << ans[1] << "]" << std::endl;
-            } else {
-                std::cout << "[]" << std::endl;
-            }
-            return 0;
+    std::string all_input;
+    while (std::getline(std::cin, line)) {
+        if (!all_input.empty()) all_input += "\\n";
+        all_input += line;
+    }
+    if (all_input.empty()) return 0;
+
+    Solution sol;
+    std::smatch m;
+    // Two Sum pattern with named target
+    std::regex target_re("target\\s*=\\s*(-?\\d+)");
+    if (std::regex_search(all_input, m, target_re)) {
+        int target = std::stoi(m[1].str());
+        std::vector<int> nums = _yogneet_parse_int_array(all_input.substr(0, m.position()));
+        auto ans = sol.twoSum(nums, target);
+        if (ans.size() >= 2) {
+            std::cout << "[" << ans[0] << ", " << ans[1] << "]" << std::endl;
+        } else {
+            std::cout << "[]" << std::endl;
         }
-        std::regex s_re("s\\\\s*=\\\\s*\\\"([^\\\"]*)\\\"");
-        if (std::regex_search(line, m, s_re)) {
-            bool ans = sol.isValid(m[1].str());
-            std::cout << (ans ? "true" : "false") << std::endl;
-            return 0;
+        return 0;
+    }
+    // Valid Parentheses pattern
+    std::regex s_re("s\\s*=\\s*\"([^\"]*)\"");
+    if (std::regex_search(all_input, m, s_re)) {
+        bool ans = sol.isValid(m[1].str());
+        std::cout << (ans ? "true" : "false") << std::endl;
+        return 0;
+    }
+    std::regex s_raw_re("\"([^\"]*)\"");
+    if (std::regex_search(all_input, m, s_raw_re)) {
+        bool ans = sol.isValid(m[1].str());
+        std::cout << (ans ? "true" : "false") << std::endl;
+        return 0;
+    }
+    // Fallback: two lines with array and target integer
+    auto all_ints = _yogneet_parse_int_array(all_input);
+    if (all_ints.size() >= 2) {
+        int target = all_ints.back();
+        all_ints.pop_back();
+        auto ans = sol.twoSum(all_ints, target);
+        if (ans.size() >= 2) {
+            std::cout << "[" << ans[0] << ", " << ans[1] << "]" << std::endl;
+        } else {
+            std::cout << "[]" << std::endl;
         }
+        return 0;
     }
     return 0;
 }
 `;
-  }
-
-  if (language === 'java') {
-    if (code.includes('public static void main(')) {
-      return code;
     }
-    return `import java.util.*;
+
+    if (language === 'java') {
+      if (code.includes('public static void main(')) {
+        return code;
+      }
+      return `import java.util.*;
 import java.util.regex.*;
 
 ${code}
@@ -213,14 +387,18 @@ ${code}
 public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        if (!sc.hasNextLine()) return;
-        String line = sc.nextLine();
+        StringBuilder sb = new StringBuilder();
+        while (sc.hasNextLine()) {
+            sb.append(sc.nextLine()).append("\\n");
+        }
+        String line = sb.toString().trim();
+        if (line.isEmpty()) return;
         Solution sol = new Solution();
 
-        Matcher tm = Pattern.compile("target\\\\s*=\\\\s*(-?\\\\d+)").matcher(line);
+        Matcher tm = Pattern.compile("target\\s*=\\s*(-?\\d+)").matcher(line);
         if (tm.find()) {
             int target = Integer.parseInt(tm.group(1));
-            Matcher nm = Pattern.compile("-?\\\\d+").matcher(line.substring(0, tm.start()));
+            Matcher nm = Pattern.compile("-?\\d+").matcher(line.substring(0, tm.start()));
             List<Integer> list = new ArrayList<>();
             while (nm.find()) list.add(Integer.parseInt(nm.group()));
             int[] nums = list.stream().mapToInt(i -> i).toArray();
@@ -233,18 +411,40 @@ public class Main {
             return;
         }
 
-        Matcher sm = Pattern.compile("s\\\\s*=\\\\s*\\\"([^\\\"]*)\\\"").matcher(line);
+        Matcher sm = Pattern.compile("s\\s*=\\s*\"([^\"]*)\"").matcher(line);
         if (sm.find()) {
             boolean res = sol.isValid(sm.group(1));
             System.out.println(res ? "true" : "false");
             return;
         }
+
+        Matcher sm2 = Pattern.compile("\"([^\"]*)\"").matcher(line);
+        if (sm2.find()) {
+            boolean res = sol.isValid(sm2.group(1));
+            System.out.println(res ? "true" : "false");
+            return;
+        }
+
+        Matcher nm2 = Pattern.compile("-?\\d+").matcher(line);
+        List<Integer> list2 = new ArrayList<>();
+        while (nm2.find()) list2.add(Integer.parseInt(nm2.group()));
+        if (list2.size() >= 2) {
+            int target = list2.remove(list2.size() - 1);
+            int[] nums = list2.stream().mapToInt(i -> i).toArray();
+            int[] res = sol.twoSum(nums, target);
+            if (res.length >= 2) {
+                System.out.println("[" + res[0] + ", " + res[1] + "]");
+            } else {
+                System.out.println("[]");
+            }
+            return;
+        }
     }
 }
 `;
-  }
+    }
 
-  return code;
+    return code;
 }
 
 async function executeSingleTestCase(

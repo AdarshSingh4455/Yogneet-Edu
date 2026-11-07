@@ -117,7 +117,11 @@ export const CodingProblemPage: React.FC = () => {
         });
         toast.success('Sample Tests Passed', `Passed all ${summary.totalCases} sample test cases.`);
       } else {
-        const firstFailed = summary.results.find((r) => !r.passed);
+        const firstFailedIdx = summary.results.findIndex((r) => !r.passed);
+        if (firstFailedIdx !== -1) {
+          setSelectedCaseIdx(firstFailedIdx);
+        }
+        const firstFailed = summary.results[firstFailedIdx];
         setConsoleOutput({
           status: 'error',
           runtime: `${summary.totalRuntimeMs} ms`,
@@ -532,17 +536,19 @@ export const CodingProblemPage: React.FC = () => {
                       <button
                         key={idx}
                         onClick={() => setSelectedCaseIdx(idx)}
-                        className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-1.5 ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-1.5 ${
                           selectedCaseIdx === idx
-                            ? 'bg-slate-900 text-white dark:bg-slate-700'
-                            : 'bg-slate-200 text-slate-600 dark:bg-dark-card dark:text-slate-400 hover:bg-slate-300'
+                            ? 'bg-slate-900 text-white dark:bg-slate-700 shadow-sm'
+                            : 'bg-slate-200 text-slate-600 dark:bg-dark-card dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-800'
                         }`}
                       >
                         {result ? (
                           result.passed ? (
-                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                          ) : result.status === 'time_limit_exceeded' ? (
+                            <Clock className="w-3.5 h-3.5 text-amber-500" />
                           ) : (
-                            <XCircle className="w-3 h-3 text-rose-400" />
+                            <XCircle className="w-3.5 h-3.5 text-rose-500" />
                           )
                         ) : (
                           <span className="w-2 h-2 rounded-full bg-slate-400" />
@@ -554,64 +560,98 @@ export const CodingProblemPage: React.FC = () => {
                 </div>
 
                 {/* Selected Test Case Card */}
-                <div className="p-3 rounded-xl bg-white dark:bg-dark-card border border-light-border dark:border-dark-border text-xs font-mono space-y-2">
+                <div className="p-3.5 rounded-xl bg-white dark:bg-dark-card border border-light-border dark:border-dark-border text-xs font-mono space-y-3">
                   {consoleOutput.status === 'running' ? (
-                    <div className="flex items-center gap-2 text-brand-500 animate-pulse py-2">
-                      <span className="w-2 h-2 rounded-full bg-brand-500" />
-                      <span>Executing in isolated Judge0 CE container...</span>
+                    <div className="flex items-center gap-2 text-brand-500 animate-pulse py-3">
+                      <span className="w-2.5 h-2.5 rounded-full bg-brand-500" />
+                      <span>Executing test cases in isolated Judge0 container...</span>
                     </div>
                   ) : (
                     <>
+                      {/* 1. Input */}
                       <div>
-                        <span className="text-slate-400 font-sans block text-[11px] font-semibold">Input:</span>
-                        <div className="p-2 rounded bg-slate-50 dark:bg-dark-sidebar border border-light-border dark:border-dark-border text-slate-700 dark:text-slate-200 mt-0.5">
+                        <span className="text-slate-500 dark:text-slate-400 font-sans block text-[11px] font-semibold mb-1">
+                          Input:
+                        </span>
+                        <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-dark-sidebar border border-light-border dark:border-dark-border text-slate-800 dark:text-slate-100 font-mono text-xs whitespace-pre-wrap break-all">
                           {currentExample?.input || 'No input defined'}
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {/* 2. Expected Output & 3. Your Output (2-column on desktop, stacked on mobile) */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <span className="text-slate-400 font-sans block text-[11px] font-semibold">Expected Output:</span>
-                          <div className="p-2 rounded bg-slate-50 dark:bg-dark-sidebar border border-light-border dark:border-dark-border text-emerald-600 dark:text-emerald-400 mt-0.5">
+                          <span className="text-slate-500 dark:text-slate-400 font-sans block text-[11px] font-semibold mb-1">
+                            Expected Output:
+                          </span>
+                          <div className="p-2.5 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400 font-mono text-xs whitespace-pre-wrap break-all min-h-[42px] flex items-center">
                             {currentExample?.output || 'No expected output'}
                           </div>
                         </div>
 
                         <div>
-                          <span className="text-slate-400 font-sans block text-[11px] font-semibold">Your Output:</span>
+                          <span className="text-slate-500 dark:text-slate-400 font-sans block text-[11px] font-semibold mb-1">
+                            Your Output:
+                          </span>
                           <div
-                            className={`p-2 rounded bg-slate-50 dark:bg-dark-sidebar border border-light-border dark:border-dark-border mt-0.5 ${
+                            className={`p-2.5 rounded-lg border font-mono text-xs whitespace-pre-wrap break-all min-h-[42px] flex items-center ${
                               currentCaseResult
                                 ? currentCaseResult.passed
-                                  ? 'text-emerald-600 dark:text-emerald-400'
-                                  : 'text-rose-600 dark:text-rose-400'
-                                : 'text-slate-400'
+                                  ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200/80 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400'
+                                  : currentCaseResult.status === 'time_limit_exceeded'
+                                  ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/80 dark:border-amber-800/40 text-amber-700 dark:text-amber-300'
+                                  : 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200/80 dark:border-rose-800/40 text-rose-600 dark:text-rose-400'
+                                : 'bg-slate-50 dark:bg-dark-sidebar border-light-border dark:border-dark-border text-slate-400'
                             }`}
                           >
-                            {currentCaseResult
-                              ? currentCaseResult.actualOutput
-                              : 'Click "Run Tests" to execute'}
+                            {currentCaseResult ? (
+                              currentCaseResult.actualOutput ? (
+                                currentCaseResult.actualOutput
+                              ) : (
+                                <span className="italic text-slate-400 dark:text-slate-500 font-sans">
+                                  No output generated
+                                </span>
+                              )
+                            ) : (
+                              <span className="italic text-slate-400 font-sans">
+                                Click "Run Tests" to execute
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
 
-                      {/* Diagnostic details / Error report */}
-                      {consoleOutput.status === 'error' && (
-                        <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs">
-                          <div className="flex items-center gap-1.5 font-bold mb-1">
-                            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      {/* Execution Diagnostic / Error Report (rendered separately below outputs) */}
+                      {currentCaseResult && !currentCaseResult.passed && currentCaseResult.errorMessage && (
+                        <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs mt-2">
+                          <div className="flex items-center gap-1.5 font-bold mb-1.5">
+                            <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+                            <span>Execution Diagnostic (Case {selectedCaseIdx + 1})</span>
+                          </div>
+                          <pre className="whitespace-pre-wrap font-mono text-[11px] leading-relaxed bg-white/70 dark:bg-black/40 p-2.5 rounded border border-rose-200/60 dark:border-rose-900/40 overflow-x-auto text-rose-800 dark:text-rose-200">
+                            {currentCaseResult.errorMessage}
+                          </pre>
+                        </div>
+                      )}
+
+                      {/* Overall Error Diagnostic fallback if no per-case error is shown */}
+                      {consoleOutput.status === 'error' && (!currentCaseResult || currentCaseResult.passed || !currentCaseResult.errorMessage) && consoleOutput.details && (
+                        <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs mt-2">
+                          <div className="flex items-center gap-1.5 font-bold mb-1.5">
+                            <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
                             <span>Execution Diagnostic</span>
                           </div>
-                          <pre className="whitespace-pre-wrap font-mono text-[11px] leading-relaxed">
+                          <pre className="whitespace-pre-wrap font-mono text-[11px] leading-relaxed bg-white/70 dark:bg-black/40 p-2.5 rounded border border-rose-200/60 dark:border-rose-900/40 overflow-x-auto text-rose-800 dark:text-rose-200">
                             {consoleOutput.details}
                           </pre>
                         </div>
                       )}
 
+                      {/* Success Report */}
                       {consoleOutput.status === 'success' && (
-                        <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
-                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                          <span>{consoleOutput.details}</span>
+                        <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center gap-2 mt-2">
+                          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                          <span className="font-sans font-medium text-xs">{consoleOutput.details}</span>
                         </div>
                       )}
                     </>

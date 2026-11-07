@@ -689,4 +689,155 @@ if lines:
       assert.ok(hadRateLimit, 'Burst requests must trigger rate limit enforcement');
     });
   });
+  // ---------------------------------------------------------------------------
+  // 10. SMART AUTO-HARNESS REGRESSION: LeetCode class Solution Execution
+  // ---------------------------------------------------------------------------
+  describe('Smart Auto-Harness Regression: LeetCode class Solution Execution', () => {
+    it('10.1 Python: LeetCode class Solution Two Sum Case 3 (nums = [3, 3], target = 6) -> [0, 1]', async () => {
+      await sleep(1600);
+      const pythonLeetCode = `class Solution:
+    def twoSum(self, nums, target):
+        seen = {}
+        for i, num in enumerate(nums):
+            complement = target - num
+            if complement in seen:
+                return [seen[complement], i]
+            seen[num] = i
+        return []
+`;
+      const { data, error } = await studentClient.functions.invoke('execute-code', {
+        body: {
+          mode: 'run',
+          language: 'python',
+          code: pythonLeetCode,
+          stdin: 'nums = [3, 3], target = 6',
+        },
+      });
+
+      assert.ifError(error);
+      assert.ok(data);
+      assert.strictEqual(data.status, 'accepted');
+      assert.strictEqual(data.stdout?.trim(), '[0, 1]');
+      if (data.stderr) {
+        assert.ok(!data.stderr.includes('FutureWarning'), 'Must not have FutureWarning');
+        assert.ok(!data.stderr.includes('TypeError'), 'Must not have TypeError');
+      }
+    });
+
+    it('10.2 Python: LeetCode class Solution Two Sum Case 1 (nums = [2, 7, 11, 15], target = 9) -> [0, 1]', async () => {
+      await sleep(1600);
+      const pythonLeetCode = `class Solution:
+    def twoSum(self, nums, target):
+        seen = {}
+        for i, num in enumerate(nums):
+            complement = target - num
+            if complement in seen:
+                return [seen[complement], i]
+            seen[num] = i
+        return []
+`;
+      const { data, error } = await studentClient.functions.invoke('execute-code', {
+        body: {
+          mode: 'run',
+          language: 'python',
+          code: pythonLeetCode,
+          stdin: 'nums = [2, 7, 11, 15], target = 9',
+        },
+      });
+
+      assert.ifError(error);
+      assert.ok(data);
+      assert.strictEqual(data.status, 'accepted');
+      assert.strictEqual(data.stdout?.trim(), '[0, 1]');
+    });
+
+    it('10.3 JavaScript: LeetCode class Solution Two Sum Case 2 (nums = [3, 2, 4], target = 6) -> [1, 2]', async () => {
+      await sleep(1600);
+      const jsLeetCode = `class Solution {
+  twoSum(nums, target) {
+    const map = new Map();
+    for (let i = 0; i < nums.length; i++) {
+      const diff = target - nums[i];
+      if (map.has(diff)) return [map.get(diff), i];
+      map.set(nums[i], i);
+    }
+    return [];
+  }
+}
+`;
+      const { data, error } = await studentClient.functions.invoke('execute-code', {
+        body: {
+          mode: 'run',
+          language: 'javascript',
+          code: jsLeetCode,
+          stdin: 'nums = [3, 2, 4], target = 6',
+        },
+      });
+
+      assert.ifError(error);
+      assert.ok(data);
+      assert.strictEqual(data.status, 'accepted');
+      assert.strictEqual(data.stdout?.trim(), '[1, 2]');
+    });
+
+    it('10.4 Python: LeetCode class Solution Valid Parentheses Case 1 (s = "()") -> true', async () => {
+      await sleep(1600);
+      const pythonLeetCode = `class Solution:
+    def isValid(self, s: str) -> bool:
+        stack = []
+        mapping = {')': '(', '}': '{', ']': '['}
+        for char in s:
+            if char in mapping:
+                top = stack.pop() if stack else '#'
+                if mapping[char] != top:
+                    return False
+            else:
+                stack.append(char)
+        return not stack
+`;
+      const { data, error } = await studentClient.functions.invoke('execute-code', {
+        body: {
+          mode: 'run',
+          language: 'python',
+          code: pythonLeetCode,
+          stdin: 's = "()"',
+        },
+      });
+
+      assert.ifError(error);
+      assert.ok(data);
+      assert.strictEqual(data.status, 'accepted');
+      assert.strictEqual(data.stdout?.trim(), 'true');
+    });
+
+    it('10.5 Python: LeetCode class Solution Valid Parentheses Case 3 (s = "(]") -> false', async () => {
+      await sleep(1600);
+      const pythonLeetCode = `class Solution:
+    def isValid(self, s: str) -> bool:
+        stack = []
+        mapping = {')': '(', '}': '{', ']': '['}
+        for char in s:
+            if char in mapping:
+                top = stack.pop() if stack else '#'
+                if mapping[char] != top:
+                    return False
+            else:
+                stack.append(char)
+        return not stack
+`;
+      const { data, error } = await studentClient.functions.invoke('execute-code', {
+        body: {
+          mode: 'run',
+          language: 'python',
+          code: pythonLeetCode,
+          stdin: 's = "(]"',
+        },
+      });
+
+      assert.ifError(error);
+      assert.ok(data);
+      assert.strictEqual(data.status, 'accepted');
+      assert.strictEqual(data.stdout?.trim(), 'false');
+    });
+  });
 });
