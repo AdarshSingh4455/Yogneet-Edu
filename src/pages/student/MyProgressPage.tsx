@@ -221,7 +221,7 @@ export const MyProgressPage: React.FC = () => {
             />
           ) : (
             <div className="p-8 text-center rounded-2xl bg-slate-50 dark:bg-dark-bg/50 border border-dashed border-slate-200 dark:border-dark-border">
-              <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/50 text-brand-500 mx-auto flex items-center justify-center mb-3">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-cyan-400 mx-auto flex items-center justify-center mb-3">
                 <Target className="w-6 h-6" />
               </div>
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">

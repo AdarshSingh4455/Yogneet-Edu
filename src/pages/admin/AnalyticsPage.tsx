@@ -134,7 +134,7 @@ export const AnalyticsPage: React.FC = () => {
       {/* Top Metrics KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <Card padding="sm" className="space-y-1 border border-light-border dark:border-dark-border">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-bold uppercase">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold uppercase">
             <span>Enrolled Learners</span>
             <Users className="w-4 h-4 text-brand-500" />
           </div>
@@ -286,29 +286,29 @@ export const AnalyticsPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-dark-bg/60 border border-light-border dark:border-dark-border">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Watch Hours Telemetry</span>
-              <span className="text-base font-black text-slate-700 dark:text-slate-300 block mt-1">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-dark-sidebar/90 border border-slate-200 dark:border-dark-border">
+              <span className="text-[10px] uppercase font-bold text-slate-600 dark:text-slate-400 block">Watch Hours Telemetry</span>
+              <span className="text-base font-black text-slate-900 dark:text-slate-100 block mt-1">
                 {metrics?.watchHoursMetric.displayValue}
               </span>
-              <span className="text-[11px] text-slate-400 block mt-1">
+              <span className="text-[11px] text-slate-600 dark:text-slate-400 block mt-1">
                 {metrics?.watchHoursMetric.subtext}
               </span>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-dark-bg/60 border border-light-border dark:border-dark-border">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">PDF Download Telemetry</span>
-              <span className="text-base font-black text-slate-700 dark:text-slate-300 block mt-1">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-dark-sidebar/90 border border-slate-200 dark:border-dark-border">
+              <span className="text-[10px] uppercase font-bold text-slate-600 dark:text-slate-400 block">PDF Download Telemetry</span>
+              <span className="text-base font-black text-slate-900 dark:text-slate-100 block mt-1">
                 {metrics?.noteDownloadsMetric.displayValue}
               </span>
-              <span className="text-[11px] text-slate-400 block mt-1">
+              <span className="text-[11px] text-slate-600 dark:text-slate-400 block mt-1">
                 {metrics?.noteDownloadsMetric.subtext}
               </span>
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-brand-50/50 dark:bg-brand-950/20 border border-brand-500/20 text-xs text-brand-700 dark:text-cyan-300">
-            <strong>Data Integrity Assurance:</strong> Only verified submissions and live database records are plotted. Simulated data is never fabricated.
+          <div className="p-3.5 rounded-xl bg-blue-50/90 dark:bg-dark-card border border-blue-200/80 dark:border-blue-900/50 text-xs text-blue-900 dark:text-slate-200 shadow-xs">
+            <strong className="text-blue-950 dark:text-cyan-300 font-bold">Data Integrity Assurance:</strong> Only verified submissions and live database records are plotted. Simulated data is never fabricated.
           </div>
         </Card>
       </div>

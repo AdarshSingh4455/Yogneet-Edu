@@ -48,7 +48,7 @@ describe('Coding Arena & Forum Navigation Consolidation Suite', () => {
       assert.ok(subAdminNavMatch[1].includes("path: '/coding'"), 'Coding Arena must link to /coding');
     });
 
-    it('1.3 studentNav contains Coding Arena pointing to /coding with hot badge', () => {
+    it('1.3 studentNav contains Coding Arena pointing to /coding without decorative badges', () => {
       const studentNavMatch = sidebarContent.match(/studentNav = \[([\s\S]*?)\];/);
       assert.ok(studentNavMatch, 'studentNav must be defined');
       assert.ok(

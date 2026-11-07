@@ -713,7 +713,7 @@ export const ContentWorkspacePage: React.FC = () => {
                           <button
                             onClick={() => handleOpenEditNote(note)}
                             disabled={!canEditNotes}
-                            className="p-1.5 rounded-lg border border-slate-300 dark:border-dark-border text-slate-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors"
+                            className="p-1.5 rounded-lg border border-slate-300 dark:border-dark-border text-slate-400 hover:text-brand-500 hover:bg-blue-50 dark:hover:bg-blue-950/60 transition-colors"
                             title="Edit note"
                           >
                             <Edit2 className="w-4 h-4" />
@@ -785,7 +785,7 @@ export const ContentWorkspacePage: React.FC = () => {
                         <button
                           onClick={() => handleOpenEditVideo(video)}
                           disabled={!canEditVideos}
-                          className="p-1.5 rounded-lg border border-slate-300 dark:border-dark-border text-slate-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors"
+                          className="p-1.5 rounded-lg border border-slate-300 dark:border-dark-border text-slate-400 hover:text-brand-500 hover:bg-blue-50 dark:hover:bg-blue-950/60 transition-colors"
                           title="Edit video lesson"
                         >
                           <Edit2 className="w-4 h-4" />

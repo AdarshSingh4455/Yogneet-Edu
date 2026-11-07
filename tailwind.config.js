@@ -43,6 +43,7 @@ export default {
           700: '#1D4ED8',
           800: '#1E40AF',
           900: '#1E3A8A',
+          950: '#0E1B3D',
         },
         yogneet: {
           navy: '#0E1B3D',
