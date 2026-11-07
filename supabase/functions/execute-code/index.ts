@@ -23,7 +23,7 @@ const corsHeaders = {
 };
 
 const LANGUAGE_MAP: Record<string, number> = {
-  python: 71,      // Python 3
+  python: 92,      // Python 3
   javascript: 63,  // Node.js
   cpp: 54,         // C++ (GCC)
   java: 62,        // Java (OpenJDK)
@@ -36,7 +36,10 @@ function applyHarness(code: string, language: string): string {
       if (code.includes('if __name__ ==') || code.includes('sys.stdin.read(')) {
         return code;
       }
-      return `${code}
+      const futureHeader = code.includes('from __future__ import annotations')
+        ? ''
+        : 'from __future__ import annotations\n';
+      return `${futureHeader}${code}
 
 # --- YOGNEET AUTO-HARNESS ---
 import sys, json

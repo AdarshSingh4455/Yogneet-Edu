@@ -42,10 +42,10 @@ export const SUPPORTED_LANGUAGES: Record<SupportedLanguage, LanguageConfig> = {
   python: {
     id: 'python',
     name: 'Python 3',
-    judge0Id: 71,
+    judge0Id: 92,
     pistonLanguage: 'python',
-    pistonVersion: '3.10.0',
-    version: '3.10+',
+    pistonVersion: '3.11.2',
+    version: '3.11+',
     fileExtension: 'py',
     starterTemplate: '# Write your code here\ndef solution():\n    pass\n',
   },
@@ -271,7 +271,10 @@ export class CodeExecutionService {
       if (code.includes('if __name__ ==') || code.includes('sys.stdin.read(')) {
         return code;
       }
-      return `${code}
+      const futureHeader = code.includes('from __future__ import annotations')
+        ? ''
+        : 'from __future__ import annotations\n';
+      return `${futureHeader}${code}
 
 # --- YOGNEET AUTO-HARNESS ---
 import sys, json
