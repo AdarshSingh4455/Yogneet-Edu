@@ -785,7 +785,7 @@ print(a == b, a is b, a is c)`,
 
 export const INITIAL_CODING_PROBLEMS: CodingProblem[] = [
   {
-    id: 'prob_1',
+    id: 'e0000000-0000-0000-0000-000000000001',
     title: 'Two Sum',
     slug: 'two-sum',
     difficulty: 'Easy',
@@ -880,7 +880,7 @@ class Solution {
     },
   },
   {
-    id: 'prob_2',
+    id: 'e0000000-0000-0000-0000-000000000002',
     title: 'Valid Parentheses',
     slug: 'valid-parentheses',
     difficulty: 'Easy',
@@ -976,7 +976,7 @@ class Solution {
     },
   },
   {
-    id: 'prob_3',
+    id: 'e0000000-0000-0000-0000-000000000003',
     title: 'Longest Substring Without Repeating Characters',
     slug: 'longest-substring-without-repeating-characters',
     difficulty: 'Medium',
@@ -1069,7 +1069,7 @@ class Solution {
     },
   },
   {
-    id: 'prob_4',
+    id: 'e0000000-0000-0000-0000-000000000004',
     title: 'Coin Change Problem (Min Coins)',
     slug: 'coin-change',
     difficulty: 'Medium',
@@ -1154,7 +1154,7 @@ class Solution {
     },
   },
   {
-    id: 'prob_5',
+    id: 'e0000000-0000-0000-0000-000000000005',
     title: 'Trapping Rain Water',
     slug: 'trapping-rain-water',
     difficulty: 'Hard',

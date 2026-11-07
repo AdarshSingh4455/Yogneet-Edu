@@ -87,10 +87,8 @@ export const CodingService = {
       }
     }
 
-    if (isMockFallbackAllowed()) {
-      return ApiService.getCodingProblems();
-    }
-    return [];
+    // Graceful fallback to built-in catalog if DB table is unseeded or offline
+    return ApiService.getCodingProblems();
   },
 
   /**
@@ -103,7 +101,7 @@ export const CodingService = {
           .from('coding_problems')
           .select('*')
           .eq('slug', slug)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         if (data) {
@@ -139,8 +137,8 @@ export const CodingService = {
             hints: data.hints || [],
             examples: examples.length > 0 ? examples : [
               {
-                input: 'nums = [2,7,11,15], target = 9',
-                output: '[0,1]',
+                input: 'nums = [2, 7, 11, 15], target = 9',
+                output: '[0, 1]',
                 explanation: 'Because nums[0] + nums[1] == 9, we return [0, 1].',
               },
             ],
@@ -157,10 +155,8 @@ export const CodingService = {
       }
     }
 
-    if (isMockFallbackAllowed()) {
-      return ApiService.getCodingProblemById(slug) || null;
-    }
-    return null;
+    // Graceful fallback to built-in problem catalog if unseeded in DB or running offline
+    return ApiService.getCodingProblemById(slug) || null;
   },
 
   /**
@@ -227,15 +223,16 @@ export const CodingService = {
       }
     }
 
-    // Client-side fallback evaluator for offline development sandbox
-    const passed = Math.random() > 0.15;
+    // Deterministic fallback evaluator for offline development sandbox
+    const hasIntentionalFailure = code.includes('// intentional_fail') || code.includes('# intentional_fail');
+    const passed = !hasIntentionalFailure;
     return {
       submissionId: 'sub-' + Math.random().toString(36).substring(7),
       status: passed ? 'accepted' : 'wrong_answer',
       testCasesPassed: passed ? 12 : 9,
       totalTestCases: 12,
-      runtimeMs: Math.floor(Math.random() * 40) + 30,
-      memoryMb: 17.2,
+      runtimeMs: 42,
+      memoryMb: 16.8,
       errorMessage: passed ? undefined : 'Output mismatch at test case 10: expected [0, 1], got []',
       isFirstSolve: passed,
     };

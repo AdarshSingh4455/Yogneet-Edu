@@ -29,6 +29,224 @@ const LANGUAGE_MAP: Record<string, number> = {
   java: 62,        // Java (OpenJDK)
 };
 
+function applyHarness(code: string, language: string): string {
+  if (!code) return '';
+
+  if (language === 'python') {
+    if (code.includes('if __name__ ==') || code.includes('sys.stdin.read(')) {
+      return code;
+    }
+    return `${code}
+
+# --- YOGNEET AUTO-HARNESS ---
+import sys, json, re
+
+def _yogneet_parse_val(v):
+    v = v.strip()
+    if v.lower() == 'true': return True
+    if v.lower() == 'false': return False
+    if v.lower() == 'null': return None
+    try:
+        return json.loads(v)
+    except Exception:
+        if (v.startswith('"') and v.endswith('"')) or (v.startswith("'") and v.endswith("'")):
+            return v[1:-1]
+        try:
+            if '.' in v: return float(v)
+            return int(v)
+        except Exception:
+            return v
+
+def _yogneet_runner():
+    raw = sys.stdin.read().strip()
+    if not raw:
+        return
+    matches = re.findall(r"""(?:[a-zA-Z_]\w*\s*=\s*)?(\[[^\]]*\]|"[^"]*"|'[^']*'|-?\d+(?:\.\d+)?|true|false|null|\{[^\}]*\})""", raw, re.IGNORECASE)
+    args = [_yogneet_parse_val(m) for m in matches] if matches else [_yogneet_parse_val(line) for line in raw.splitlines() if line.strip()]
+    sol = Solution() if 'Solution' in globals() else None
+    for candidate in ['twoSum', 'isValid', 'reverseString', 'isPalindrome', 'solve', 'solution']:
+        fn = getattr(sol, candidate, None) if sol else globals().get(candidate)
+        if callable(fn):
+            try:
+                res = fn(*args)
+                if isinstance(res, bool):
+                    print(str(res).lower())
+                elif isinstance(res, (list, dict)):
+                    print(json.dumps(res, separators=(', ', ': ')))
+                else:
+                    print(res)
+                return
+            except Exception as e:
+                import traceback
+                traceback.print_exc(file=sys.stderr)
+                sys.exit(1)
+
+if __name__ == '__main__':
+    _yogneet_runner()
+`;
+  }
+
+  if (language === 'javascript') {
+    if (code.includes('fs.readFileSync') || code.includes('process.stdin') || code.includes('readline')) {
+      return code;
+    }
+    return `${code}
+
+// --- YOGNEET AUTO-HARNESS ---
+(() => {
+  const fs = require('fs');
+  const raw = fs.readFileSync(0, 'utf-8').trim();
+  if (!raw) return;
+
+  function parseVal(v) {
+    v = v.trim();
+    if (v.toLowerCase() === 'true') return true;
+    if (v.toLowerCase() === 'false') return false;
+    if (v.toLowerCase() === 'null') return null;
+    try { return JSON.parse(v); } catch(e) {
+      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+        return v.slice(1, -1);
+      }
+      const num = Number(v);
+      return !isNaN(num) ? num : v;
+    }
+  }
+
+  const regex = /(?:[a-zA-Z_]\\w*\\s*=\\s*)?(\\[[^\\]]*\\]|"[^"]*"|'[^']*'|-?\\d+(?:\\.\\d+)?|true|false|null|\\{[^\\}]*\\})/gi;
+  const matches = [];
+  let m;
+  while ((m = regex.exec(raw)) !== null) {
+    matches.push(parseVal(m[1]));
+  }
+  const args = matches.length ? matches : raw.split('\\n').filter(Boolean).map(parseVal);
+
+  const candidates = [
+    typeof twoSum === 'function' ? twoSum : null,
+    typeof isValid === 'function' ? isValid : null,
+    typeof reverseString === 'function' ? reverseString : null,
+    typeof isPalindrome === 'function' ? isPalindrome : null,
+    typeof solve === 'function' ? solve : null,
+    typeof solution === 'function' ? solution : null,
+  ].filter(Boolean);
+
+  if (candidates.length > 0) {
+    try {
+      const res = candidates[0](...args);
+      if (typeof res === 'boolean') {
+        console.log(res ? 'true' : 'false');
+      } else if (typeof res === 'object' && res !== null) {
+        console.log(JSON.stringify(res).replace(/,/g, ', '));
+      } else {
+        console.log(res);
+      }
+    } catch(err) {
+      console.error(err);
+      process.exit(1);
+    }
+  }
+})();
+`;
+  }
+
+  if (language === 'cpp') {
+    if (code.includes('int main(') || code.includes('int main (')) {
+      return code;
+    }
+    return `${code}
+
+// --- YOGNEET AUTO-HARNESS ---
+#include <iostream>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <regex>
+
+static std::vector<int> _yogneet_parse_int_array(const std::string& s) {
+    std::vector<int> res;
+    std::regex re("-?\\\\d+");
+    auto begin = std::sregex_iterator(s.begin(), s.end(), re);
+    auto end = std::sregex_iterator();
+    for (std::sregex_iterator i = begin; i != end; ++i) {
+        res.push_back(std::stoi(i->str()));
+    }
+    return res;
+}
+
+int main() {
+    std::string line;
+    if (std::getline(std::cin, line)) {
+        Solution sol;
+        std::smatch m;
+        std::regex target_re("target\\\\s*=\\\\s*(-?\\\\d+)");
+        if (std::regex_search(line, m, target_re)) {
+            int target = std::stoi(m[1].str());
+            std::vector<int> nums = _yogneet_parse_int_array(line.substr(0, m.position()));
+            auto ans = sol.twoSum(nums, target);
+            if (ans.size() >= 2) {
+                std::cout << "[" << ans[0] << ", " << ans[1] << "]" << std::endl;
+            } else {
+                std::cout << "[]" << std::endl;
+            }
+            return 0;
+        }
+        std::regex s_re("s\\\\s*=\\\\s*\\\"([^\\\"]*)\\\"");
+        if (std::regex_search(line, m, s_re)) {
+            bool ans = sol.isValid(m[1].str());
+            std::cout << (ans ? "true" : "false") << std::endl;
+            return 0;
+        }
+    }
+    return 0;
+}
+`;
+  }
+
+  if (language === 'java') {
+    if (code.includes('public static void main(')) {
+      return code;
+    }
+    return `import java.util.*;
+import java.util.regex.*;
+
+${code}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        if (!sc.hasNextLine()) return;
+        String line = sc.nextLine();
+        Solution sol = new Solution();
+
+        Matcher tm = Pattern.compile("target\\\\s*=\\\\s*(-?\\\\d+)").matcher(line);
+        if (tm.find()) {
+            int target = Integer.parseInt(tm.group(1));
+            Matcher nm = Pattern.compile("-?\\\\d+").matcher(line.substring(0, tm.start()));
+            List<Integer> list = new ArrayList<>();
+            while (nm.find()) list.add(Integer.parseInt(nm.group()));
+            int[] nums = list.stream().mapToInt(i -> i).toArray();
+            int[] res = sol.twoSum(nums, target);
+            if (res.length >= 2) {
+                System.out.println("[" + res[0] + ", " + res[1] + "]");
+            } else {
+                System.out.println("[]");
+            }
+            return;
+        }
+
+        Matcher sm = Pattern.compile("s\\\\s*=\\\\s*\\\"([^\\\"]*)\\\"").matcher(line);
+        if (sm.find()) {
+            boolean res = sol.isValid(sm.group(1));
+            System.out.println(res ? "true" : "false");
+            return;
+        }
+    }
+}
+`;
+  }
+
+  return code;
+}
+
 async function executeSingleTestCase(
   judge0BaseUrl: string,
   headers: Record<string, string>,
@@ -167,6 +385,9 @@ serve(async (req: Request) => {
       );
     }
 
+    // Wrap code with harness if appropriate
+    const finalCode = applyHarness(code, language);
+
     // 4. Secure Judge0 Configuration from Server Environment
     const judge0BaseUrl = (Deno.env.get('JUDGE0_API_URL') || 'https://ce.judge0.com').replace(/\/+$/, '');
     const judge0ApiKey = Deno.env.get('JUDGE0_API_KEY');
@@ -231,7 +452,7 @@ serve(async (req: Request) => {
           execResult = await executeSingleTestCase(
             judge0BaseUrl,
             judge0Headers,
-            code,
+            finalCode,
             languageId,
             tc.input
           );
@@ -263,9 +484,9 @@ serve(async (req: Request) => {
           break;
         }
 
-        // Compare stdout with expected output
-        const actualTrimmed = execResult.stdout.trim();
-        const expectedTrimmed = tc.expected_output.trim();
+        // Compare stdout with expected output (normalizing CRLF and trailing whitespace)
+        const actualTrimmed = execResult.stdout.replace(/\r\n/g, '\n').trim();
+        const expectedTrimmed = tc.expected_output.replace(/\r\n/g, '\n').trim();
 
         if (actualTrimmed !== expectedTrimmed) {
           overallStatus = 'wrong_answer';
@@ -323,7 +544,7 @@ serve(async (req: Request) => {
     const singleExec = await executeSingleTestCase(
       judge0BaseUrl,
       judge0Headers,
-      code,
+      finalCode,
       languageId,
       stdin
     );
