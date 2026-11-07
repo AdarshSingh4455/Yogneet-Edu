@@ -213,7 +213,7 @@ export const VideoPlayerPage: React.FC = () => {
         </div>
 
         <div className="py-20 text-center space-y-4 max-w-md mx-auto">
-          <div className="w-14 h-14 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-cyan-400 mx-auto flex items-center justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-cyan-400 mx-auto flex items-center justify-center">
             <Youtube className="w-7 h-7 text-red-500" />
           </div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">

@@ -338,7 +338,7 @@ export const IconLibraryManagementPage: React.FC = () => {
                 {icons.length}
               </span>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/50 text-brand-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-cyan-400 flex items-center justify-center">
               <Boxes className="w-5 h-5" />
             </div>
           </div>
@@ -713,7 +713,7 @@ export const IconLibraryManagementPage: React.FC = () => {
                 onClick={() => setSourceType('lucide')}
                 className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition-all ${
                   sourceType === 'lucide'
-                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 shadow-xs'
+                    ? 'border-brand-500 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 shadow-xs'
                     : 'border-light-border dark:border-dark-border text-slate-600 hover:bg-slate-50 dark:hover:bg-dark-hover'
                 }`}
               >
@@ -726,7 +726,7 @@ export const IconLibraryManagementPage: React.FC = () => {
                 onClick={() => setSourceType('url')}
                 className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition-all ${
                   sourceType === 'url'
-                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 shadow-xs'
+                    ? 'border-brand-500 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 shadow-xs'
                     : 'border-light-border dark:border-dark-border text-slate-600 hover:bg-slate-50 dark:hover:bg-dark-hover'
                 }`}
               >
@@ -739,7 +739,7 @@ export const IconLibraryManagementPage: React.FC = () => {
                 onClick={() => setSourceType('upload')}
                 className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition-all ${
                   sourceType === 'upload'
-                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 shadow-xs'
+                    ? 'border-brand-500 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 shadow-xs'
                     : 'border-light-border dark:border-dark-border text-slate-600 hover:bg-slate-50 dark:hover:bg-dark-hover'
                 }`}
               >
@@ -806,7 +806,7 @@ export const IconLibraryManagementPage: React.FC = () => {
                       }}
                       className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${
                         isSelected
-                          ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/80 text-brand-600 dark:text-cyan-400 font-bold shadow-xs'
+                          ? 'border-brand-500 bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-cyan-400 font-bold shadow-xs'
                           : 'border-transparent text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-dark-card'
                       }`}
                       title={key}
@@ -866,7 +866,7 @@ export const IconLibraryManagementPage: React.FC = () => {
                   htmlFor="icon-file-input"
                   className="cursor-pointer flex flex-col items-center gap-2"
                 >
-                  <div className="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-500 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-cyan-400 flex items-center justify-center">
                     <Upload className="w-5 h-5" />
                   </div>
                   <div>

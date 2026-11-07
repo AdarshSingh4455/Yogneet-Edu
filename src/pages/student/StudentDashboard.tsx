@@ -195,7 +195,7 @@ export const StudentDashboard: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-cyan-300 border border-brand-200 dark:border-brand-800">
+              <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-cyan-300 border border-blue-300 dark:border-cyan-500/40 shadow-xs">
                 Core Learning Path
               </span>
               <span className="text-xs text-slate-400">Structured 4-Stage Technical Curriculum</span>

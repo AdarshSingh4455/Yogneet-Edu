@@ -116,8 +116,8 @@ export const PracticalAssignmentsPage: React.FC = () => {
       <div className="rounded-3xl border border-light-border dark:border-dark-border bg-gradient-to-r from-brand-500/10 via-purple-500/10 to-brand-500/5 p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
-            <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-brand-100 dark:bg-brand-950/60 text-brand-700 dark:text-cyan-300 border border-brand-200 dark:border-brand-800">
-              <Sparkles className="w-3 h-3" /> Step 3: Practical Projects & Assignments
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-cyan-300 border border-blue-300 dark:border-cyan-500/40 shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400" /> Step 3: Practical Projects & Assignments
             </span>
             <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
               Lecture-Wise Practical Assignments
