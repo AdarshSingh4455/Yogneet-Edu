@@ -66,7 +66,7 @@ export const StudentDashboard: React.FC = () => {
       {/* Welcome Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-yogneet-navy via-[#12224A] to-[#0A1329] p-6 sm:p-8 text-white border border-yogneet-cyan/20 shadow-2xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-          <div className="max-w-2xl">
+          <div className="min-w-0 flex-1 max-w-2xl">
             <div className="flex items-center gap-2 mb-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-yogneet-cyan/15 border border-yogneet-cyan/30 text-yogneet-cyan backdrop-blur-sm">
                 <Sparkles className="w-3.5 h-3.5 text-yogneet-cyan" /> Tech Geek Adarsh Learning Hub
@@ -107,12 +107,12 @@ export const StudentDashboard: React.FC = () => {
 
           {/* Dedicated Hero Phoenix Emblem */}
           <div className="flex items-center justify-center md:justify-end shrink-0 self-center">
-            <div className="relative w-48 h-32 sm:w-60 sm:h-36 md:w-72 md:h-44 flex items-center justify-center">
+            <div className="relative w-48 h-32 sm:w-56 sm:h-36 md:w-56 md:h-36 lg:w-72 lg:h-44 flex items-center justify-center">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/20 to-orange-500/25 blur-2xl rounded-full pointer-events-none" />
               <img
                 src="/brand/yogneet-emblem.png"
                 alt="Yogneet Edu Phoenix Emblem"
-                className="relative max-h-28 sm:max-h-36 md:max-h-40 w-auto object-contain drop-shadow-[0_0_25px_rgba(0,200,232,0.35)] transition-transform duration-300 hover:scale-105"
+                className="relative max-h-28 sm:max-h-32 md:max-h-32 lg:max-h-40 w-auto object-contain drop-shadow-[0_0_25px_rgba(0,200,232,0.35)] transition-transform duration-300 hover:scale-105"
               />
             </div>
           </div>
