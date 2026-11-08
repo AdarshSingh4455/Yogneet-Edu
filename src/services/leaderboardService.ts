@@ -129,7 +129,7 @@ export const LeaderboardService = {
         .from('leaderboard_config' as any)
         .select('*')
         .eq('id', 1)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         if (error) {
