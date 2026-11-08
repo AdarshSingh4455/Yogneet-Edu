@@ -22,23 +22,22 @@ export const CommunityService = {
             is_pinned,
             is_locked,
             is_hidden,
-            is_soft_deleted,
-            moderation_reason,
-            moderated_by,
-            moderated_at,
-            upvotes_count,
+            deleted_at,
+            deletion_reason,
+            deleted_by,
+            upvotes,
             replies_count,
-            views_count,
+            views,
             is_solved,
             created_at,
             updated_at,
-            profiles:author_id (id, name, avatar, role)
+            profiles:author_id (id, name, avatar:avatar_url, role)
           `)
           .order('is_pinned', { ascending: false })
           .order('created_at', { ascending: false });
 
         if (!includeModerated) {
-          query = query.eq('is_hidden', false).eq('is_soft_deleted', false);
+          query = query.eq('is_hidden', false).is('deleted_at', null);
         }
 
         const { data, error } = await query;
@@ -52,26 +51,26 @@ export const CommunityService = {
             author: {
               id: item.profiles?.id || item.author_id,
               name: item.profiles?.name || 'Anonymous Learner',
-              avatar: item.profiles?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+              avatar: item.profiles?.avatar || item.profiles?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
               role: item.profiles?.role || 'student',
               badge: item.profiles?.role === 'admin' ? 'Faculty Lead' : undefined,
             },
             category: item.category,
             tags: item.tags || [],
             createdAt: new Date(item.created_at).toLocaleDateString(),
-            upvotes: item.upvotes_count || 0,
+            upvotes: item.upvotes ?? item.upvotes_count ?? 0,
             userUpvoted: false,
             repliesCount: item.replies_count || 0,
             isSolved: item.is_solved || false,
-            views: item.views_count || 0,
+            views: item.views ?? item.views_count ?? 0,
             replies: [],
             isPinned: item.is_pinned,
             isLocked: item.is_locked,
             isHidden: item.is_hidden,
-            isSoftDeleted: item.is_soft_deleted,
-            moderationReason: item.moderation_reason,
-            moderatedBy: item.moderated_by,
-            moderatedAt: item.moderated_at,
+            isSoftDeleted: Boolean(item.deleted_at),
+            moderationReason: item.deletion_reason || item.flag_reason,
+            moderatedBy: item.deleted_by,
+            moderatedAt: item.deleted_at,
           }));
         }
       } catch (err) {
@@ -95,7 +94,7 @@ export const CommunityService = {
           .from('discussion_threads')
           .select(`
             *,
-            profiles:author_id (id, name, avatar, role)
+            profiles:author_id (id, name, avatar:avatar_url, role)
           `)
           .eq('id', id)
           .single();
@@ -107,13 +106,13 @@ export const CommunityService = {
             .from('discussion_replies')
             .select(`
               *,
-              profiles:author_id (id, name, avatar, role)
+              profiles:author_id (id, name, avatar:avatar_url, role)
             `)
             .eq('thread_id', id)
             .order('created_at', { ascending: true });
 
           if (!includeModerated) {
-            repliesQuery = repliesQuery.eq('is_soft_deleted', false);
+            repliesQuery = repliesQuery.is('deleted_at', null);
           }
 
           const { data: repliesData } = await repliesQuery;
@@ -124,15 +123,15 @@ export const CommunityService = {
             author: {
               id: r.profiles?.id || r.author_id,
               name: r.profiles?.name || 'Fellow Learner',
-              avatar: r.profiles?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+              avatar: r.profiles?.avatar || r.profiles?.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
               role: r.profiles?.role || 'student',
             },
             content: r.content,
             createdAt: new Date(r.created_at).toLocaleDateString(),
-            upvotes: r.upvotes_count || 0,
+            upvotes: r.upvotes ?? r.upvotes_count ?? 0,
             userUpvoted: false,
             isAcceptedSolution: r.is_solution,
-            isSoftDeleted: r.is_soft_deleted,
+            isSoftDeleted: Boolean(r.deleted_at),
           }));
 
           return {
@@ -142,23 +141,23 @@ export const CommunityService = {
             author: {
               id: threadData.profiles?.id || threadData.author_id,
               name: threadData.profiles?.name || 'Learner',
-              avatar: threadData.profiles?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+              avatar: threadData.profiles?.avatar || threadData.profiles?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
               role: threadData.profiles?.role || 'student',
             },
             category: threadData.category,
             tags: threadData.tags || [],
             createdAt: new Date(threadData.created_at).toLocaleDateString(),
-            upvotes: threadData.upvotes_count || 0,
+            upvotes: threadData.upvotes ?? threadData.upvotes_count ?? 0,
             userUpvoted: false,
             repliesCount: replies.length,
             isSolved: threadData.is_solved,
-            views: (threadData.views_count || 0) + 1,
+            views: (threadData.views ?? threadData.views_count ?? 0) + 1,
             replies,
             isPinned: threadData.is_pinned,
             isLocked: threadData.is_locked,
             isHidden: threadData.is_hidden,
-            isSoftDeleted: threadData.is_soft_deleted,
-            moderationReason: threadData.moderation_reason,
+            isSoftDeleted: Boolean(threadData.deleted_at),
+            moderationReason: threadData.deletion_reason || threadData.flag_reason,
           };
         }
       } catch (err) {
@@ -310,7 +309,6 @@ export const CommunityService = {
       const { error } = await (supabase as any)
         .from('discussion_replies')
         .update({
-          is_soft_deleted: isSoftDeleted,
           deletion_reason: isSoftDeleted ? reason : null,
           deleted_at: isSoftDeleted ? new Date().toISOString() : null,
           deleted_by: isSoftDeleted ? user?.id : null,
