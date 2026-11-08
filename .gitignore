@@ -24,6 +24,13 @@ vite.config.js
 supabase/.temp/
 
 # Editor directories and files
+tools/
+load-tests/results/
+load-tests/test-tokens.json
+load-tests/*.tokens.json
+browser-tests/results/
+browser-tests/screenshots/
+browser-tests/*.json
 scratch/
 backups/
 .vscode/*
