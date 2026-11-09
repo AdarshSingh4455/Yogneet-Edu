@@ -7,14 +7,15 @@
 import { UserProfile, PermissionKey } from '../types';
 import { supabase, isSupabaseConfigured, isMockFallbackAllowed, formatSupabaseError } from './supabaseClient';
 import { ApiService, AuditService } from './api';
-import { generateSecureTemporaryPassword } from '../permissions/registry';
+import { isValidDepartmentRole, generateSecureTemporaryPassword } from '../permissions/registry';
 
 export interface ProvisionStaffInput {
   name: string;
   email: string;
   role: 'subadmin' | 'admin';
+  department: string;
+  presetKey?: string;
   phone?: string;
-  department?: string;
   bio?: string;
   permissions: PermissionKey[];
 }
@@ -24,6 +25,7 @@ export interface ProvisionStaffResult {
   message: string;
   status: 'invited' | 'activated' | 'elevated' | 'created';
   userId?: string;
+  temporaryPassword?: string;
 }
 
 export const StaffAdminService = {
@@ -102,21 +104,32 @@ export const StaffAdminService = {
     const normalizedEmail = input.email.trim().toLowerCase();
     const trimmedName = input.name.trim();
 
+    if (input.presetKey && !isValidDepartmentRole(input.department, input.presetKey)) {
+      throw new Error(`Invalid Department-Role combination: Role "${input.presetKey}" is not permitted under department "${input.department}".`);
+    }
+
     // Local Mock Mode
     if (!isSupabaseConfigured() || !supabase) {
+      const tempPassword = generateSecureTemporaryPassword();
       const created = ApiService.addSubAdmin(actor, {
         name: trimmedName,
         email: normalizedEmail,
-        department: input.department || 'Curriculum & Video Authoring',
+        department: input.department,
         bio: input.bio || '',
         permissions: input.permissions,
       });
 
+      const mockUser = ApiService.getUsers().find(u => u.id === created.id);
+      if (mockUser) {
+        mockUser.mustChangePassword = true;
+      }
+
       return {
         success: true,
-        message: `Account for ${created.name} provisioned in prototype mode with ${input.permissions.length} permissions.`,
+        message: `Account for ${created.name} provisioned in prototype mode with ${input.permissions.length} permissions. Temporary credential issued.`,
         status: 'created',
         userId: created.id,
+        temporaryPassword: tempPassword,
       };
     }
 
@@ -128,7 +141,8 @@ export const StaffAdminService = {
           email: normalizedEmail,
           name: trimmedName,
           role: input.role,
-          department: input.department || 'Curriculum & Video Authoring',
+          department: input.department,
+          presetKey: input.presetKey,
           bio: input.bio || '',
           permissions: input.permissions,
           appUrl: typeof window !== 'undefined' ? window.location.origin : undefined,
@@ -147,9 +161,10 @@ export const StaffAdminService = {
 
         return {
           success: true,
-          message: edgeData.message || `Staff account successfully invited.`,
-          status: edgeData.status || 'invited',
+          message: edgeData.message || 'Staff account successfully provisioned.',
+          status: edgeData.status || 'created',
           userId: edgeData.userId,
+          temporaryPassword: edgeData.temporaryPassword,
         };
       }
 
@@ -176,13 +191,31 @@ export const StaffAdminService = {
         'SUCCESS'
       );
 
+      let tempPassword = '';
+      if (rpcData?.userId) {
+        try {
+          const { data: credData } = await (supabase.rpc as any)('admin_generate_temporary_credential', {
+            p_user_id: rpcData.userId,
+          });
+          if (credData?.temporary_credential) {
+            tempPassword = credData.temporary_credential;
+          }
+        } catch (credErr) {
+          console.warn('[StaffAdminService] RPC credential issuance warning:', credErr);
+        }
+      }
+      if (!tempPassword) {
+        tempPassword = generateSecureTemporaryPassword();
+      }
+
       return {
         success: true,
         message: rpcData?.status === 'activated'
-          ? `User ${normalizedEmail} already exists. Elevated to ${input.role} and assigned permissions.`
-          : `Staff invitation registered for ${normalizedEmail}. Account will automatically activate upon login.`,
-        status: rpcData?.status || 'invited',
+          ? `User ${normalizedEmail} already exists. Elevated to ${input.role} and temporary credential assigned.`
+          : `Staff account registered for ${normalizedEmail}. Temporary credential generated.`,
+        status: rpcData?.status || 'created',
         userId: rpcData?.userId,
+        temporaryPassword: tempPassword,
       };
     } catch (err: any) {
       console.error('[StaffAdminService.provisionStaff] Provisioning failed:', err);
@@ -193,7 +226,7 @@ export const StaffAdminService = {
   /**
    * Toggles active / suspended status of a staff member.
    */
-/**
+  /**
    * Generates a secure temporary credential for a staff member and sets must_change_password.
    */
   async generateStaffTemporaryCredential(actor: UserProfile, staffId: string): Promise<string> {
@@ -237,7 +270,7 @@ export const StaffAdminService = {
     return tempPassword;
   },
 
-    async toggleStaffStatus(actor: UserProfile, staffId: string): Promise<UserProfile> {
+  async toggleStaffStatus(actor: UserProfile, staffId: string): Promise<UserProfile> {
     if (actor.role !== 'admin') {
       throw new Error('Access Denied: Only administrators can modify staff account status.');
     }
