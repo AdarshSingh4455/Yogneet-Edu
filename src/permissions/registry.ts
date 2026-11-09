@@ -529,41 +529,61 @@ export function isValidDepartmentRole(department: string, roleKey: string): bool
  * - Minimum 16 characters (well over the 12-character requirement)
  * - Contains uppercase letters, lowercase letters, numbers, and special symbols
  * - Generated using cryptographically secure pseudorandom number generators (Web Crypto API)
+ * - Rejection sampling is employed for all random selections to completely eliminate modulo bias
  * - NEVER derived from phone numbers, email addresses, names, or predictable sequences
+ * - Throws a controlled Error if cryptographically secure randomness is unavailable (zero non-crypto fallback)
  */
-export function generateSecureTemporaryPassword(): string {
+export function generateSecureTemporaryPassword(length: number = 16): string {
+  const cryptoObj = typeof globalThis !== 'undefined' ? globalThis.crypto : undefined;
+  if (!cryptoObj || typeof cryptoObj.getRandomValues !== 'function') {
+    throw new Error('Cryptographically secure pseudorandom number generator (crypto.getRandomValues) is required but unavailable in this environment.');
+  }
+
   const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   const lower = 'abcdefghijkmnopqrstuvwxyz';
   const digits = '23456789';
-  const symbols = '!@#$%^&*_-+=';
+  const symbols = '!@#$%^&*';
   const all = upper + lower + digits + symbols;
 
-  const getRandomByte = (): number => {
-    if (typeof globalThis !== 'undefined' && globalThis.crypto?.getRandomValues) {
-      const arr = new Uint8Array(1);
-      globalThis.crypto.getRandomValues(arr);
-      return arr[0];
+  /**
+   * Unbiased random integer selection in range [0, maxExclusive - 1] via rejection sampling.
+   * Discards samples >= limit where limit is the largest multiple of maxExclusive <= 256.
+   */
+  const getUnbiasedRandomInt = (maxExclusive: number): number => {
+    if (maxExclusive <= 0 || maxExclusive > 256) {
+      throw new Error(`Invalid range for byte rejection sampling: ${maxExclusive}`);
     }
-    return Math.floor(Math.random() * 256);
+    const limit = 256 - (256 % maxExclusive);
+    const buffer = new Uint8Array(1);
+    while (true) {
+      cryptoObj.getRandomValues(buffer);
+      const byte = buffer[0];
+      if (byte < limit) {
+        return byte % maxExclusive;
+      }
+    }
   };
 
-  // Ensure at least one from each character class
-  const u = upper[getRandomByte() % upper.length];
-  const l = lower[getRandomByte() % lower.length];
-  const d = digits[getRandomByte() % digits.length];
-  const s = symbols[getRandomByte() % symbols.length];
+  // Enforce minimum 16 characters complexity
+  const targetLength = Math.max(16, length);
 
-  // Fill remaining 12 characters from entire pool
-  const restLength = 12;
+  // Ensure at least one from each character class
+  const u = upper[getUnbiasedRandomInt(upper.length)];
+  const l = lower[getUnbiasedRandomInt(lower.length)];
+  const d = digits[getUnbiasedRandomInt(digits.length)];
+  const s = symbols[getUnbiasedRandomInt(symbols.length)];
+
+  // Fill remaining characters from entire pool using rejection sampling
+  const restLength = targetLength - 4;
   let rest = '';
   for (let i = 0; i < restLength; i++) {
-    rest += all[getRandomByte() % all.length];
+    rest += all[getUnbiasedRandomInt(all.length)];
   }
 
-  // Shuffle characters using Fisher-Yates
+  // Shuffle characters using Fisher-Yates with unbiased rejection sampling
   const chars = (u + l + d + s + rest).split('');
   for (let i = chars.length - 1; i > 0; i--) {
-    const j = getRandomByte() % (i + 1);
+    const j = getUnbiasedRandomInt(i + 1);
     [chars[i], chars[j]] = [chars[j], chars[i]];
   }
 

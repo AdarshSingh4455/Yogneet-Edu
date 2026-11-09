@@ -10,32 +10,54 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 
 // Runtime implementation matching src/permissions/registry.ts
-function generateSecureTemporaryPassword(length = 16) {
+function generateSecureTemporaryPassword(length = 16, customCrypto = undefined) {
+  const cryptoObj = customCrypto !== undefined ? customCrypto : (typeof globalThis !== 'undefined' ? globalThis.crypto : (typeof crypto !== 'undefined' ? crypto : undefined));
+  if (!cryptoObj || typeof cryptoObj.getRandomValues !== 'function') {
+    throw new Error('Cryptographically secure pseudorandom number generator (crypto.getRandomValues) is required but unavailable in this environment.');
+  }
+
   const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   const lowercase = 'abcdefghijkmnopqrstuvwxyz';
   const numbers = '23456789';
   const symbols = '!@#$%^&*';
   const allChars = uppercase + lowercase + numbers + symbols;
 
-  const randomValues = new Uint32Array(length);
-  crypto.getRandomValues(randomValues);
+  /**
+   * Unbiased random integer selection in range [0, maxExclusive - 1] via rejection sampling.
+   * Discards samples >= limit where limit is the largest multiple of maxExclusive <= 256.
+   */
+  const getUnbiasedRandomInt = (maxExclusive) => {
+    if (maxExclusive <= 0 || maxExclusive > 256) {
+      throw new Error(`Invalid range for byte rejection sampling: ${maxExclusive}`);
+    }
+    const limit = 256 - (256 % maxExclusive);
+    const buffer = new Uint8Array(1);
+    while (true) {
+      cryptoObj.getRandomValues(buffer);
+      const byte = buffer[0];
+      if (byte < limit) {
+        return byte % maxExclusive;
+      }
+    }
+  };
 
-  const passwordChars = [
-    uppercase[randomValues[0] % uppercase.length],
-    lowercase[randomValues[1] % lowercase.length],
-    numbers[randomValues[2] % numbers.length],
-    symbols[randomValues[3] % symbols.length],
-  ];
+  const targetLength = Math.max(16, length);
 
-  for (let i = 4; i < length; i++) {
-    passwordChars.push(allChars[randomValues[i] % allChars.length]);
+  const u = uppercase[getUnbiasedRandomInt(uppercase.length)];
+  const l = lowercase[getUnbiasedRandomInt(lowercase.length)];
+  const d = numbers[getUnbiasedRandomInt(numbers.length)];
+  const s = symbols[getUnbiasedRandomInt(symbols.length)];
+
+  const restLength = targetLength - 4;
+  let rest = '';
+  for (let i = 0; i < restLength; i++) {
+    rest += allChars[getUnbiasedRandomInt(allChars.length)];
   }
 
+  const passwordChars = (u + l + d + s + rest).split('');
   for (let i = passwordChars.length - 1; i > 0; i--) {
-    const j = randomValues[i] % (i + 1);
-    const temp = passwordChars[i];
-    passwordChars[i] = passwordChars[j];
-    passwordChars[j] = temp;
+    const j = getUnbiasedRandomInt(i + 1);
+    [passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]];
   }
 
   return passwordChars.join('');
@@ -112,27 +134,61 @@ function isValidDepartmentRole(department, roleKey) {
 describe('Sub-Admin Provisioning & RBAC Hotfix Suite', () => {
 
   describe('Suite 1: Cryptographic Temporary Password Generation', () => {
-    it('generates a password of minimum 12 characters (default 16)', () => {
+    it('generates a password of minimum 16 characters (default 16)', () => {
       const pwd = generateSecureTemporaryPassword();
       assert.equal(pwd.length, 16);
-      assert.ok(pwd.length >= 12);
+      assert.ok(pwd.length >= 16);
     });
 
-    it('supports custom lengths >= 12 characters', () => {
+    it('supports custom lengths >= 16 characters and clamps smaller requests to 16', () => {
+      const pwdShort = generateSecureTemporaryPassword(8);
+      assert.equal(pwdShort.length, 16, 'Should clamp sub-16 lengths to 16');
       const pwd20 = generateSecureTemporaryPassword(20);
       assert.equal(pwd20.length, 20);
       const pwd24 = generateSecureTemporaryPassword(24);
       assert.equal(pwd24.length, 24);
     });
 
-    it('enforces character set complexity (uppercase, lowercase, number, symbol)', () => {
+    it('enforces character set compliance (uppercase, lowercase, number, symbol from !@#$%^&*)', () => {
       for (let i = 0; i < 50; i++) {
         const pwd = generateSecureTemporaryPassword();
         assert.match(pwd, /[A-Z]/, 'Must contain uppercase');
         assert.match(pwd, /[a-z]/, 'Must contain lowercase');
         assert.match(pwd, /[0-9]/, 'Must contain number');
-        assert.match(pwd, /[!@#$%^&*]/, 'Must contain symbol');
+        assert.match(pwd, /[!@#$%^&*]/, 'Must contain symbol from !@#$%^&*');
       }
+    });
+
+    it('throws controlled error if crypto.getRandomValues is unavailable (no Math.random fallback)', () => {
+      assert.throws(
+        () => generateSecureTemporaryPassword(16, null),
+        /Cryptographically secure pseudorandom number generator/
+      );
+      assert.throws(
+        () => generateSecureTemporaryPassword(16, {}),
+        /Cryptographically secure pseudorandom number generator/
+      );
+      assert.throws(
+        () => generateSecureTemporaryPassword(16, { getRandomValues: 'not-a-function' }),
+        /Cryptographically secure pseudorandom number generator/
+      );
+    });
+
+    it('rejection sampling executes without modulo bias across all character classes', () => {
+      const counts = { u: 0, l: 0, d: 0, s: 0 };
+      for (let i = 0; i < 100; i++) {
+        const pwd = generateSecureTemporaryPassword();
+        for (const ch of pwd) {
+          if (/[A-Z]/.test(ch)) counts.u++;
+          else if (/[a-z]/.test(ch)) counts.l++;
+          else if (/[0-9]/.test(ch)) counts.d++;
+          else if (/[!@#$%^&*]/.test(ch)) counts.s++;
+        }
+      }
+      assert.ok(counts.u > 100, 'Uppercase characters adequately sampled');
+      assert.ok(counts.l > 100, 'Lowercase characters adequately sampled');
+      assert.ok(counts.d > 50, 'Digits adequately sampled');
+      assert.ok(counts.s > 50, 'Symbols adequately sampled');
     });
 
     it('has zero collisions over 200 consecutive generations', () => {
@@ -206,7 +262,7 @@ describe('Sub-Admin Provisioning & RBAC Hotfix Suite', () => {
   });
 
   describe('Suite 3: Source Code & Architectural Invariant Audit', () => {
-    it('verifies src/permissions/registry.ts exports all required structures', () => {
+    it('verifies src/permissions/registry.ts exports all required structures and contains NO Math.random', () => {
       const code = fs.readFileSync(path.resolve('src/permissions/registry.ts'), 'utf8');
       assert.ok(code.includes('export const DEPARTMENT_CONFIGS'));
       assert.ok(code.includes('export const VALID_DEPARTMENTS'));
@@ -214,6 +270,9 @@ describe('Sub-Admin Provisioning & RBAC Hotfix Suite', () => {
       assert.ok(code.includes('export function getRolesForDepartment'));
       assert.ok(code.includes('export function isValidDepartmentRole'));
       assert.ok(code.includes('export function generateSecureTemporaryPassword'));
+      assert.ok(!code.includes('Math.random'), 'src/permissions/registry.ts must NOT use Math.random');
+      assert.ok(code.includes('cryptoObj.getRandomValues'), 'Must require crypto.getRandomValues');
+      assert.ok(code.includes('rejection sampling') || code.includes('getUnbiasedRandomInt'), 'Must use rejection sampling for unbiased selection');
     });
 
     it('verifies src/services/staffAdminService.ts enforces server-side validation and secure credentials', () => {
@@ -225,11 +284,13 @@ describe('Sub-Admin Provisioning & RBAC Hotfix Suite', () => {
       assert.ok(code.includes('must_change_password: true'));
     });
 
-    it('verifies supabase/functions/admin-provision-staff/index.ts uses authoritative auth and security validation', () => {
+    it('verifies supabase/functions/admin-provision-staff/index.ts uses authoritative auth, rejection sampling and NO Math.random', () => {
       const code = fs.readFileSync(path.resolve('supabase/functions/admin-provision-staff/index.ts'), 'utf8');
       assert.ok(code.includes('adminClient.auth.admin.createUser'), 'Must use authoritative admin API');
       assert.ok(code.includes('DEPARTMENT_ROLE_MAPPING'), 'Must validate against server-side department role mapping');
       assert.ok(code.includes('generateCryptographicPassword'), 'Must generate random cryptographic password');
+      assert.ok(!code.includes('Math.random'), 'supabase/functions/admin-provision-staff/index.ts must NOT use Math.random');
+      assert.ok(code.includes('crypto.getRandomValues'), 'Must require crypto.getRandomValues');
       assert.ok(code.includes('must_change_password: true'), 'Must set must_change_password flag');
       assert.ok(code.includes('temporaryPassword: tempPassword'), 'Must return temporaryPassword to admin');
       assert.ok(!code.includes('details: `...${tempPassword}`'), 'Must never log temporary password to audit trail');

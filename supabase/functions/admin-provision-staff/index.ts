@@ -51,38 +51,58 @@ const DEPARTMENT_ROLE_MAPPING: Record<string, string[]> = {
 
 /**
  * Generates a cryptographically secure random password meeting all platform complexity rules:
- * - 16 characters in length
+ * - Minimum 16 characters in length
  * - At least one uppercase letter, lowercase letter, number, and special symbol
  * - Generated using crypto.getRandomValues()
+ * - Rejection sampling is employed for all selections to completely eliminate modulo bias
+ * - Zero non-crypto fallback; throws controlled error if secure randomness is unavailable
  * - Never derived from predictable personal data
  */
-function generateCryptographicPassword(): string {
+function generateCryptographicPassword(length = 16): string {
+  if (typeof crypto === 'undefined' || typeof crypto.getRandomValues !== 'function') {
+    throw new Error('Cryptographically secure pseudorandom number generator (crypto.getRandomValues) is required but unavailable.');
+  }
+
   const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   const lower = 'abcdefghijkmnopqrstuvwxyz';
   const digits = '23456789';
   const symbols = '!@#$%^&*';
   const all = upper + lower + digits + symbols;
 
-  const getRandomByte = (): number => {
-    const arr = new Uint8Array(1);
-    crypto.getRandomValues(arr);
-    return arr[0];
+  /**
+   * Unbiased random integer selection in range [0, maxExclusive - 1] via rejection sampling.
+   */
+  const getUnbiasedRandomInt = (maxExclusive: number): number => {
+    if (maxExclusive <= 0 || maxExclusive > 256) {
+      throw new Error(`Invalid range for byte rejection sampling: ${maxExclusive}`);
+    }
+    const limit = 256 - (256 % maxExclusive);
+    const buffer = new Uint8Array(1);
+    while (true) {
+      crypto.getRandomValues(buffer);
+      const byte = buffer[0];
+      if (byte < limit) {
+        return byte % maxExclusive;
+      }
+    }
   };
 
-  const u = upper[getRandomByte() % upper.length];
-  const l = lower[getRandomByte() % lower.length];
-  const d = digits[getRandomByte() % digits.length];
-  const s = symbols[getRandomByte() % symbols.length];
+  const targetLength = Math.max(16, length);
 
-  const restLength = 12;
+  const u = upper[getUnbiasedRandomInt(upper.length)];
+  const l = lower[getUnbiasedRandomInt(lower.length)];
+  const d = digits[getUnbiasedRandomInt(digits.length)];
+  const s = symbols[getUnbiasedRandomInt(symbols.length)];
+
+  const restLength = targetLength - 4;
   let rest = '';
   for (let i = 0; i < restLength; i++) {
-    rest += all[getRandomByte() % all.length];
+    rest += all[getUnbiasedRandomInt(all.length)];
   }
 
   const chars = (u + l + d + s + rest).split('');
   for (let i = chars.length - 1; i > 0; i--) {
-    const j = getRandomByte() % (i + 1);
+    const j = getUnbiasedRandomInt(i + 1);
     [chars[i], chars[j]] = [chars[j], chars[i]];
   }
 
