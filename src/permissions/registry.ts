@@ -434,6 +434,95 @@ export const ROLE_PRESETS: Record<string, { name: string; description: string; p
     permissions: ['videos.view', 'notes.view', 'tests.view', 'students.view', 'audit_logs.view', 'analytics.view', 'advertisements.view', 'leaderboard.view', 'coding.view'],
   },
 };
+
+/**
+ * Authoritative Department to Initial Role mapping.
+ * Each department strictly governs which role presets can be provisioned.
+ */
+export interface DepartmentConfig {
+  id: string;
+  name: string;
+  description: string;
+  allowedRoleKeys: string[];
+}
+
+export const DEPARTMENT_CONFIGS: Record<string, DepartmentConfig> = {
+  'Curriculum & Video Authoring': {
+    id: 'curriculum',
+    name: 'Curriculum & Video Authoring',
+    description: 'Creation and lifecycle management of video lectures, study notes, and syllabus structures.',
+    allowedRoleKeys: ['content_creator', 'content_manager'],
+  },
+  'Assessment & Test Series': {
+    id: 'assessment',
+    name: 'Assessment & Test Series',
+    description: 'Mock tests, practice series, question authoring, scheduling, and student evaluations.',
+    allowedRoleKeys: ['test_evaluator'],
+  },
+  'Community Moderation': {
+    id: 'community',
+    name: 'Community Moderation',
+    description: 'Discussion forums, student threads, answer verification, and safety moderation.',
+    allowedRoleKeys: ['community_moderator'],
+  },
+  'Platform Compliance & Audit': {
+    id: 'compliance',
+    name: 'Platform Compliance & Audit',
+    description: 'Read-only operational oversight, compliance inspection, and security audit logs.',
+    allowedRoleKeys: ['auditor'],
+  },
+  'Advertisements & Monetization': {
+    id: 'advertisements',
+    name: 'Advertisements & Monetization',
+    description: 'Sponsor campaigns, banner placements, impression limits, and CTR analytics.',
+    allowedRoleKeys: ['ads_manager'],
+  },
+  'Coding Arena & Practice': {
+    id: 'coding',
+    name: 'Coding Arena & Practice',
+    description: 'Algorithmic problem authoring, test case suites, and code execution evaluation.',
+    allowedRoleKeys: ['coding_lead'],
+  },
+  'Tournaments & Leaderboard': {
+    id: 'leaderboard',
+    name: 'Tournaments & Leaderboard',
+    description: 'Competitive rankings, scoring governance, and leaderboard fraud exclusions.',
+    allowedRoleKeys: ['leaderboard_manager'],
+  },
+};
+
+export const VALID_DEPARTMENTS: string[] = Object.keys(DEPARTMENT_CONFIGS);
+
+/**
+ * Returns all valid departments supported by the platform.
+ */
+export function getDepartments(): string[] {
+  return VALID_DEPARTMENTS;
+}
+
+/**
+ * Returns all valid role presets for a specific department.
+ */
+export function getRolesForDepartment(department: string): Array<{ key: string; name: string; description: string; permissions: PermissionKey[] }> {
+  const dept = DEPARTMENT_CONFIGS[department];
+  if (!dept) return [];
+  return dept.allowedRoleKeys
+    .map(key => ({
+      key,
+      ...ROLE_PRESETS[key],
+    }))
+    .filter(role => !!role.name);
+}
+
+/**
+ * Validates whether a department and role preset combination is permitted under the RBAC policy.
+ */
+export function isValidDepartmentRole(department: string, roleKey: string): boolean {
+  const dept = DEPARTMENT_CONFIGS[department];
+  if (!dept) return false;
+  return dept.allowedRoleKeys.includes(roleKey);
+}
+
 /**
  * Generates a cryptographically strong temporary password.
  * Satisfies all complexity rules:
@@ -480,7 +569,6 @@ export function generateSecureTemporaryPassword(): string {
 
   return chars.join('');
 }
-
 
 /**
  * Check if a user has a specific permission.
