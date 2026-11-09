@@ -19,6 +19,7 @@ import {
   Unlock,
   MoreVertical,
   UserCheck,
+  Copy,
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -29,7 +30,7 @@ import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { PermissionEditorModal } from '../../components/admin/PermissionEditorModal';
 import { PasswordLifecycleModal } from '../../components/auth/PasswordLifecycleModal';
 import { generateProposedYogneetEmail } from '../../services/premiumStudentService';
-import { ROLE_PRESETS } from '../../permissions/registry';
+import { ROLE_PRESETS, getDepartments, getRolesForDepartment, DEPARTMENT_CONFIGS, VALID_DEPARTMENTS } from '../../permissions/registry';
 
 export const SubAdminManagementPage: React.FC = () => {
   const { currentUser, isAdmin, refreshUsers } = useAuth();
@@ -66,6 +67,22 @@ export const SubAdminManagementPage: React.FC = () => {
   const [newBio, setNewBio] = useState('');
   const [selectedPreset, setSelectedPreset] = useState<string>('content_creator');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [provisionedCredential, setProvisionedCredential] = useState<{
+    name: string;
+    email: string;
+    department: string;
+    roleName: string;
+    temporaryPassword: string;
+  } | null>(null);
+  const [hasCopiedPassword, setHasCopiedPassword] = useState(false);
+
+  const handleDepartmentChange = (dept: string) => {
+    setNewDepartment(dept);
+    const roles = getRolesForDepartment(dept);
+    if (!roles.some(r => r.key === selectedPreset)) {
+      setSelectedPreset(roles[0]?.key || '');
+    }
+  };
 
   const reloadData = useCallback(async () => {
     setIsLoadingStaff(true);
@@ -139,6 +156,8 @@ export const SubAdminManagementPage: React.FC = () => {
         email: newEmail.trim(),
         role: 'subadmin',
         department: newDepartment,
+        presetKey: selectedPreset,
+        phone: newPhone.trim(),
         bio: newBio,
         permissions: presetPerms,
       });
@@ -148,6 +167,18 @@ export const SubAdminManagementPage: React.FC = () => {
         result.message
       );
       setIsAddModalOpen(false);
+
+      if (result.temporaryPassword) {
+        setProvisionedCredential({
+          name: newName.trim(),
+          email: newEmail.trim(),
+          department: newDepartment,
+          roleName: ROLE_PRESETS[selectedPreset]?.name || selectedPreset,
+          temporaryPassword: result.temporaryPassword,
+        });
+        setHasCopiedPassword(false);
+      }
+
       setNewName('');
       setNewEmail('');
       setNewBio('');
@@ -397,35 +428,43 @@ export const SubAdminManagementPage: React.FC = () => {
           />
 
           <Input
-            label="Registered Phone Number"
+            label="Contact Phone Number (Optional)"
             type="tel"
             value={newPhone}
             onChange={e => setNewPhone(e.target.value)}
             placeholder="+91 98000 12345"
-            helperText="Used for initial credential policy (last 4 digits)"
-            required
+            helperText="Internal staff contact directory reference only"
           />
 
           {/* Security policy banner */}
-          <div className="p-3 rounded-xl border border-indigo-200/80 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/20 text-[11px] text-indigo-900 dark:text-indigo-300">
-            <span className="font-bold block mb-0.5">Security Credential Policy</span>
-            <span>Initial credential will be generated from the last 4 digits of registered phone number. Plaintext passwords are never stored or transmitted in frontend state.</span>
+          <div className="p-3 rounded-xl border border-indigo-200/80 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/20 text-[11px] text-indigo-900 dark:text-indigo-300 space-y-1">
+            <span className="font-bold flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              Cryptographic Temporary Credential Policy
+            </span>
+            <p className="text-slate-600 dark:text-slate-300">
+              A cryptographically secure random 16-character temporary password will be generated and displayed to you once upon account creation. The sub-admin is required to change it on their first login.
+            </p>
           </div>
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-              Department / Specialty
+              Department / Functional Area
             </label>
             <select
               value={newDepartment}
-              onChange={e => setNewDepartment(e.target.value)}
+              onChange={e => handleDepartmentChange(e.target.value)}
               className="w-full p-2.5 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
-              <option value="Curriculum & Video Authoring">Curriculum & Video Authoring</option>
-              <option value="Assessment & Test Series">Assessment & Test Series</option>
-              <option value="Community Moderation">Community Moderation</option>
-              <option value="Platform Compliance & Audit">Platform Compliance & Audit</option>
+              {getDepartments().map(dept => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
             </select>
+            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+              {DEPARTMENT_CONFIGS[newDepartment]?.description || ''}
+            </p>
           </div>
 
           <div>
@@ -437,19 +476,46 @@ export const SubAdminManagementPage: React.FC = () => {
               onChange={e => setSelectedPreset(e.target.value)}
               className="w-full p-2.5 rounded-xl border border-light-border dark:border-dark-border bg-white dark:bg-dark-card text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
-              <option value="content_creator">Content Creator (Videos & Notes draft/edit)</option>
-              <option value="content_manager">Senior Content Lead (Full author + publish)</option>
-              <option value="test_evaluator">Assessment Coordinator (Tests & Grading)</option>
-              <option value="community_moderator">Community Moderator (Forums & Threads)</option>
-              <option value="auditor">Compliance Auditor (Read-only)</option>
+              {getRolesForDepartment(newDepartment).map(role => (
+                <option key={role.key} value={role.key}>
+                  {role.name} — {role.description}
+                </option>
+              ))}
             </select>
           </div>
+
+          {/* Active Role Capability Preview */}
+          {selectedPreset && ROLE_PRESETS[selectedPreset] && (
+            <div className="p-3 rounded-xl border border-slate-200 dark:border-dark-border bg-slate-50/70 dark:bg-dark-sidebar/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                  Granted Capabilities ({ROLE_PRESETS[selectedPreset].permissions.length})
+                </span>
+                <span className="text-[10px] font-mono text-purple-600 dark:text-purple-400 font-bold">
+                  {ROLE_PRESETS[selectedPreset].name}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {ROLE_PRESETS[selectedPreset].description}
+              </p>
+              <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pt-1">
+                {ROLE_PRESETS[selectedPreset].permissions.map(perm => (
+                  <span
+                    key={perm}
+                    className="text-[10px] px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-mono"
+                  >
+                    {perm}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-light-border dark:border-dark-border">
             <Button variant="outline" size="sm" type="button" onClick={() => setIsAddModalOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" type="submit">
+            <Button size="sm" type="submit" isLoading={isSubmitting}>
               Provision Account
             </Button>
           </div>
@@ -488,6 +554,79 @@ export const SubAdminManagementPage: React.FC = () => {
           confirmText="Delete Account"
           variant="danger"
         />
+      )}
+
+      {/* One-Time Temporary Credential Display Dialog */}
+      {provisionedCredential && (
+        <Modal
+          isOpen={!!provisionedCredential}
+          onClose={() => setProvisionedCredential(null)}
+          title="Temporary Credentials Generated"
+          description="Deliver these initial login credentials securely to the new team member."
+          maxWidth="md"
+        >
+          <div className="space-y-4">
+            <div className="p-3 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
+              <AlertOctagon className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <p>
+                <span className="font-bold">One-Time Display Warning: </span>
+                This temporary password is displayed exactly once and is never stored in plaintext. Copy it now. The user will be required to choose a new password upon first login.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl border border-light-border dark:border-dark-border bg-slate-50 dark:bg-dark-card space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Staff Member:</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{provisionedCredential.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Email:</span>
+                <span className="font-semibold font-mono text-slate-800 dark:text-slate-200">{provisionedCredential.email}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Department:</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{provisionedCredential.department}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Assigned Role:</span>
+                <span className="font-semibold text-purple-600 dark:text-purple-400">{provisionedCredential.roleName}</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                Temporary Password
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 p-3 rounded-xl border border-brand-200 dark:border-cyan-800/60 bg-white dark:bg-slate-900 font-mono text-sm font-bold text-brand-600 dark:text-cyan-400 tracking-wider select-all break-all">
+                  {provisionedCredential.temporaryPassword}
+                </div>
+                <Button
+                  type="button"
+                  size="md"
+                  variant={hasCopiedPassword ? 'secondary' : 'primary'}
+                  leftIcon={hasCopiedPassword ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                  onClick={() => {
+                    navigator.clipboard.writeText(provisionedCredential.temporaryPassword);
+                    setHasCopiedPassword(true);
+                    toast.success('Credential Copied', 'Temporary password copied to clipboard.');
+                  }}
+                >
+                  {hasCopiedPassword ? 'Copied' : 'Copy'}
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-light-border dark:border-dark-border">
+              <Button
+                size="sm"
+                onClick={() => setProvisionedCredential(null)}
+              >
+                Done (I have saved the credentials)
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {/* Password Lifecycle Modal (Module 9) */}
