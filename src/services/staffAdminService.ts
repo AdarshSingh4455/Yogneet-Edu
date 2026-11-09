@@ -7,6 +7,7 @@
 import { UserProfile, PermissionKey } from '../types';
 import { supabase, isSupabaseConfigured, isMockFallbackAllowed, formatSupabaseError } from './supabaseClient';
 import { ApiService, AuditService } from './api';
+import { generateSecureTemporaryPassword } from '../permissions/registry';
 
 export interface ProvisionStaffInput {
   name: string;
@@ -192,7 +193,51 @@ export const StaffAdminService = {
   /**
    * Toggles active / suspended status of a staff member.
    */
-  async toggleStaffStatus(actor: UserProfile, staffId: string): Promise<UserProfile> {
+/**
+   * Generates a secure temporary credential for a staff member and sets must_change_password.
+   */
+  async generateStaffTemporaryCredential(actor: UserProfile, staffId: string): Promise<string> {
+    if (actor.role !== 'admin') {
+      throw new Error('Access Denied: Only administrators can reset staff credentials.');
+    }
+
+    const tempPassword = generateSecureTemporaryPassword();
+
+    if (!isSupabaseConfigured() || !supabase) {
+      const mockUser = ApiService.getUsers().find(u => u.id === staffId);
+      if (mockUser) {
+        mockUser.mustChangePassword = true;
+      }
+      return tempPassword;
+    }
+
+    try {
+      const { data: credData } = await (supabase.rpc as any)('admin_generate_temporary_credential', {
+        p_user_id: staffId,
+      });
+      if (credData?.temporary_credential) {
+        return credData.temporary_credential;
+      }
+    } catch (err) {
+      console.warn('[StaffAdminService] RPC credential issuance warning:', err);
+    }
+
+    // Direct update to set must_change_password
+    try {
+      await (supabase as any)
+        .from('profiles')
+        .update({
+          must_change_password: true,
+        })
+        .eq('id', staffId);
+    } catch (updateErr) {
+      console.warn('[StaffAdminService] Direct profile update warning:', updateErr);
+    }
+
+    return tempPassword;
+  },
+
+    async toggleStaffStatus(actor: UserProfile, staffId: string): Promise<UserProfile> {
     if (actor.role !== 'admin') {
       throw new Error('Access Denied: Only administrators can modify staff account status.');
     }

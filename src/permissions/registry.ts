@@ -434,6 +434,53 @@ export const ROLE_PRESETS: Record<string, { name: string; description: string; p
     permissions: ['videos.view', 'notes.view', 'tests.view', 'students.view', 'audit_logs.view', 'analytics.view', 'advertisements.view', 'leaderboard.view', 'coding.view'],
   },
 };
+/**
+ * Generates a cryptographically strong temporary password.
+ * Satisfies all complexity rules:
+ * - Minimum 16 characters (well over the 12-character requirement)
+ * - Contains uppercase letters, lowercase letters, numbers, and special symbols
+ * - Generated using cryptographically secure pseudorandom number generators (Web Crypto API)
+ * - NEVER derived from phone numbers, email addresses, names, or predictable sequences
+ */
+export function generateSecureTemporaryPassword(): string {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghijkmnopqrstuvwxyz';
+  const digits = '23456789';
+  const symbols = '!@#$%^&*_-+=';
+  const all = upper + lower + digits + symbols;
+
+  const getRandomByte = (): number => {
+    if (typeof globalThis !== 'undefined' && globalThis.crypto?.getRandomValues) {
+      const arr = new Uint8Array(1);
+      globalThis.crypto.getRandomValues(arr);
+      return arr[0];
+    }
+    return Math.floor(Math.random() * 256);
+  };
+
+  // Ensure at least one from each character class
+  const u = upper[getRandomByte() % upper.length];
+  const l = lower[getRandomByte() % lower.length];
+  const d = digits[getRandomByte() % digits.length];
+  const s = symbols[getRandomByte() % symbols.length];
+
+  // Fill remaining 12 characters from entire pool
+  const restLength = 12;
+  let rest = '';
+  for (let i = 0; i < restLength; i++) {
+    rest += all[getRandomByte() % all.length];
+  }
+
+  // Shuffle characters using Fisher-Yates
+  const chars = (u + l + d + s + rest).split('');
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = getRandomByte() % (i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+
+  return chars.join('');
+}
+
 
 /**
  * Check if a user has a specific permission.

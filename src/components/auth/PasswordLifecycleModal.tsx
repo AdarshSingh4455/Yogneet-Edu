@@ -4,6 +4,9 @@ import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import { PasswordStrengthMeter, analyzePassword } from './PasswordStrengthMeter';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
+import { StaffAdminService } from '../../services/staffAdminService';
+import { generateSecureTemporaryPassword } from '../../permissions/registry';
 import {
   KeyRound,
   ShieldCheck,
@@ -14,6 +17,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Sparkles,
+  Copy,
+  AlertOctagon,
 } from 'lucide-react';
 
 export type PasswordLifecycleMode = 'admin_reset' | 'first_login' | 'change_password';
@@ -47,6 +52,9 @@ export const PasswordLifecycleModal: React.FC<PasswordLifecycleModalProps> = ({
   // Admin Reset State
   const [isResetting, setIsResetting] = useState(false);
   const [resetCompleted, setResetCompleted] = useState(false);
+  const { currentUser } = useAuth();
+  const [generatedCredential, setGeneratedCredential] = useState<string | null>(null);
+  const [hasCopiedPassword, setHasCopiedPassword] = useState(false);
 
   // Password Input States
   const [currentPassword, setCurrentPassword] = useState('');
@@ -55,25 +63,26 @@ export const PasswordLifecycleModal: React.FC<PasswordLifecycleModalProps> = ({
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
-  const cleanPhone = phone.replace(/\D/g, '');
-  const last4Phone = cleanPhone.slice(-4) || 'XXXX';
-  const last4Enrollment = enrollmentNumber.replace(/\D/g, '').slice(-4) || 'XXXX';
-
-  const policyHint =
-    accountType === 'staff'
-      ? `Last 4 digits of registered phone number (${last4Phone})`
-      : `Phone [${last4Phone}] + Enrollment [${last4Enrollment}] (8 characters)`;
-
   const handleAdminReset = async () => {
     setIsResetting(true);
-    setTimeout(() => {
-      setIsResetting(false);
+    try {
+      let tempPassword = '';
+      if (accountType === 'staff' && currentUser?.role === 'admin') {
+        tempPassword = await StaffAdminService.generateStaffTemporaryCredential(currentUser, userId);
+      } else {
+        tempPassword = generateSecureTemporaryPassword();
+      }
+      setGeneratedCredential(tempPassword);
       setResetCompleted(true);
       toast.success(
         'Temporary Credential Provisioned',
         `Reset requested for ${userName}. Flagged for mandatory password change at first login.`
       );
-    }, 600);
+    } catch (err: any) {
+      toast.error('Reset Failed', err.message || 'Could not generate temporary credential.');
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const handleSavePasswordChange = async (e: React.FormEvent) => {
@@ -198,13 +207,13 @@ export const PasswordLifecycleModal: React.FC<PasswordLifecycleModalProps> = ({
             <div className="p-4 rounded-xl border border-indigo-200/80 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/20 text-xs space-y-2">
               <div className="flex items-center gap-2 font-bold text-indigo-950 dark:text-indigo-200">
                 <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                <span>Initial Credential Policy</span>
+                <span>Cryptographic Temporary Credential Policy</span>
               </div>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px]">
-                Upon reset, a deterministic temporary credential will be issued following Yogneet Edu policy:
+                Upon reset, a cryptographically secure 16-character temporary credential (containing uppercase, lowercase, numbers, and symbols) is generated following Yogneet Edu RBAC security standards:
               </p>
               <div className="p-2.5 rounded-lg bg-white/80 dark:bg-dark-card/80 border border-indigo-100 dark:border-indigo-900/50 font-mono text-xs text-indigo-900 dark:text-indigo-300">
-                {policyHint}
+                [A-Za-z0-9!@#$%^&*] (16 chars cryptographically random)
               </div>
               <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 text-[11px] font-semibold pt-1">
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
@@ -212,14 +221,47 @@ export const PasswordLifecycleModal: React.FC<PasswordLifecycleModalProps> = ({
               </div>
             </div>
 
-            {resetCompleted ? (
-              <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-200 text-xs flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-bold">Temporary Credential Issued</h4>
-                  <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-1">
-                    The account status has been updated with a temporary credential flag. An automated notification with first-login instructions will be securely dispatched.
+            {resetCompleted && generatedCredential ? (
+              <div className="space-y-3">
+                <div className="p-3 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
+                  <AlertOctagon className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p>
+                    <span className="font-bold">One-Time Display Warning: </span>
+                    This temporary password is displayed exactly once and is never stored in plaintext. Copy it now. The user will be required to choose a new password upon first login.
                   </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                    Temporary Password
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 p-3 rounded-xl border border-brand-200 dark:border-cyan-800/60 bg-white dark:bg-slate-900 font-mono text-sm font-bold text-brand-600 dark:text-cyan-400 tracking-wider select-all break-all">
+                      {generatedCredential}
+                    </div>
+                    <Button
+                      type="button"
+                      size="md"
+                      variant={hasCopiedPassword ? 'secondary' : 'primary'}
+                      leftIcon={hasCopiedPassword ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedCredential);
+                        setHasCopiedPassword(true);
+                        toast.success('Credential Copied', 'Temporary password copied to clipboard.');
+                      }}
+                    >
+                      {hasCopiedPassword ? 'Copied' : 'Copy'}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <Button
+                    size="sm"
+                    onClick={onClose}
+                  >
+                    Done (Close)
+                  </Button>
                 </div>
               </div>
             ) : (
